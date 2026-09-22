@@ -452,9 +452,9 @@ if (CONFIG.MAPY_API_KEY){
     L.DomEvent.disableClickPropagation(a); return a; }});
   new Logo().addTo(map);
 } else {
-  baseLayers = [{name:"Mapa", filter:NIGHT, layer:L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-    maxZoom: 20, subdomains:"abcd",
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+  baseLayers = [{name:"Mapa", filter:NIGHT, layer:L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19, minZoom: 12,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">P\u0159isp\u011bvatel\u00e9 OpenStreetMap</a>'
   })}];
 }
 function setBase(i){
