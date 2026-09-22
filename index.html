@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dýňová stezka Úvaly</title>
+<meta name="description" content="Halloweenská stezka po domech v Primaveře a Radlické čtvrti v Úvalech – mapa stanovišť, plánování trasy a navigace k dalšímu domu.">
+<meta name="theme-color" content="#1b1426">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@600;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,800&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --night:#1b1426; --dusk:#261c35; --dusk2:#33264a; --line:#46365f;
+  --bone:#f3ead9; --mist:#b9aec9; --pumpkin:#ff8a2a; --pumpkin-d:#d96412;
+  --candle:#ffd36b; --teal:#3cc9b5; --grave:#7d7390; --blood:#ff5f6d;
+  --r:14px; --nav-h:64px;
+  --display:"Grenze Gotisch", "Georgia", serif;
+  --body:"Nunito Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--night);color:var(--bone);font:15px/1.5 var(--body);display:flex;flex-direction:column;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--candle)}
+:focus-visible{outline:3px solid var(--candle);outline-offset:2px}
+
+/* header */
+header.top{padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;display:flex;align-items:center;gap:12px;background:linear-gradient(180deg,#140e1d, var(--night));border-bottom:1px solid var(--line)}
+.logo{width:38px;height:38px;flex:none}
+.brand{min-width:0;flex:1}
+.brand h1{font:800 26px/1 var(--display);margin:0;letter-spacing:.3px;color:var(--pumpkin);text-shadow:0 0 18px rgba(255,138,42,.35)}
+.brand p{margin:2px 0 0;font-size:12.5px;color:var(--mist);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.count{flex:none;text-align:right;font-size:11px;color:var(--mist);line-height:1.2}
+.count b{display:block;font:800 18px/1.1 var(--body);color:var(--candle);font-variant-numeric:tabular-nums}
+.demo-flag{background:var(--candle);color:#2a1a00;font-weight:800;font-size:12px;padding:5px 16px;text-align:center}
+
+/* views */
+main{flex:1;min-height:0;position:relative}
+.view{position:absolute;inset:0;overflow:auto;padding:16px 16px calc(var(--nav-h) + 24px + env(safe-area-inset-bottom,0px))}
+.view[hidden]{display:none!important}
+#v-map{padding:0}
+#map{position:absolute;inset:0;background:#15101d}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h2{font:800 28px/1.1 var(--display);margin:4px 0 0;color:var(--candle);text-wrap:balance}
+h3{margin:0;font-size:16px;font-weight:800}
+.muted{color:var(--mist)}
+.small{font-size:13px}
+
+/* bottom nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:1000;display:grid;grid-template-columns:repeat(4,1fr);background:rgba(20,14,29,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs button{background:none;border:0;height:var(--nav-h);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:700;color:var(--mist);cursor:pointer}
+nav.tabs button svg{width:24px;height:24px}
+nav.tabs button[aria-selected="true"]{color:var(--pumpkin)}
+
+/* map overlays */
+.chips{position:absolute;top:10px;left:10px;right:10px;z-index:500;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:rgba(27,20,38,.92);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--pumpkin);border-color:var(--pumpkin);color:#2a1300}
+.chip.teal[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:#062b26}
+.fab{position:absolute;right:12px;z-index:500;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--dusk);display:grid;place-items:center;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.fab svg{width:24px;height:24px}
+#fabLocate{bottom:calc(var(--nav-h) + 20px + env(safe-area-inset-bottom,0px))}
+#fabLocate.on{color:var(--teal)}
+.nextcard{position:absolute;left:12px;right:72px;bottom:calc(var(--nav-h) + 22px + env(safe-area-inset-bottom,0px));z-index:500;background:var(--dusk);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.45);max-width:460px}
+.nextcard .t{flex:1;min-width:0}
+.nextcard .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nextcard .t span{font-size:12.5px;color:var(--mist)}
+.pickbar{position:absolute;top:10px;left:10px;right:10px;z-index:600;background:var(--candle);color:#2a1a00;border-radius:var(--r);padding:10px 12px;font-weight:800;display:flex;align-items:center;gap:10px}
+.pickbar span{flex:1}
+.crosshair{position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;z-index:550;pointer-events:none;color:var(--candle)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;border:1px solid var(--line);background:var(--dusk2);padding:10px 14px;font-weight:800;cursor:pointer;text-decoration:none;color:var(--bone);min-height:44px}
+.btn.primary{background:var(--pumpkin);border-color:var(--pumpkin);color:#2a1300}
+.btn.teal{background:var(--teal);border-color:var(--teal);color:#062b26}
+.btn.ghost{background:transparent}
+.btn.sm{min-height:36px;padding:6px 10px;font-size:13px;border-radius:10px}
+.btn svg{width:18px;height:18px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>.btn{flex:1 1 auto}
+
+/* cards / lists */
+.panel{background:var(--dusk);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.stat{display:flex;gap:18px;flex-wrap:wrap}
+.stat div{font-size:12px;color:var(--mist)}
+.stat b{display:block;font-size:22px;color:var(--bone);font-variant-numeric:tabular-nums}
+ol.route{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+ol.route li{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line)}
+ol.route li:last-child{border-bottom:0}
+.num{width:30px;height:30px;border-radius:50%;background:var(--pumpkin);color:#2a1300;font-weight:800;display:grid;place-items:center;font-size:14px;font-variant-numeric:tabular-nums}
+.num.done{background:var(--grave);color:var(--night)}
+.num.teal{background:var(--teal);color:#062b26}
+li .nm{font-weight:800;overflow-wrap:anywhere}
+li .meta{font-size:12.5px;color:var(--mist)}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
+.tag{font-size:11.5px;font-weight:700;border-radius:6px;padding:2px 7px;background:var(--dusk2);color:var(--mist)}
+.tag.teal{background:rgba(60,201,181,.16);color:var(--teal)}
+.tag.warn{background:rgba(255,95,109,.15);color:var(--blood)}
+.tag.gold{background:rgba(255,211,107,.14);color:var(--candle)}
+.ghosts{letter-spacing:1px;color:var(--candle)}
+
+/* form */
+form{display:flex;flex-direction:column;gap:14px}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:14px}
+label.f small{font-weight:400;color:var(--mist)}
+input[type=text],input[type=time],textarea{width:100%;background:var(--night);border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-height:44px}
+textarea{min-height:70px;resize:vertical}
+fieldset{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:0;display:flex;flex-direction:column;gap:8px}
+legend{font-weight:800;padding:0 6px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg label{border:1px solid var(--line);border-radius:10px;padding:8px 6px;text-align:center;cursor:pointer;font-size:13px;line-height:1.25}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){background:var(--pumpkin);border-color:var(--pumpkin);color:#2a1300;font-weight:800}
+.seg label:has(input:focus-visible){outline:3px solid var(--candle)}
+.check{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.check input{width:20px;height:20px;accent-color:var(--pumpkin);margin-top:2px;flex:none}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.locbox{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.locbox .val{flex:1 1 160px;font-size:13px;color:var(--mist);font-variant-numeric:tabular-nums}
+.locbox .val.ok{color:var(--teal);font-weight:700}
+.msg{border-radius:10px;padding:10px 12px;font-weight:700}
+.msg.ok{background:rgba(60,201,181,.15);color:var(--teal)}
+.msg.err{background:rgba(255,95,109,.15);color:var(--blood)}
+
+/* info */
+.rules{display:grid;gap:10px}
+.rule{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:start}
+.rule svg{width:40px;height:40px}
+.rule p{margin:2px 0 0;color:var(--mist);font-size:14px}
+.split{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:720px){.split{grid-template-columns:1fr 1fr}}
+
+/* leaflet skin */
+.leaflet-container{font:inherit;background:#15101d}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--dusk);color:var(--bone);border:1px solid var(--line);box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.leaflet-popup-content{margin:12px 14px;min-width:220px;max-width:270px}
+.leaflet-popup-content h3{font-size:16px;margin-bottom:2px}
+.leaflet-container a.leaflet-popup-close-button{color:var(--mist)}
+.leaflet-control-attribution{background:rgba(20,14,29,.8)!important;color:var(--grave)!important;font-size:10px}
+.leaflet-control-attribution a{color:var(--mist)!important}
+.leaflet-control-zoom{display:none}
+.leaflet-top.leaflet-left{top:48px}
+.leaflet-bottom{bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px))}
+.mapy-logo{display:block;line-height:0;margin:0 0 0 10px!important}
+.mapy-logo img{height:30px;width:auto;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))}
+#fabLayer{bottom:calc(var(--nav-h) + 76px + env(safe-area-inset-bottom,0px));width:auto;min-width:48px;border-radius:24px;padding:0 12px;gap:6px;display:flex;align-items:center;font-weight:800;font-size:13px}
+.pin{position:relative;width:40px;height:44px}
+.pin svg{width:40px;height:44px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6))}
+.pin i{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;border-radius:10px;background:var(--bone);color:var(--night);font:800 11px/20px var(--body);font-style:normal;text-align:center;padding:0 4px}
+.me-dot{width:18px;height:18px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 0 0 6px rgba(60,201,181,.3)}
+.popup-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.popup-actions .btn{flex:1 1 auto}
+@media (prefers-reduced-motion:no-preference){.pin svg{transition:transform .15s}.pin:hover svg{transform:translateY(-3px)}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 14c3-6 8-8 10-7-3 2-5 5-6 8" fill="none" stroke="#6bbf59" stroke-width="3" stroke-linecap="round"/><ellipse cx="22" cy="38" rx="14" ry="18" fill="#d96412"/><ellipse cx="42" cy="38" rx="14" ry="18" fill="#d96412"/><ellipse cx="32" cy="38" rx="13" ry="19" fill="#ff8a2a"/><path d="M22 33l5-5 5 5zM32 33l5-5 5 5z" fill="#ffd36b"/><path d="M20 43c4 5 20 5 24 0l-3 1-2 3-3-3-4 3-3-3-3 3-2-3z" fill="#ffd36b"/></svg>
+  <div class="brand">
+    <h1 id="evTitle">Dýňová stezka</h1>
+    <p id="evSub">Primavera &amp; Radlická čtvrť · Úvaly</p>
+  </div>
+  <div class="count" id="countdown" aria-live="polite"></div>
+</header>
+<div class="demo-flag" id="demoFlag" hidden>Ukázkový režim – stanoviště jsou vymyšlená a ukládají se jen v tomto prohlížeči</div>
+
+<main>
+  <!-- MAPA -->
+  <section class="view" id="v-map" aria-label="Mapa">
+    <div id="map"></div>
+    <div class="chips" id="chips" role="toolbar" aria-label="Filtry">
+      <button class="chip" data-f="small" aria-pressed="false">Pro malé děti</button>
+      <button class="chip teal" data-f="allergy" aria-pressed="false">Bez alergenů</button>
+      <button class="chip" data-f="noncandy" aria-pressed="false">Nesladké dárky</button>
+      <button class="chip" data-f="access" aria-pressed="false">Bezbariérové</button>
+      <button class="chip" data-f="open" aria-pressed="true">Jen otevřená</button>
+    </div>
+    <div class="pickbar" id="pickbar" hidden><span>Posuňte mapu tak, aby zaměřovač mířil na váš dům</span><button class="btn sm" id="pickOk" type="button">Tady</button><button class="btn sm ghost" id="pickCancel" type="button">Zrušit</button></div>
+    <svg class="crosshair" id="crosshair" hidden viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="9" fill="none" stroke="currentColor" stroke-width="3"/><path d="M17 0v10M17 24v10M0 17h10M24 17h10" stroke="currentColor" stroke-width="3"/></svg>
+    <div class="nextcard" id="nextcard" hidden></div>
+    <button class="fab" id="fabLayer" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg><span>Letecká</span></button>
+    <button class="fab" id="fabLocate" type="button" aria-label="Zobrazit moji polohu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+  </section>
+
+  <!-- TRASA -->
+  <section class="view" id="v-route" hidden aria-label="Trasa">
+    <div class="wrap">
+      <h2>Vaše trasa</h2>
+      <p class="muted small" id="routeIntro">Trasa začíná tam, kde právě jste, a vede vždy k nejbližšímu dalšímu otevřenému domu. Navštívené domy odškrtávejte – trasa se sama přepočítá.</p>
+      <div class="panel stat" id="routeStats"></div>
+      <div class="row">
+        <button class="btn primary" id="btnReplan" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12a8 8 0 0 1 14-5l2 2M20 12a8 8 0 0 1-14 5l-2-2M20 4v5h-5M4 20v-5h5"/></svg>Přepočítat od mé polohy</button>
+        <a class="btn" id="btnGmapsAll" target="_blank" rel="noopener">Celá trasa v Google Mapách</a>
+      </div>
+      <div class="panel"><ol class="route" id="routeList"></ol></div>
+      <div id="doneWrap" hidden>
+        <h3 style="margin:6px 0 8px">Už navštívené</h3>
+        <div class="panel"><ol class="route" id="doneList"></ol></div>
+        <div class="row" style="margin-top:10px"><button class="btn ghost sm" id="btnResetVisited" type="button">Začít znovu (smazat odškrtnutí)</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PŘIDAT -->
+  <section class="view" id="v-add" hidden aria-label="Přidat stanoviště">
+    <div class="wrap">
+      <h2 id="formTitle">Zapojte svůj dům</h2>
+      <p class="muted small">Stačí pár údajů. Rodiče pak uvidí váš dům na mapě a děti k vám dojdou po nejkratší trase. Údaje můžete z tohoto telefonu kdykoli upravit, smazat, nebo večer přepnout na „došly bonbony“.</p>
+      <form id="form" novalidate>
+        <input type="hidden" id="fId">
+        <label class="f">Název stanoviště
+          <input type="text" id="fName" maxlength="60" required placeholder="např. Strašidelný hřbitov u Novákových" autocomplete="off">
+        </label>
+        <label class="f">Ulice a číslo domu <small>Pomůže při hledání v tmě – na mapě se ukáže u pinu.</small>
+          <input type="text" id="fAddress" maxlength="80" placeholder="např. Radlická 1234" autocomplete="street-address">
+        </label>
+        <fieldset>
+          <legend>Poloha domu</legend>
+          <div class="locbox">
+            <span class="val" id="fLocVal">Zatím nevybráno</span>
+            <button class="btn sm" type="button" id="btnGps">Jsem u domu – použít GPS</button>
+            <button class="btn sm" type="button" id="btnPick">Vybrat na mapě</button>
+          </div>
+          <input type="hidden" id="fLat"><input type="hidden" id="fLng">
+        </fieldset>
+        <fieldset>
+          <legend>Jak moc strašidelné?</legend>
+          <div class="seg">
+            <label><input type="radio" name="scare" value="1" checked>Vlídné<br><span class="small">i pro batolata</span></label>
+            <label><input type="radio" name="scare" value="2">Trochu strašidelné</label>
+            <label><input type="radio" name="scare" value="3">Pro odvážné<br><span class="small">tma, masky, zvuky</span></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Co nabízíte</legend>
+          <label class="check"><input type="checkbox" id="fAllergy"><span><b>Mám i dobroty bez alergenů</b><br><span class="muted small">bez ořechů, lepku a mléka – na mapě tyrkysová dýně</span></span></label>
+          <label class="check"><input type="checkbox" id="fNonCandy"><span><b>Mám i nesladké dárky</b><br><span class="muted small">samolepky, svítící náramky, pastelky…</span></span></label>
+          <label class="check"><input type="checkbox" id="fAccess"><span><b>Dojde se bez schodů</b><br><span class="muted small">s kočárkem nebo na vozíku</span></span></label>
+        </fieldset>
+        <div class="two">
+          <label class="f">Otevřeno od<input type="time" id="fFrom" value="17:00"></label>
+          <label class="f">do<input type="time" id="fTo" value="20:00"></label>
+        </div>
+        <label class="f">Poznámka pro rodiče <small>Nepovinné. Např. „zvoňte u branky“, „pes je zavřený“.</small>
+          <textarea id="fNote" maxlength="200"></textarea>
+        </label>
+        <div id="formMsg" class="msg" hidden></div>
+        <div class="row">
+          <button class="btn primary" type="submit" id="btnSave">Přidat na mapu</button>
+          <button class="btn ghost" type="button" id="btnCancelEdit" hidden>Zrušit úpravy</button>
+        </div>
+      </form>
+
+      <div id="mineWrap" hidden>
+        <h3 style="margin:10px 0 8px">Vaše stanoviště</h3>
+        <div class="panel"><ol class="route" id="mineList"></ol></div>
+        <p class="muted small">Během večera klepněte na „Došly bonbony“, ať k vám děti zbytečně nechodí. Stanoviště z mapy zmizí z tras, ale zůstane vidět šedě.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- INFO -->
+  <section class="view" id="v-info" hidden aria-label="Informace">
+    <div class="wrap">
+      <h2>Jak to funguje</h2>
+      <div class="panel">
+        <div class="stat" id="infoFacts"></div>
+      </div>
+      <div class="split">
+        <div class="panel rules">
+          <h3>Pro děti</h3>
+          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><ellipse cx="20" cy="23" rx="15" ry="12" fill="#ff8a2a"/><path d="M13 20l3-3 3 3zM21 20l3-3 3 3z" fill="#ffd36b"/><path d="M20 11c1-4 4-5 5-5" stroke="#6bbf59" stroke-width="2.5" fill="none"/></svg><div><b>Klepejte jen tam, kde svítí dýně</b><p>Na mapě jsou jen domy, které se zapojily. Ostatní sousedy nechte v klidu.</p></div></div>
+          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 34c0-14 5-26 12-26s12 12 12 26l-4-3-4 3-4-3-4 3-4-3z" fill="#f3ead9"/><circle cx="16" cy="18" r="2" fill="#1b1426"/><circle cx="24" cy="18" r="2" fill="#1b1426"/></svg><div><b>Vždycky s dospělým</b><p>Do domu ani na zahradu nechodíme. Koledujeme u dveří nebo u branky.</p></div></div>
+          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><rect x="12" y="6" width="16" height="28" rx="8" fill="#ffd36b"/><path d="M12 18h16" stroke="#1b1426" stroke-width="2"/></svg><div><b>Svítit a být vidět</b><p>Baterka, svítící náramek nebo reflexní pásek ke kostýmu. V Radlické jezdí auta.</p></div></div>
+          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="14" fill="none" stroke="#3cc9b5" stroke-width="3"/><path d="M13 20l5 5 9-10" stroke="#3cc9b5" stroke-width="3" fill="none"/></svg><div><b>Řekněte „děkuji“ a odškrtněte dům</b><p>Aplikace vás pak pošle k dalšímu nejbližšímu stanovišti.</p></div></div>
+        </div>
+        <div class="panel rules">
+          <h3>Pro rodiče</h3>
+          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><ellipse cx="20" cy="23" rx="15" ry="12" fill="#3cc9b5"/><path d="M13 20l3-3 3 3zM21 20l3-3 3 3z" fill="#1b1426"/></svg><div><b>Tyrkysová dýně = bez alergenů</b><p>Dům má i dobroty bez ořechů, lepku a mléka. Filtr „Bez alergenů“ nechá na mapě jen je.</p></div></div>
+          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><text x="4" y="28" font-size="20" fill="#ffd36b">👻</text></svg><div><b>Strašidelnost 1 až 3</b><p>1 = vlídné i pro batolata, 3 = tma, masky a zvuky. Filtr „Pro malé děti“ ukáže jen jedničky.</p></div></div>
+          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 30h28M10 30V14l10-6 10 6v16" fill="none" stroke="#b9aec9" stroke-width="3"/><path d="M4 22h8" stroke="#ff8a2a" stroke-width="3"/></svg><div><b>Navigace k dalšímu domu</b><p>Tlačítko „Navigovat“ otevře pěší trasu v Google Mapách nebo Mapy.com. Trasa počítá dětské tempo 3 km/h.</p></div></div>
+          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="14" fill="#7d7390"/><path d="M13 20h14" stroke="#1b1426" stroke-width="3"/></svg><div><b>Šedá dýně = došly bonbony</b><p>Hostitelé to přepínají živě, stránka se sama obnovuje každou minutu.</p></div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Chcete se zapojit?</h3>
+        <p class="muted small" style="margin:6px 0 10px">Postavte před dům svítící dýni, připravte misku a přidejte se na mapu. Zabere to minutu.</p>
+        <button class="btn primary" type="button" data-go="add">Přidat svůj dům</button>
+      </div>
+      <p class="muted small">Pořádají sousedé z Primavery a Radlické čtvrti. Údaje o stanovištích vidí každý, kdo má odkaz – nepište sem telefon ani jména dětí.</p>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" data-tab="map" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>Mapa</button>
+  <button role="tab" data-tab="route" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5"/></svg>Trasa</button>
+  <button role="tab" data-tab="add" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9H3z"/><path d="M12 11v6M9 14h6"/></svg>Můj dům</button>
+  <button role="tab" data-tab="info" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>Info</button>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* ================= NASTAVENÍ – upravte podle sebe ================= */
+const CONFIG = {
+  // URL webové aplikace z Google Apps Script (viz NAVOD.md). Prázdné = ukázkový režim.
+  API_URL: "https://script.google.com/macros/s/AKfycbz6HmhUNU3vwI1jLcRfl9Yfg5HtuYyaPx0BnrzXbjI-bk5Ti6DQ_P0q1I7B0E67UA-Q/exec",
+  // API klíč z developer.mapy.com (Seznam účet → Můj účet → API klíče). Prázdné = náhradní mapa OpenStreetMap.
+  MAPY_API_KEY: "",
+  TITLE: "Dýňová stezka",
+  AREA: "Primavera & Radlická čtvrť · Úvaly",
+  START: "2026-10-31T17:00:00+01:00",   // sobota 31. 10. 2026 – po změně času už platí SEČ (+01:00)
+  END:   "2026-10-31T20:00:00+01:00",
+  MEETING: "",                           // např. "Sraz v 16:45 u dětského hřiště" – nepovinné
+  CENTER: [50.0668, 14.7155],           // střed mapy (Radlická čtvrť, Úvaly) – klidně doladit
+  ZOOM: 16,
+  BOUNDS: [[50.03, 14.66], [50.10, 14.80]], // stanoviště mimo tento obdélník nepůjde uložit
+  KID_SPEED_KMH: 3,
+  STOP_MIN: 3                            // minut na jedno zastavení
+};
+/* ================================================================== */
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+const params = new URLSearchParams(location.search);
+const ADMIN = params.get("admin") || "";
+
+/* ---------- state ---------- */
+let stations = [];
+let mine = store.get("hw-mine", {});           // {id: token}
+let visited = new Set(store.get("hw-visited", []));
+let skipped = new Set(store.get("hw-skip", []));
+let filters = Object.assign({small:false, allergy:false, noncandy:false, access:false, open:true}, store.get("hw-filters", {}));
+let me = null;           // {lat,lng}
+let route = [];          // ordered station ids
+let picking = false;
+
+/* ---------- data layer ---------- */
+const DEMO = !CONFIG.API_URL;
+const SAMPLE = [
+  {id:"d1",name:"Dýňová brána",address:"Radlická (ukázka)",lat:50.0676,lng:14.7131,scare:1,allergyFree:true,nonCandy:true,accessible:true,from:"17:00",to:"20:00",note:"Zvoňte u branky.",status:"open"},
+  {id:"d2",name:"Hřbitov kostlivců",address:"Primavera (ukázka)",lat:50.0662,lng:14.7172,scare:3,allergyFree:false,nonCandy:false,accessible:false,from:"17:30",to:"20:00",note:"Tma a mlha – doporučeno od 8 let.",status:"open"},
+  {id:"d3",name:"Čarodějnický kotlík",address:"Primavera (ukázka)",lat:50.0655,lng:14.7148,scare:2,allergyFree:false,nonCandy:true,accessible:true,from:"17:00",to:"19:30",note:"",status:"open"},
+  {id:"d4",name:"Netopýří jeskyně",address:"Radlická (ukázka)",lat:50.0684,lng:14.7160,scare:2,allergyFree:true,nonCandy:false,accessible:true,from:"17:00",to:"20:00",note:"Pes je zavřený.",status:"open"},
+  {id:"d5",name:"Duchové u branky",address:"Radlická (ukázka)",lat:50.0671,lng:14.7189,scare:1,allergyFree:false,nonCandy:false,accessible:true,from:"17:00",to:"18:30",note:"",status:"out"}
+];
+const api = {
+  async list(){
+    if (DEMO){ return store.get("hw-demo", null) || SAMPLE.slice(); }
+    const r = await fetch(CONFIG.API_URL + "?t=" + Date.now());
+    const j = await r.json(); if (!j.ok) throw new Error(j.error || "Chyba serveru");
+    return j.stations;
+  },
+  async post(body){
+    if (DEMO){
+      let list = store.get("hw-demo", null) || SAMPLE.slice();
+      if (body.action === "add"){ const id = "u" + Date.now().toString(36); list.push(Object.assign({}, body.station, {id})); store.set("hw-demo", list); return {ok:true,id,token:"demo"}; }
+      if (body.action === "update"){ list = list.map(s => s.id === body.id ? Object.assign({}, s, body.station) : s); store.set("hw-demo", list); return {ok:true}; }
+      if (body.action === "delete"){ list = list.filter(s => s.id !== body.id); store.set("hw-demo", list); return {ok:true}; }
+    }
+    const r = await fetch(CONFIG.API_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(body)});
+    const j = await r.json(); if (!j.ok) throw new Error(j.error || "Uložení se nepovedlo");
+    return j;
+  }
+};
+
+/* ---------- geo helpers ---------- */
+function dist(a, b){ // metres
+  const R = 6371000, toR = x => x * Math.PI / 180;
+  const dLat = toR(b.lat - a.lat), dLng = toR(b.lng - a.lng);
+  const h = Math.sin(dLat/2)**2 + Math.cos(toR(a.lat))*Math.cos(toR(b.lat))*Math.sin(dLng/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+const walk = m => m * 1.3; // ulice nejsou vzdušnou čarou
+const fmtM = m => m < 1000 ? Math.round(m/10)*10 + " m" : (m/1000).toFixed(1).replace(".", ",") + " km";
+const fmtMin = m => Math.max(1, Math.round(walk(m) / (CONFIG.KID_SPEED_KMH * 1000 / 60))) + " min";
+const byId = id => stations.find(s => s.id === id);
+function gmaps(s){ return `https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}&travelmode=walking`; }
+function mapy(s){ return me
+  ? `https://mapy.com/fnc/v1/route?mapset=outdoor&start=${me.lng},${me.lat}&end=${s.lng},${s.lat}&routeType=foot_fast`
+  : `https://mapy.com/fnc/v1/showmap?mapset=outdoor&center=${s.lng},${s.lat}&zoom=18&marker=true`; }
+
+/* ---------- filtering & routing ---------- */
+function matches(s){
+  if (filters.small && s.scare > 1) return false;
+  if (filters.allergy && !s.allergyFree) return false;
+  if (filters.noncandy && !s.nonCandy) return false;
+  if (filters.access && !s.accessible) return false;
+  if (filters.open && s.status !== "open") return false;
+  return true;
+}
+function planRoute(){
+  const cand = stations.filter(s => matches(s) && s.status === "open" && !visited.has(s.id) && !skipped.has(s.id));
+  if (!cand.length){ route = []; return; }
+  let start = me;
+  if (!start){ // bez polohy začni u domu nejblíž středu
+    const c = {lat:CONFIG.CENTER[0], lng:CONFIG.CENTER[1]};
+    start = cand.reduce((a, b) => dist(c, a) < dist(c, b) ? a : b);
+  }
+  // nejbližší soused
+  const left = cand.slice(), path = [];
+  let cur = start;
+  while (left.length){
+    let bi = 0, bd = Infinity;
+    left.forEach((s, i) => { const d = dist(cur, s); if (d < bd){ bd = d; bi = i; } });
+    cur = left.splice(bi, 1)[0]; path.push(cur);
+  }
+  // 2-opt, otevřená trasa s pevným startem
+  const P = [start, ...path], n = P.length - 1;
+  let improved = true, guard = 0;
+  while (improved && guard++ < 50){
+    improved = false;
+    for (let i = 1; i < n; i++) for (let k = i + 1; k <= n; k++){
+      const before = dist(P[i-1], P[i]) + (k < n ? dist(P[k], P[k+1]) : 0);
+      const after  = dist(P[i-1], P[k]) + (k < n ? dist(P[i], P[k+1]) : 0);
+      if (after + 0.5 < before){ P.splice(i, k - i + 1, ...P.slice(i, k + 1).reverse()); improved = true; }
+    }
+  }
+  route = P.slice(1).map(s => s.id);
+}
+
+/* ---------- map ---------- */
+const map = L.map("map", {zoomControl:false, attributionControl:true}).setView(CONFIG.CENTER, CONFIG.ZOOM);
+const NIGHT = "brightness(.72) saturate(.75) hue-rotate(-10deg) contrast(1.05)"; // noční nádech mapy
+let baseLayers = [], baseIdx = 0;
+if (CONFIG.MAPY_API_KEY){
+  const k = encodeURIComponent(CONFIG.MAPY_API_KEY);
+  const size = (window.devicePixelRatio || 1) > 1 ? "256@2x" : "256";
+  const url = set => `https://api.mapy.com/v1/maptiles/${set}/${size}/{z}/{x}/{y}?apikey=${k}`;
+  const attr = '<a href="https://api.mapy.com/copyright" target="_blank" rel="noopener">&copy; Seznam.cz a.s. a další</a>';
+  baseLayers = [
+    {name:"Mapa", filter:NIGHT, layer:L.tileLayer(url("basic"), {maxZoom:19, minZoom:12, attribution:attr})},
+    {name:"Letecká", filter:"none", layer:L.layerGroup([
+      L.tileLayer(url("aerial"), {maxZoom:20, minZoom:12, attribution:attr}),
+      L.tileLayer(url("names-overlay"), {maxZoom:20, minZoom:12})
+    ])}
+  ];
+  // logo Mapy.com je podmínkou použití API
+  const Logo = L.Control.extend({options:{position:"topleft"}, onAdd(){
+    const a = L.DomUtil.create("a", "mapy-logo"); a.href = "https://mapy.com/"; a.target = "_blank"; a.rel = "noopener";
+    a.innerHTML = '<img src="https://api.mapy.com/img/api/logo.svg" alt="Mapy.com" height="30">';
+    L.DomEvent.disableClickPropagation(a); return a; }});
+  new Logo().addTo(map);
+} else {
+  baseLayers = [{name:"Mapa", filter:NIGHT, layer:L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+    maxZoom: 20, subdomains:"abcd",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+  })}];
+}
+function setBase(i){
+  baseLayers.forEach(b => map.removeLayer(b.layer));
+  baseIdx = i; const b = baseLayers[i];
+  b.layer.addTo(map); map.getPane("tilePane").style.filter = b.filter;
+  const btn = $("#fabLayer");
+  if (btn){ btn.hidden = baseLayers.length < 2; btn.setAttribute("aria-label", "Přepnout na: " + baseLayers[(i + 1) % baseLayers.length].name);
+    btn.querySelector("span").textContent = baseLayers[(i + 1) % baseLayers.length].name; }
+  store.set("hw-base", i);
+}
+setBase(Math.min(store.get("hw-base", 0), baseLayers.length - 1));
+$("#fabLayer").addEventListener("click", () => setBase((baseIdx + 1) % baseLayers.length));
+const markerLayer = L.layerGroup().addTo(map);
+let routeLine = null, meMarker = null, pickTemp = null;
+
+function pumpkinSvg(fill, face){
+  return `<svg viewBox="0 0 40 44" aria-hidden="true"><path d="M20 10c1-5 5-7 7-6" fill="none" stroke="#6bbf59" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="13" cy="27" rx="10" ry="12" fill="${fill}" opacity=".85"/><ellipse cx="27" cy="27" rx="10" ry="12" fill="${fill}" opacity=".85"/><ellipse cx="20" cy="27" rx="9.5" ry="13" fill="${fill}"/><path d="M13 24l3.5-3.5L20 24zM20 24l3.5-3.5L27 24z" fill="${face}"/><path d="M12 30c3 4 13 4 16 0l-2.5 1-1.5 2-2-2-2.5 2-2-2-2 2-1.5-2z" fill="${face}"/></svg>`;
+}
+function icon(s, order){
+  const out = s.status !== "open";
+  const fill = out ? "#7d7390" : s.allergyFree ? "#3cc9b5" : "#ff8a2a";
+  const face = out ? "#3a3148" : s.allergyFree ? "#0b3a34" : "#ffd36b";
+  const badge = visited.has(s.id) ? "✓" : order ? order : "";
+  return L.divIcon({className:"", iconSize:[40,44], iconAnchor:[20,42], popupAnchor:[0,-38],
+    html:`<div class="pin">${pumpkinSvg(fill, face)}${badge ? `<i>${badge}</i>` : ""}</div>`});
+}
+function scareLabel(n){ return ["", "vlídné", "trochu strašidelné", "pro odvážné"][n] || ""; }
+function ghosts(n){ return "👻".repeat(n) + "<span style='opacity:.25'>" + "👻".repeat(3 - n) + "</span>"; }
+function tagsHtml(s){
+  const t = [];
+  if (s.status === "out") t.push(`<span class="tag warn">Došly bonbony</span>`);
+  if (s.status === "closed") t.push(`<span class="tag warn">Zavřeno</span>`);
+  if (s.allergyFree) t.push(`<span class="tag teal">bez alergenů</span>`);
+  if (s.nonCandy) t.push(`<span class="tag gold">nesladké dárky</span>`);
+  if (s.accessible) t.push(`<span class="tag">bez schodů</span>`);
+  if (s.from || s.to) t.push(`<span class="tag">${esc(s.from || "?")}–${esc(s.to || "?")}</span>`);
+  return `<div class="tags">${t.join("")}</div>`;
+}
+function popupHtml(s){
+  const v = visited.has(s.id), sk = skipped.has(s.id);
+  const d = me ? `<div class="muted small">${fmtM(walk(dist(me, s)))} · asi ${fmtMin(dist(me, s))} pěšky</div>` : "";
+  return `<h3>${esc(s.name)}</h3>
+    <div class="muted small">${esc(s.address)}</div>
+    <div class="small" style="margin-top:4px"><span class="ghosts">${ghosts(s.scare)}</span> ${scareLabel(s.scare)}</div>
+    ${d}${tagsHtml(s)}
+    ${s.note ? `<p class="small" style="margin:8px 0 0">${esc(s.note)}</p>` : ""}
+    <div class="popup-actions">
+      <a class="btn sm primary" href="${gmaps(s)}" target="_blank" rel="noopener">Navigovat</a>
+      <a class="btn sm" href="${mapy(s)}" target="_blank" rel="noopener">Mapy.com</a>
+      <button class="btn sm ${v ? "" : "teal"}" type="button" data-visit="${esc(s.id)}">${v ? "Zrušit odškrtnutí" : "Navštíveno ✓"}</button>
+      ${!v ? `<button class="btn sm ghost" type="button" data-skip="${esc(s.id)}">${sk ? "Zařadit do trasy" : "Vynechat"}</button>` : ""}
+      ${ADMIN ? `<button class="btn sm ghost" type="button" data-admindel="${esc(s.id)}">Smazat (správce)</button>` : ""}
+    </div>`;
+}
+function drawMap(){
+  markerLayer.clearLayers();
+  const order = new Map(route.map((id, i) => [id, i + 1]));
+  stations.forEach(s => {
+    if (!matches(s) && !visited.has(s.id)) return;
+    const m = L.marker([s.lat, s.lng], {icon: icon(s, order.get(s.id)), title: s.name, zIndexOffset: order.has(s.id) ? 500 - order.get(s.id) : 0});
+    m.bindPopup(() => popupHtml(s));
+    markerLayer.addLayer(m);
+  });
+  if (routeLine) map.removeLayer(routeLine);
+  const pts = route.map(byId).filter(Boolean).map(s => [s.lat, s.lng]);
+  if (me && pts.length) pts.unshift([me.lat, me.lng]);
+  routeLine = pts.length > 1 ? L.polyline(pts, {color:"#ffd36b", weight:3, opacity:.8, dashArray:"2 9", lineCap:"round"}).addTo(map) : null;
+  drawNext();
+}
+function drawNext(){
+  const card = $("#nextcard");
+  const s = byId(route[0]);
+  if (!s || picking){ card.hidden = true; return; }
+  const d = me ? ` · ${fmtM(walk(dist(me, s)))}, ${fmtMin(dist(me, s))}` : "";
+  card.innerHTML = `<div class="num ${s.allergyFree ? "teal" : ""}">1</div>
+    <div class="t"><span>Další stanoviště${d}</span><b>${esc(s.name)}</b></div>
+    <a class="btn sm primary" href="${gmaps(s)}" target="_blank" rel="noopener">Jít</a>
+    <button class="btn sm teal" type="button" data-visit="${esc(s.id)}" aria-label="Označit jako navštívené">✓</button>`;
+  card.hidden = false;
+}
+
+/* ---------- route view ---------- */
+function drawRoute(){
+  const list = route.map(byId).filter(Boolean);
+  let total = 0, prev = me;
+  const items = list.map((s, i) => {
+    const leg = prev ? dist(prev, s) : 0; total += leg; prev = s;
+    return `<li>
+      <div class="num ${s.allergyFree ? "teal" : ""}">${i + 1}</div>
+      <div><div class="nm">${esc(s.name)}</div>
+        <div class="meta">${esc(s.address)}${leg ? ` · ${fmtM(walk(leg))}` : ""} · <span class="ghosts">${"👻".repeat(s.scare)}</span></div>
+        ${tagsHtml(s)}</div>
+      <div class="row" style="flex-direction:column;gap:6px">
+        <a class="btn sm primary" href="${gmaps(s)}" target="_blank" rel="noopener">Navigovat</a>
+        <button class="btn sm teal" type="button" data-visit="${esc(s.id)}">✓ Byli jsme</button>
+      </div></li>`;
+  });
+  $("#routeList").innerHTML = items.join("") || `<li style="grid-template-columns:1fr"><div class="muted">${stations.length ? "Žádné další otevřené stanoviště neodpovídá filtrům. Zkuste na mapě vypnout některý filtr." : "Zatím se nikdo nezapojil. Buďte první – přidejte svůj dům!"}</div></li>`;
+  const mins = list.length ? Math.round(walk(total) / (CONFIG.KID_SPEED_KMH * 1000 / 60) + list.length * CONFIG.STOP_MIN) : 0;
+  $("#routeStats").innerHTML = `<div>Zbývá domů<b>${list.length}</b></div><div>Pěšky<b>${fmtM(walk(total))}</b></div><div>Odhad s koledou<b>${mins} min</b></div><div>Navštíveno<b>${visited.size}</b></div>`;
+  $("#routeIntro").hidden = false;
+  // Google Maps: max 9 zastávek po cestě
+  const g = list.slice(0, 10);
+  const a = $("#btnGmapsAll");
+  if (g.length){
+    const dest = g[g.length - 1], wps = g.slice(0, -1).map(s => `${s.lat},${s.lng}`).join("|");
+    a.href = `https://www.google.com/maps/dir/?api=1&travelmode=walking&destination=${dest.lat},${dest.lng}${wps ? "&waypoints=" + encodeURIComponent(wps) : ""}`;
+    a.hidden = false; a.textContent = list.length > 10 ? "Prvních 10 v Google Mapách" : "Celá trasa v Google Mapách";
+  } else a.hidden = true;
+  const done = stations.filter(s => visited.has(s.id));
+  $("#doneWrap").hidden = !done.length;
+  $("#doneList").innerHTML = done.map(s => `<li><div class="num done">✓</div><div><div class="nm">${esc(s.name)}</div><div class="meta">${esc(s.address)}</div></div><button class="btn sm ghost" type="button" data-visit="${esc(s.id)}">Vrátit</button></li>`).join("");
+}
+
+/* ---------- my stations ---------- */
+function drawMine(){
+  const list = stations.filter(s => mine[s.id]);
+  $("#mineWrap").hidden = !list.length;
+  $("#mineList").innerHTML = list.map(s => `<li style="grid-template-columns:1fr">
+    <div><div class="nm">${esc(s.name)}</div><div class="meta">${esc(s.address)}</div>${tagsHtml(s)}</div>
+    <div class="row">
+      ${s.status === "open"
+        ? `<button class="btn sm" type="button" data-status="out" data-id="${esc(s.id)}">Došly bonbony</button>`
+        : `<button class="btn sm teal" type="button" data-status="open" data-id="${esc(s.id)}">Znovu otevřeno</button>`}
+      <button class="btn sm ghost" type="button" data-edit="${esc(s.id)}">Upravit</button>
+      <button class="btn sm ghost" type="button" data-del="${esc(s.id)}">Smazat</button>
+    </div></li>`).join("");
+}
+
+function renderAll(replan = true){ if (replan) planRoute(); drawMap(); drawRoute(); drawMine(); }
+
+/* ---------- loading ---------- */
+async function load(fit){
+  try{
+    const list = await api.list();
+    stations = list.filter(s => isFinite(s.lat) && isFinite(s.lng)).map(s => Object.assign({}, s, {lat:+s.lat, lng:+s.lng, scare:+s.scare || 1}));
+    // odstraň tokeny ke smazaným stanovištím
+    Object.keys(mine).forEach(id => { if (!byId(id)) delete mine[id]; }); store.set("hw-mine", mine);
+    const before = route.join();
+    planRoute();
+    renderAll(false);
+    if (fit && stations.length) map.fitBounds(L.latLngBounds(stations.map(s => [s.lat, s.lng])).pad(0.25), {maxZoom:17});
+  }catch(e){ console.warn(e); }
+}
+
+/* ---------- tabs ---------- */
+function go(tab){
+  $$("nav.tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tab));
+  $$(".view").forEach(v => v.hidden = v.id !== "v-" + tab);
+  if (tab === "map") setTimeout(() => map.invalidateSize(), 50);
+  try{ history.replaceState(null, "", "#" + tab); }catch(e){}
+}
+$$("nav.tabs button").forEach(b => b.addEventListener("click", () => go(b.dataset.tab)));
+document.addEventListener("click", e => { const g = e.target.closest("[data-go]"); if (g) go(g.dataset.go); });
+
+/* ---------- filters ---------- */
+$$("#chips .chip").forEach(c => {
+  c.setAttribute("aria-pressed", !!filters[c.dataset.f]);
+  c.addEventListener("click", () => {
+    filters[c.dataset.f] = !filters[c.dataset.f];
+    c.setAttribute("aria-pressed", filters[c.dataset.f]);
+    store.set("hw-filters", filters); renderAll();
+  });
+});
+
+/* ---------- location ---------- */
+let watchId = null, firstFix = true;
+function locate(center){
+  if (!navigator.geolocation){ alertMsg("Tento prohlížeč neumí zjistit polohu."); return; }
+  if (watchId === null){
+    watchId = navigator.geolocation.watchPosition(p => {
+      const moved = !me || dist(me, {lat:p.coords.latitude, lng:p.coords.longitude}) > 25;
+      me = {lat:p.coords.latitude, lng:p.coords.longitude};
+      if (!meMarker) meMarker = L.marker([me.lat, me.lng], {icon:L.divIcon({className:"", html:'<div class="me-dot"></div>', iconSize:[18,18]}), interactive:false, zIndexOffset:1000}).addTo(map);
+      else meMarker.setLatLng([me.lat, me.lng]);
+      $("#fabLocate").classList.add("on");
+      if (firstFix){ firstFix = false; if (center) map.setView([me.lat, me.lng], 17); renderAll(); }
+      else if (moved){ drawMap(); drawRoute(); }
+    }, err => { $("#fabLocate").classList.remove("on"); }, {enableHighAccuracy:true, maximumAge:10000});
+  } else if (me) map.setView([me.lat, me.lng], 17);
+}
+$("#fabLocate").addEventListener("click", () => locate(true));
+$("#btnReplan").addEventListener("click", () => { locate(false); renderAll(); });
+
+/* ---------- visited / skip / status actions ---------- */
+function toggleVisit(id){
+  visited.has(id) ? visited.delete(id) : visited.add(id);
+  store.set("hw-visited", [...visited]); map.closePopup(); renderAll();
+}
+document.addEventListener("click", async e => {
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.dataset.visit){ toggleVisit(t.dataset.visit); }
+  else if (t.dataset.skip){ const id = t.dataset.skip; skipped.has(id) ? skipped.delete(id) : skipped.add(id); store.set("hw-skip", [...skipped]); map.closePopup(); renderAll(); }
+  else if (t.dataset.status){
+    t.disabled = true;
+    try{ await api.post({action:"update", id:t.dataset.id, token:mine[t.dataset.id], station:{status:t.dataset.status}}); await load(); }
+    catch(err){ alert(err.message); } t.disabled = false;
+  }
+  else if (t.dataset.edit){ fillForm(byId(t.dataset.edit)); }
+  else if (t.dataset.del){
+    if (!confirm("Opravdu smazat stanoviště z mapy?")) return;
+    try{ await api.post({action:"delete", id:t.dataset.del, token:mine[t.dataset.del]}); delete mine[t.dataset.del]; store.set("hw-mine", mine); await load(); }
+    catch(err){ alert(err.message); }
+  }
+  else if (t.dataset.admindel){
+    if (!confirm("Smazat toto stanoviště jako správce?")) return;
+    try{ await api.post({action:"delete", id:t.dataset.admindel, admin:ADMIN}); map.closePopup(); await load(); }
+    catch(err){ alert(err.message); }
+  }
+});
+$("#btnResetVisited").addEventListener("click", () => { visited.clear(); skipped.clear(); store.set("hw-visited", []); store.set("hw-skip", []); renderAll(); });
+
+/* ---------- form ---------- */
+function alertMsg(text, ok){ const m = $("#formMsg"); m.textContent = text; m.className = "msg " + (ok ? "ok" : "err"); m.hidden = false; }
+function setLoc(lat, lng){
+  $("#fLat").value = lat.toFixed(6); $("#fLng").value = lng.toFixed(6);
+  const v = $("#fLocVal"); v.textContent = "Uloženo: " + lat.toFixed(5) + ", " + lng.toFixed(5); v.classList.add("ok");
+  if (pickTemp) map.removeLayer(pickTemp);
+  pickTemp = L.circleMarker([lat, lng], {radius:9, color:"#ffd36b", weight:3, fillOpacity:.3}).addTo(map);
+}
+$("#btnGps").addEventListener("click", () => {
+  if (!navigator.geolocation) return alertMsg("Prohlížeč neumí zjistit polohu – použijte „Vybrat na mapě“.");
+  $("#btnGps").textContent = "Zjišťuji…";
+  navigator.geolocation.getCurrentPosition(p => {
+    setLoc(p.coords.latitude, p.coords.longitude); $("#btnGps").textContent = "Jsem u domu – použít GPS";
+    if (p.coords.accuracy > 40) alertMsg(`Přesnost GPS je jen ±${Math.round(p.coords.accuracy)} m. Pro jistotu polohu dolaďte přes „Vybrat na mapě“.`);
+  }, () => { $("#btnGps").textContent = "Jsem u domu – použít GPS"; alertMsg("Polohu se nepodařilo zjistit. Povolte ji v prohlížeči, nebo použijte „Vybrat na mapě“."); },
+  {enableHighAccuracy:true, timeout:15000});
+});
+function setPicking(on){
+  picking = on;
+  $("#pickbar").hidden = !on; $("#crosshair").hidden = !on; $("#chips").hidden = on;
+  drawNext();
+}
+$("#btnPick").addEventListener("click", () => {
+  go("map"); setPicking(true);
+  const lat = parseFloat($("#fLat").value), lng = parseFloat($("#fLng").value);
+  if (isFinite(lat)) map.setView([lat, lng], 19); else map.setZoom(Math.max(map.getZoom(), 18));
+});
+$("#pickOk").addEventListener("click", () => { const c = map.getCenter(); setLoc(c.lat, c.lng); setPicking(false); go("add"); });
+$("#pickCancel").addEventListener("click", () => { setPicking(false); go("add"); });
+
+function readForm(){
+  return {
+    name: $("#fName").value.trim(), address: $("#fAddress").value.trim(),
+    lat: parseFloat($("#fLat").value), lng: parseFloat($("#fLng").value),
+    scare: +(document.querySelector("input[name=scare]:checked")?.value || 1),
+    allergyFree: $("#fAllergy").checked, nonCandy: $("#fNonCandy").checked, accessible: $("#fAccess").checked,
+    from: $("#fFrom").value, to: $("#fTo").value, note: $("#fNote").value.trim()
+  };
+}
+function fillForm(s){
+  go("add");
+  $("#fId").value = s.id; $("#fName").value = s.name; $("#fAddress").value = s.address || "";
+  setLoc(s.lat, s.lng);
+  const r = document.querySelector(`input[name=scare][value="${s.scare}"]`); if (r) r.checked = true;
+  $("#fAllergy").checked = !!s.allergyFree; $("#fNonCandy").checked = !!s.nonCandy; $("#fAccess").checked = !!s.accessible;
+  $("#fFrom").value = s.from || ""; $("#fTo").value = s.to || ""; $("#fNote").value = s.note || "";
+  $("#formTitle").textContent = "Upravit stanoviště"; $("#btnSave").textContent = "Uložit změny"; $("#btnCancelEdit").hidden = false;
+  $("#formMsg").hidden = true; $("#v-add").scrollTop = 0;
+}
+function resetForm(){
+  $("#form").reset(); $("#fId").value = ""; $("#fLat").value = ""; $("#fLng").value = "";
+  $("#fLocVal").textContent = "Zatím nevybráno"; $("#fLocVal").classList.remove("ok");
+  if (pickTemp){ map.removeLayer(pickTemp); pickTemp = null; }
+  $("#formTitle").textContent = "Zapojte svůj dům"; $("#btnSave").textContent = "Přidat na mapu"; $("#btnCancelEdit").hidden = true;
+}
+$("#btnCancelEdit").addEventListener("click", () => { resetForm(); $("#formMsg").hidden = true; });
+$("#form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const s = readForm(), id = $("#fId").value;
+  if (!s.name) return alertMsg("Vyplňte název stanoviště."), $("#fName").focus();
+  if (!isFinite(s.lat)) return alertMsg("Chybí poloha domu – klepněte na „Použít GPS“ nebo „Vybrat na mapě“.");
+  const [[a, b], [c, d]] = CONFIG.BOUNDS;
+  if (s.lat < a || s.lat > c || s.lng < b || s.lng > d) return alertMsg("Poloha je mimo Úvaly. Zkontrolujte ji přes „Vybrat na mapě“.");
+  $("#btnSave").disabled = true;
+  try{
+    if (id){
+      await api.post({action:"update", id, token:mine[id], admin:ADMIN || undefined, station:s});
+      alertMsg("Uloženo. Změny už vidí všichni.", true);
+    } else {
+      const r = await api.post({action:"add", station:Object.assign({status:"open"}, s)});
+      mine[r.id] = r.token; store.set("hw-mine", mine);
+      alertMsg("Hotovo! Váš dům je na mapě. Upravit ho můžete dole v sekci Vaše stanoviště.", true);
+    }
+    resetForm(); await load();
+  }catch(err){ alertMsg(err.message + " Zkuste to prosím znovu."); }
+  $("#btnSave").disabled = false;
+});
+
+/* ---------- header / info ---------- */
+const start = new Date(CONFIG.START), end = new Date(CONFIG.END);
+const dFmt = new Intl.DateTimeFormat("cs-CZ", {weekday:"long", day:"numeric", month:"long"});
+const tFmt = new Intl.DateTimeFormat("cs-CZ", {hour:"2-digit", minute:"2-digit"});
+$("#evTitle").textContent = CONFIG.TITLE;
+$("#evSub").textContent = CONFIG.AREA;
+document.title = CONFIG.TITLE + " Úvaly";
+function tick(){
+  const now = new Date(), el = $("#countdown");
+  if (now < start){
+    const ms = start - now, d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5), m = Math.floor(ms % 36e5 / 6e4);
+    el.innerHTML = `začínáme za<b>${d ? d + " d " + h + " h" : h + " h " + m + " min"}</b>`;
+  } else if (now < end){ el.innerHTML = `právě probíhá<b>do ${tFmt.format(end)}</b>`; }
+  else el.innerHTML = `díky, že jste<b>přišli!</b>`;
+}
+tick(); setInterval(tick, 30000);
+function drawInfo(){
+  $("#infoFacts").innerHTML = `<div>Kdy<b style="font-size:17px">${dFmt.format(start)}</b></div>
+    <div>Čas<b style="font-size:17px">${tFmt.format(start)}–${tFmt.format(end)}</b></div>
+    <div>Kde<b style="font-size:17px">${esc(CONFIG.AREA)}</b></div>
+    ${CONFIG.MEETING ? `<div>Sraz<b style="font-size:17px">${esc(CONFIG.MEETING)}</b></div>` : ""}`;
+}
+drawInfo();
+
+/* ---------- boot ---------- */
+$("#demoFlag").hidden = !DEMO;
+const initTab = (location.hash || "#map").slice(1);
+go(["map","route","add","info"].includes(initTab) ? initTab : "map");
+load(true);
+setInterval(() => { if (!document.hidden) load(); }, 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+// zkus polohu tiše, pokud už ji uživatel dříve povolil
+if (navigator.permissions) navigator.permissions.query({name:"geolocation"}).then(p => { if (p.state === "granted") locate(false); }).catch(() => {});
+</script>
+</body>
+</html>
