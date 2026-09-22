@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Dýňová stezka Úvaly</title>
+<title>Úvalský Halloween</title>
 <meta name="description" content="Halloweenská stezka po domech v Primaveře a Radlické čtvrti v Úvalech – mapa stanovišť, plánování trasy a navigace k dalšímu domu.">
 <meta name="theme-color" content="#1b1426">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,12 +29,13 @@ a{color:var(--candle)}
 
 /* header */
 header.top{padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;display:flex;align-items:center;gap:12px;background:linear-gradient(180deg,#140e1d, var(--night));border-bottom:1px solid var(--line)}
-.logo{width:38px;height:38px;flex:none}
+.logo{width:58px;height:58px;flex:none}
 .brand{min-width:0;flex:1}
-.brand h1{font:800 26px/1 var(--display);margin:0;letter-spacing:.3px;color:var(--pumpkin);text-shadow:0 0 18px rgba(255,138,42,.35)}
+.brand h1{font:800 31px/1 var(--display);margin:0;letter-spacing:.3px;color:var(--pumpkin);text-shadow:0 0 18px rgba(255,138,42,.35)}
 .brand p{margin:2px 0 0;font-size:12.5px;color:var(--mist);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .count{flex:none;text-align:right;font-size:11px;color:var(--mist);line-height:1.2}
 .count b{display:block;font:800 18px/1.1 var(--body);color:var(--candle);font-variant-numeric:tabular-nums}
+@media(max-width:430px){.logo{width:48px;height:48px}.brand h1{font-size:23px;line-height:1.05}.count{font-size:10px}.count b{font-size:16px}}
 .demo-flag{background:var(--candle);color:#2a1a00;font-weight:800;font-size:12px;padding:5px 16px;text-align:center}
 
 /* views */
@@ -107,7 +108,7 @@ li .meta{font-size:12.5px;color:var(--mist)}
 form{display:flex;flex-direction:column;gap:14px}
 label.f{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:14px}
 label.f small{font-weight:400;color:var(--mist)}
-input[type=text],input[type=time],textarea{width:100%;background:var(--night);border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-height:44px}
+input[type=text],input[type=time],input[type=password],select,textarea{width:100%;background:var(--night);border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-height:44px}
 textarea{min-height:70px;resize:vertical}
 fieldset{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:0;display:flex;flex-direction:column;gap:8px}
 legend{font-weight:800;padding:0 6px}
@@ -173,13 +174,6 @@ legend{font-weight:800;padding:0 6px}
   <!-- MAPA -->
   <section class="view" id="v-map" aria-label="Mapa">
     <div id="map"></div>
-    <div class="chips" id="chips" role="toolbar" aria-label="Filtry">
-      <button class="chip" data-f="small" aria-pressed="false">Pro malé děti</button>
-      <button class="chip teal" data-f="allergy" aria-pressed="false">Bez alergenů</button>
-      <button class="chip" data-f="noncandy" aria-pressed="false">Nesladké dárky</button>
-      <button class="chip" data-f="access" aria-pressed="false">Bezbariérové</button>
-      <button class="chip" data-f="open" aria-pressed="true">Jen otevřená</button>
-    </div>
     <div class="pickbar" id="pickbar" hidden><span>Posuňte mapu tak, aby zaměřovač mířil na váš dům</span><button class="btn sm" id="pickOk" type="button">Tady</button><button class="btn sm ghost" id="pickCancel" type="button">Zrušit</button></div>
     <svg class="crosshair" id="crosshair" hidden viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="9" fill="none" stroke="currentColor" stroke-width="3"/><path d="M17 0v10M17 24v10M0 17h10M24 17h10" stroke="currentColor" stroke-width="3"/></svg>
     <div class="nextcard" id="nextcard" hidden></div>
@@ -211,6 +205,17 @@ legend{font-weight:800;padding:0 6px}
     <div class="wrap">
       <h2 id="formTitle">Zapojte svůj dům</h2>
       <p class="muted small">Stačí pár údajů. Rodiče pak uvidí váš dům na mapě a děti k vám dojdou po nejkratší trase. Údaje můžete z tohoto telefonu kdykoli upravit, smazat, nebo večer přepnout na „došly bonbony“.</p>
+      <div class="panel" id="loginPanel" hidden>
+        <h3>Už máte svůj dům na mapě?</h3>
+        <p class="muted small" style="margin:6px 0 10px">Přihlaste se PINem, který jste zadali při přidání. Pak můžete stanoviště upravit i z jiného telefonu nebo počítače.</p>
+        <div class="two">
+          <label class="f">Stanoviště<select id="lgStation"></select></label>
+          <label class="f">PIN<input type="password" id="lgPin" inputmode="numeric" maxlength="16" autocomplete="off"></label>
+        </div>
+        <div id="loginMsg" class="msg" hidden></div>
+        <div class="row" style="margin-top:10px"><button class="btn" type="button" id="btnLogin">Přihlásit se</button></div>
+      </div>
+
       <form id="form" novalidate>
         <input type="hidden" id="fId">
         <label class="f">Název stanoviště
@@ -246,6 +251,9 @@ legend{font-weight:800;padding:0 6px}
           <label class="f">Otevřeno od<input type="time" id="fFrom" value="17:00"></label>
           <label class="f">do<input type="time" id="fTo" value="20:00"></label>
         </div>
+        <label class="f" id="pinWrap">PIN pro pozdější úpravy <small>4 až 16 znaků, klidně číslice. Budete ho potřebovat, když budete chtít stanoviště upravit z jiného zařízení.</small>
+          <input type="password" id="fPin" inputmode="numeric" maxlength="16" autocomplete="new-password">
+        </label>
         <label class="f">Poznámka pro rodiče <small>Nepovinné. Např. „zvoňte u branky“, „pes je zavřený“.</small>
           <textarea id="fNote" maxlength="200"></textarea>
         </label>
@@ -312,7 +320,7 @@ const CONFIG = {
   API_URL: "https://script.google.com/macros/s/AKfycbz6HmhUNU3vwI1jLcRfl9Yfg5HtuYyaPx0BnrzXbjI-bk5Ti6DQ_P0q1I7B0E67UA-Q/exec",
   // API klíč z developer.mapy.com (Seznam účet → Můj účet → API klíče). Prázdné = náhradní mapa OpenStreetMap.
   MAPY_API_KEY: "QLKoJzssPK3BWFiwNKVEnf9x7l6md2l7sVfUN6Ef2Xs",
-  TITLE: "Dýňová stezka",
+  TITLE: "Úvalský Halloween",
   AREA: "Primavera & Radlická čtvrť · Úvaly",
   START: "2026-11-07T17:00:00+01:00",   // sobota 7. 11. 2026 – po změně času už platí SEČ (+01:00)
   END:   "2026-11-07T20:00:00+01:00",
@@ -340,7 +348,7 @@ let stations = [];
 let mine = store.get("hw-mine", {});           // {id: token}
 let visited = new Set(store.get("hw-visited", []));
 let skipped = new Set(store.get("hw-skip", []));
-let filters = Object.assign({small:false, allergy:false, noncandy:false, access:false, open:true}, store.get("hw-filters", {}));
+let filters = {small:false, allergy:false, noncandy:false, access:false, open:true};
 let me = null;           // {lat,lng}
 let route = [];          // ordered station ids
 let picking = false;
@@ -367,6 +375,7 @@ const api = {
       if (body.action === "add"){ const id = "u" + Date.now().toString(36); list.push(Object.assign({}, body.station, {id})); store.set("hw-demo", list); return {ok:true,id,token:"demo"}; }
       if (body.action === "update"){ list = list.map(s => s.id === body.id ? Object.assign({}, s, body.station) : s); store.set("hw-demo", list); return {ok:true}; }
       if (body.action === "delete"){ list = list.filter(s => s.id !== body.id); store.set("hw-demo", list); return {ok:true}; }
+      if (body.action === "login"){ return {ok:true, token:"demo"}; }
     }
     const r = await fetch(CONFIG.API_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(body)});
     const j = await r.json(); if (!j.ok) throw new Error(j.error || "Uložení se nepovedlo");
@@ -385,6 +394,29 @@ const walk = m => m * 1.3; // ulice nejsou vzdušnou čarou
 const fmtM = m => m < 1000 ? Math.round(m/10)*10 + " m" : (m/1000).toFixed(1).replace(".", ",") + " km";
 const fmtMin = m => Math.max(1, Math.round(walk(m) / (CONFIG.KID_SPEED_KMH * 1000 / 60))) + " min";
 const byId = id => stations.find(s => s.id === id);
+/* ---------- otevírací doba stanoviště ---------- */
+const EV_DAY = CONFIG.START.slice(0, 10);
+const toMin = t => { const m = /^(\d{1,2}):(\d{2})$/.exec(t || ""); return m ? +m[1] * 60 + +m[2] : null; };
+function isEventDay(){ const d = new Date(), p = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}` === EV_DAY; }
+function hours(s){ return (s.from || s.to) ? `${s.from || "?"}–${s.to || "?"}` : "neuvedeno"; }
+function timeState(s){                       // "before" | "open" | "after" | null (mimo den akce)
+  if (!isEventDay()) return null;
+  const d = new Date(), n = d.getHours() * 60 + d.getMinutes(), a = toMin(s.from), b = toMin(s.to);
+  if (a !== null && n < a) return "before";
+  if (b !== null && n > b) return "after";
+  return "open";
+}
+function timeNote(s){
+  const st = timeState(s);
+  if (st === "before") return `otevírá v ${esc(s.from)}`;
+  if (st === "after") return `už zavřeno (do ${esc(s.to)})`;
+  return "";
+}
+function hoursHtml(s){
+  const n = timeNote(s);
+  return `<div class="small" style="margin-top:6px">🕕 Otevřeno <b>${esc(hours(s))}</b>${n ? ` · <span class="tag warn">${n}</span>` : ""}</div>`;
+}
 function gmaps(s){ return `https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}&travelmode=walking`; }
 function mapy(s){ return me
   ? `https://mapy.com/fnc/v1/route?mapset=outdoor&start=${me.lng},${me.lat}&end=${s.lng},${s.lat}&routeType=foot_fast`
@@ -400,7 +432,7 @@ function matches(s){
   return true;
 }
 function planRoute(){
-  const cand = stations.filter(s => matches(s) && s.status === "open" && !visited.has(s.id) && !skipped.has(s.id));
+  const cand = stations.filter(s => matches(s) && s.status === "open" && timeState(s) !== "after" && !visited.has(s.id) && !skipped.has(s.id));
   if (!cand.length){ route = []; return; }
   let start = me;
   if (!start){ // bez polohy začni u domu nejblíž středu
@@ -491,7 +523,6 @@ function tagsHtml(s){
   if (s.allergyFree) t.push(`<span class="tag teal">bez alergenů</span>`);
   if (s.nonCandy) t.push(`<span class="tag gold">nesladké dárky</span>`);
   if (s.accessible) t.push(`<span class="tag">bez schodů</span>`);
-  if (s.from || s.to) t.push(`<span class="tag">${esc(s.from || "?")}–${esc(s.to || "?")}</span>`);
   return `<div class="tags">${t.join("")}</div>`;
 }
 function popupHtml(s){
@@ -500,7 +531,7 @@ function popupHtml(s){
   return `<h3>${esc(s.name)}</h3>
     <div class="muted small">${esc(s.address)}</div>
     <div class="small" style="margin-top:4px"><span class="ghosts">${ghosts(s.scare)}</span> ${scareLabel(s.scare)}</div>
-    ${d}${tagsHtml(s)}
+    ${d}${hoursHtml(s)}${tagsHtml(s)}
     ${s.note ? `<p class="small" style="margin:8px 0 0">${esc(s.note)}</p>` : ""}
     <div class="popup-actions">
       <a class="btn sm primary" href="${gmaps(s)}" target="_blank" rel="noopener">Navigovat</a>
@@ -531,7 +562,7 @@ function drawNext(){
   if (!s || picking){ card.hidden = true; return; }
   const d = me ? ` · ${fmtM(walk(dist(me, s)))}, ${fmtMin(dist(me, s))}` : "";
   card.innerHTML = `<div class="num ${s.allergyFree ? "teal" : ""}">1</div>
-    <div class="t"><span>Další stanoviště${d}</span><b>${esc(s.name)}</b></div>
+    <div class="t"><span>Další stanoviště${d} · otevřeno ${esc(hours(s))}</span><b>${esc(s.name)}</b></div>
     <a class="btn sm primary" href="${gmaps(s)}" target="_blank" rel="noopener">Jít</a>
     <button class="btn sm teal" type="button" data-visit="${esc(s.id)}" aria-label="Označit jako navštívené">✓</button>`;
   card.hidden = false;
@@ -546,7 +577,7 @@ function drawRoute(){
     return `<li>
       <div class="num ${s.allergyFree ? "teal" : ""}">${i + 1}</div>
       <div><div class="nm">${esc(s.name)}</div>
-        <div class="meta">${esc(s.address)}${leg ? ` · ${fmtM(walk(leg))}` : ""} · <span class="ghosts">${"👻".repeat(s.scare)}</span></div>
+        <div class="meta">${esc(s.address)}${leg ? ` · ${fmtM(walk(leg))}` : ""} · otevřeno ${esc(hours(s))}${timeNote(s) ? ` · ${timeNote(s)}` : ""}</div>
         ${tagsHtml(s)}</div>
       <div class="row" style="flex-direction:column;gap:6px">
         <a class="btn sm primary" href="${gmaps(s)}" target="_blank" rel="noopener">Navigovat</a>
@@ -575,7 +606,7 @@ function drawMine(){
   const list = stations.filter(s => mine[s.id]);
   $("#mineWrap").hidden = !list.length;
   $("#mineList").innerHTML = list.map(s => `<li style="grid-template-columns:1fr">
-    <div><div class="nm">${esc(s.name)}</div><div class="meta">${esc(s.address)}</div>${tagsHtml(s)}</div>
+    <div><div class="nm">${esc(s.name)}</div><div class="meta">${esc(s.address)} · otevřeno ${esc(hours(s))}</div>${tagsHtml(s)}</div>
     <div class="row">
       ${s.status === "open"
         ? `<button class="btn sm" type="button" data-status="out" data-id="${esc(s.id)}">Došly bonbony</button>`
@@ -585,7 +616,31 @@ function drawMine(){
     </div></li>`).join("");
 }
 
-function renderAll(replan = true){ if (replan) planRoute(); drawMap(); drawRoute(); drawMine(); }
+function drawLogin(){
+  const free = stations.filter(s => !mine[s.id]);
+  const sel = $("#lgStation");
+  const keep = sel.value;
+  sel.innerHTML = free.map(s => `<option value="${esc(s.id)}">${esc(s.name)}${s.address ? " – " + esc(s.address) : ""}</option>`).join("");
+  if (free.some(s => s.id === keep)) sel.value = keep;
+  $("#loginPanel").hidden = !free.length;
+}
+async function doLogin(){
+  const id = $("#lgStation").value, pin = $("#lgPin").value.trim(), m = $("#loginMsg");
+  const say = (text, ok) => { m.textContent = text; m.className = "msg " + (ok ? "ok" : "err"); m.hidden = false; };
+  if (!id) return say("Vyberte stanoviště.");
+  if (!pin) return say("Zadejte PIN, který jste zvolili při přidání stanoviště.");
+  $("#btnLogin").disabled = true;
+  try{
+    const r = await api.post({action:"login", id, pin});
+    mine[id] = r.token; store.set("hw-mine", mine);
+    $("#lgPin").value = "";
+    say("Přihlášeno. Svoje stanoviště teď najdete dole a můžete ho upravit.", true);
+    await load();
+  }catch(err){ say(err.message); }
+  $("#btnLogin").disabled = false;
+}
+
+function renderAll(replan = true){ if (replan) planRoute(); drawMap(); drawRoute(); drawMine(); drawLogin(); }
 
 /* ---------- loading ---------- */
 async function load(fit){
@@ -612,14 +667,6 @@ $$("nav.tabs button").forEach(b => b.addEventListener("click", () => go(b.datase
 document.addEventListener("click", e => { const g = e.target.closest("[data-go]"); if (g) go(g.dataset.go); });
 
 /* ---------- filters ---------- */
-$$("#chips .chip").forEach(c => {
-  c.setAttribute("aria-pressed", !!filters[c.dataset.f]);
-  c.addEventListener("click", () => {
-    filters[c.dataset.f] = !filters[c.dataset.f];
-    c.setAttribute("aria-pressed", filters[c.dataset.f]);
-    store.set("hw-filters", filters); renderAll();
-  });
-});
 
 /* ---------- location ---------- */
 let watchId = null, firstFix = true;
@@ -666,6 +713,7 @@ document.addEventListener("click", async e => {
     catch(err){ alert(err.message); }
   }
 });
+$("#btnLogin").addEventListener("click", doLogin);
 $("#btnResetVisited").addEventListener("click", () => { visited.clear(); skipped.clear(); store.set("hw-visited", []); store.set("hw-skip", []); renderAll(); });
 
 /* ---------- form ---------- */
@@ -687,7 +735,7 @@ $("#btnGps").addEventListener("click", () => {
 });
 function setPicking(on){
   picking = on;
-  $("#pickbar").hidden = !on; $("#crosshair").hidden = !on; $("#chips").hidden = on;
+  $("#pickbar").hidden = !on; $("#crosshair").hidden = !on;
   drawNext();
 }
 $("#btnPick").addEventListener("click", () => {
@@ -714,6 +762,7 @@ function fillForm(s){
   const r = document.querySelector(`input[name=scare][value="${s.scare}"]`); if (r) r.checked = true;
   $("#fAllergy").checked = !!s.allergyFree; $("#fNonCandy").checked = !!s.nonCandy; $("#fAccess").checked = !!s.accessible;
   $("#fFrom").value = s.from || ""; $("#fTo").value = s.to || ""; $("#fNote").value = s.note || "";
+  $("#pinWrap").hidden = true; $("#fPin").value = "";
   $("#formTitle").textContent = "Upravit stanoviště"; $("#btnSave").textContent = "Uložit změny"; $("#btnCancelEdit").hidden = false;
   $("#formMsg").hidden = true; $("#v-add").scrollTop = 0;
 }
@@ -721,6 +770,7 @@ function resetForm(){
   $("#form").reset(); $("#fId").value = ""; $("#fLat").value = ""; $("#fLng").value = "";
   $("#fLocVal").textContent = "Zatím nevybráno"; $("#fLocVal").classList.remove("ok");
   if (pickTemp){ map.removeLayer(pickTemp); pickTemp = null; }
+  $("#pinWrap").hidden = false;
   $("#formTitle").textContent = "Zapojte svůj dům"; $("#btnSave").textContent = "Přidat na mapu"; $("#btnCancelEdit").hidden = true;
 }
 $("#btnCancelEdit").addEventListener("click", () => { resetForm(); $("#formMsg").hidden = true; });
@@ -731,15 +781,17 @@ $("#form").addEventListener("submit", async e => {
   if (!isFinite(s.lat)) return alertMsg("Chybí poloha domu – klepněte na „Použít GPS“ nebo „Vybrat na mapě“.");
   const [[a, b], [c, d]] = CONFIG.BOUNDS;
   if (s.lat < a || s.lat > c || s.lng < b || s.lng > d) return alertMsg("Poloha je mimo Úvaly. Zkontrolujte ji přes „Vybrat na mapě“.");
+  const pin = $("#fPin").value.trim();
+  if (!id && pin.length < 4) return alertMsg("Zvolte PIN alespoň o 4 znacích – bez něj byste stanoviště nemohli upravit z jiného telefonu."), $("#fPin").focus();
   $("#btnSave").disabled = true;
   try{
     if (id){
       await api.post({action:"update", id, token:mine[id], admin:ADMIN || undefined, station:s});
       alertMsg("Uloženo. Změny už vidí všichni.", true);
     } else {
-      const r = await api.post({action:"add", station:Object.assign({status:"open"}, s)});
+      const r = await api.post({action:"add", pin, station:Object.assign({status:"open"}, s)});
       mine[r.id] = r.token; store.set("hw-mine", mine);
-      alertMsg("Hotovo! Váš dům je na mapě. Upravit ho můžete dole v sekci Vaše stanoviště.", true);
+      alertMsg("Hotovo! Váš dům je na mapě. Upravit ho můžete dole v sekci Vaše stanoviště – z jiného zařízení se přihlaste svým PINem.", true);
     }
     resetForm(); await load();
   }catch(err){ alertMsg(err.message + " Zkuste to prosím znovu."); }
@@ -752,7 +804,7 @@ const dFmt = new Intl.DateTimeFormat("cs-CZ", {weekday:"long", day:"numeric", mo
 const tFmt = new Intl.DateTimeFormat("cs-CZ", {hour:"2-digit", minute:"2-digit"});
 $("#evTitle").textContent = CONFIG.TITLE;
 $("#evSub").textContent = CONFIG.AREA;
-document.title = CONFIG.TITLE + " Úvaly";
+document.title = CONFIG.TITLE;
 function tick(){
   const now = new Date(), el = $("#countdown");
   if (now < start){

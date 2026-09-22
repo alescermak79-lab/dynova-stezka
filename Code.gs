@@ -7,7 +7,7 @@ const SHEET = 'Stanoviste';
 const ADMIN_KEY = 'dyne-2e41849e';        // heslo správce pro mazání cizích stanovišť (?admin=HESLO)
 const MAX_STATIONS = 300;                      // pojistka proti spamu
 const BOUNDS = { minLat: 50.03, maxLat: 50.10, minLng: 14.66, maxLng: 14.80 }; // Úvaly a okolí
-const COLS = ['id','token','name','address','lat','lng','scare','allergyFree','nonCandy','accessible','from','to','note','status','created','updated'];
+const COLS = ['id','token','pinHash','name','address','lat','lng','scare','allergyFree','nonCandy','accessible','from','to','note','status','created','updated'];
 
 function sheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -15,8 +15,13 @@ function sheet_() {
   if (!sh) {
     sh = ss.insertSheet(SHEET);
     sh.getRange(1, 1, 1, COLS.length).setValues([COLS]).setFontWeight('bold');
-    sh.getRange('A:P').setNumberFormat('@');   // vše jako text, ať Tabulky nepřevádí časy na datum
+    sh.getRange('A:R').setNumberFormat('@');   // vše jako text, ať Tabulky nepřevádí časy na datum
     sh.setFrozenRows(1);
+  }
+  // doplnění chybějících sloupců (např. pinHash po aktualizaci skriptu)
+  const head = sh.getRange(1, 1, 1, Math.max(sh.getLastColumn(), COLS.length)).getValues()[0];
+  if (COLS.some(function (c, i) { return head[i] !== c; })) {
+    sh.getRange(1, 1, 1, COLS.length).setValues([COLS]).setFontWeight('bold');
   }
   return sh;
 }
@@ -65,6 +70,11 @@ function clean_(s, prev) {
   return out;
 }
 
+function hash_(pin, id) {
+  const raw = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, 'dyne|' + id + '|' + pin, Utilities.Charset.UTF_8);
+  return raw.map(function (b) { return ('0' + (b & 0xff).toString(16)).slice(-2); }).join('');
+}
+
 function json_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
@@ -98,14 +108,27 @@ function doPost(e) {
     if (body.action === 'add') {
       if (all.length >= MAX_STATIONS) throw new Error('Mapa je plná, ozvěte se organizátorovi.');
       const s = clean_(body.station || {});
+      const pin = String(body.pin || '');
+      if (pin.length < 4 || pin.length > 32) throw new Error('Zvolte PIN o délce 4 až 32 znaků.');
       const id = Utilities.getUuid().slice(0, 8);
       const token = Utilities.getUuid();
-      writeRow_(sh, sh.getLastRow() + 1, Object.assign({ id: id, token: token, created: now, updated: now }, s));
+      writeRow_(sh, sh.getLastRow() + 1, Object.assign({ id: id, token: token, pinHash: hash_(pin, id), created: now, updated: now }, s));
       return json_({ ok: true, id: id, token: token });
     }
 
     const row = all.filter(r => String(r.id) === String(body.id))[0];
     if (!row) throw new Error('Stanoviště nebylo nalezeno.');
+
+    if (body.action === 'login') {
+      const pin = String(body.pin || '');
+      if (!row.pinHash) throw new Error('U tohoto stanoviště není PIN nastavený, ozvěte se organizátorovi.');
+      if (hash_(pin, row.id) !== String(row.pinHash)) {
+        Utilities.sleep(1000);                       // brzda proti hádání PINu
+        throw new Error('Nesprávný PIN.');
+      }
+      return json_({ ok: true, id: String(row.id), token: String(row.token) });
+    }
+
     if (!isAdmin && String(row.token) !== String(body.token || ''))
       throw new Error('Toto stanoviště můžete upravit jen z telefonu, ze kterého bylo přidáno.');
 
