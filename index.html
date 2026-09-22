@@ -155,6 +155,25 @@ legend{font-weight:800;padding:0 6px}
 .me-dot{width:18px;height:18px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 0 0 6px rgba(60,201,181,.3)}
 .popup-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .popup-actions .btn{flex:1 1 auto}
+.pop-cover{display:block;width:100%;height:140px;object-fit:cover;border-radius:10px;margin:0 0 8px;background:var(--dusk2);cursor:zoom-in}
+.thumbs{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.thumbs button{padding:0;border:0;background:none;position:relative;cursor:zoom-in;border-radius:8px}
+.thumbs img{width:54px;height:54px;object-fit:cover;border-radius:8px;display:block;background:var(--dusk2)}
+.thumbs .x{position:absolute;top:-7px;right:-7px;width:24px;height:24px;border-radius:50%;background:var(--blood);color:#fff;font-weight:800;display:grid;place-items:center;font-size:14px;line-height:1;cursor:pointer}
+.stars{color:var(--candle);letter-spacing:1px}
+.stars .off{color:var(--line)}
+.overlay{position:fixed;inset:0;z-index:2000;background:rgba(10,6,16,.72);display:flex;align-items:flex-end;justify-content:center;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.sheet{background:var(--dusk);border:1px solid var(--line);border-radius:18px;padding:18px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px}
+.starpick{display:flex;justify-content:center;gap:4px}
+.starpick button{background:none;border:0;font-size:42px;line-height:1;color:var(--grave);cursor:pointer;padding:4px}
+.starpick button.on{color:var(--candle)}
+.starpick button:disabled{color:var(--line);opacity:.55;cursor:not-allowed}
+.starpick button:disabled.on{color:var(--candle);opacity:.55}
+.lightbox{position:fixed;inset:0;z-index:2100;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:16px}
+.lightbox img{max-width:100%;max-height:100%;border-radius:10px}
+.lightbox .close{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + 96px + env(safe-area-inset-bottom,0px));z-index:2200;background:var(--bone);color:var(--night);font-weight:800;padding:10px 16px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:calc(100% - 32px);text-align:center}
+.toast.err{background:var(--blood);color:#fff}
 @media (prefers-reduced-motion:no-preference){.pin svg{transition:transform .15s}.pin:hover svg{transform:translateY(-3px)}}
 </style>
 </head>
@@ -268,6 +287,7 @@ legend{font-weight:800;padding:0 6px}
         <h3 style="margin:10px 0 8px">Vaše stanoviště</h3>
         <div class="panel"><ol class="route" id="mineList"></ol></div>
         <p class="muted small">Během večera klepněte na „Došly bonbony“, ať k vám děti zbytečně nechodí. Stanoviště z mapy zmizí z tras, ale zůstane vidět šedě.</p>
+        <p class="muted small">Vaše fotky se u stanoviště zobrazí jako první. Fotky od návštěvníků tady můžete smazat křížkem.</p>
       </div>
     </div>
   </section>
@@ -304,6 +324,25 @@ legend{font-weight:800;padding:0 6px}
     </div>
   </section>
 </main>
+
+<div class="overlay" id="rateOverlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="rateTitle">
+    <h3 id="rateTitle">Ohodnoťte stanoviště</h3>
+    <div class="muted small" id="rateName"></div>
+    <div class="starpick" id="starPick">
+      <button type="button" data-star="1" disabled aria-label="1 hvězdička – nelze udělit">★</button>
+      <button type="button" data-star="2" disabled aria-label="2 hvězdičky – nelze udělit">★</button>
+      <button type="button" data-star="3" aria-label="3 hvězdičky">★</button>
+      <button type="button" data-star="4" aria-label="4 hvězdičky">★</button>
+      <button type="button" data-star="5" aria-label="5 hvězdiček">★</button>
+    </div>
+    <p class="muted small" style="margin:0;text-align:center">Dát lze 3 až 5 hvězdiček – každý, kdo se zapojil, si zaslouží pochvalu. Hodnocení můžete později změnit.</p>
+    <div class="row"><button class="btn ghost" type="button" id="rateCancel">Zavřít</button></div>
+  </div>
+</div>
+<div class="lightbox" id="lightbox" hidden><img id="lbImg" alt="Fotka stanoviště"><button class="btn sm close" type="button" id="lbClose">Zavřít</button></div>
+<div class="toast" id="toast" role="status" hidden></div>
+<input type="file" id="photoInput" accept="image/*" hidden>
 
 <nav class="tabs" role="tablist">
   <button role="tab" data-tab="map" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>Mapa</button>
@@ -376,6 +415,9 @@ const api = {
       if (body.action === "update"){ list = list.map(s => s.id === body.id ? Object.assign({}, s, body.station) : s); store.set("hw-demo", list); return {ok:true}; }
       if (body.action === "delete"){ list = list.filter(s => s.id !== body.id); store.set("hw-demo", list); return {ok:true}; }
       if (body.action === "login"){ return {ok:true, token:"demo"}; }
+      if (body.action === "rate"){ list = list.map(s => s.id === body.id ? Object.assign({}, s, {rating:{avg:body.stars, count:1}}) : s); store.set("hw-demo", list); return {ok:true}; }
+      if (body.action === "photo"){ list = list.map(s => s.id === body.id ? Object.assign({}, s, {photos:[{id:"p" + Date.now(), url:body.image, host:!!body.token}].concat(s.photos || [])}) : s); store.set("hw-demo", list); return {ok:true}; }
+      if (body.action === "delphoto"){ list = list.map(s => s.id === body.id ? Object.assign({}, s, {photos:(s.photos || []).filter(p => p.id !== body.photoId)}) : s); store.set("hw-demo", list); return {ok:true}; }
     }
     const r = await fetch(CONFIG.API_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(body)});
     const j = await r.json(); if (!j.ok) throw new Error(j.error || "Uložení se nepovedlo");
@@ -418,9 +460,6 @@ function hoursHtml(s){
   return `<div class="small" style="margin-top:6px">🕕 Otevřeno <b>${esc(hours(s))}</b>${n ? ` · <span class="tag warn">${n}</span>` : ""}</div>`;
 }
 function gmaps(s){ return `https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}&travelmode=walking`; }
-function mapy(s){ return me
-  ? `https://mapy.com/fnc/v1/route?mapset=outdoor&start=${me.lng},${me.lat}&end=${s.lng},${s.lat}&routeType=foot_fast`
-  : `https://mapy.com/fnc/v1/showmap?mapset=outdoor&center=${s.lng},${s.lat}&zoom=18&marker=true`; }
 
 /* ---------- filtering & routing ---------- */
 function matches(s){
@@ -460,6 +499,53 @@ function planRoute(){
   }
   route = P.slice(1).map(s => s.id);
 }
+
+/* ---------- hodnocení a fotky ---------- */
+let VOTER = store.get("hw-voter", "");
+if (!VOTER){ VOTER = "v" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); store.set("hw-voter", VOTER); }
+let myRatings = store.get("hw-ratings", {});
+function starsHtml(avg){ const n = Math.round(avg || 0); return `<span class="stars" aria-hidden="true">${"★".repeat(n)}<span class="off">${"★".repeat(5 - n)}</span></span>`; }
+function ratingHtml(s){
+  const r = s.rating || {avg:0, count:0};
+  return r.count
+    ? `${starsHtml(r.avg)} <b>${String(r.avg).replace(".", ",")}</b> <span class="muted">(${r.count}×)</span>`
+    : `<span class="muted">zatím bez hodnocení</span>`;
+}
+function thumbsHtml(s, from, max, canDelete){
+  const list = (s.photos || []).slice(from, from + max);
+  if (!list.length) return "";
+  return `<div class="thumbs">${list.map(p => `<button type="button" data-photo="${esc(p.url)}" aria-label="Zvětšit fotku"><img src="${esc(p.url)}" alt="" loading="lazy">${canDelete ? `<span class="x" role="button" tabindex="0" data-delphoto="${esc(p.id)}" data-id="${esc(s.id)}" aria-label="Smazat fotku">×</span>` : ""}</button>`).join("")}</div>`;
+}
+let toastT = null;
+function toast(msg, ok = true, ms = 3500){
+  const t = $("#toast"); t.textContent = msg; t.className = "toast" + (ok ? "" : " err"); t.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, ms);
+}
+function shrink(file, max, q){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      res(c.toDataURL("image/jpeg", q));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("Tenhle formát fotky neumím načíst. Zkuste JPG nebo PNG.")); };
+    img.src = url;
+  });
+}
+let photoTarget = null;
+function pickPhoto(id){ photoTarget = id; const inp = $("#photoInput"); inp.value = ""; inp.click(); }
+async function deletePhoto(id, photoId){
+  if (!confirm("Smazat tuto fotku?")) return;
+  try{ await api.post({action:"delphoto", id, photoId, voter:VOTER, token:mine[id], admin:ADMIN || undefined}); toast("Fotka je smazaná."); await load(); }
+  catch(err){ toast(err.message, false); }
+}
+let rateId = null;
+function paintStars(n){ $$("#starPick button").forEach(b => b.classList.toggle("on", +b.dataset.star <= n)); }
+function openRate(id){ const s = byId(id); if (!s) return; rateId = id; $("#rateName").textContent = s.name; paintStars(myRatings[id] || 0); $("#rateOverlay").hidden = false; }
+function closeRate(){ $("#rateOverlay").hidden = true; rateId = null; }
+function openLightbox(url){ $("#lbImg").src = url; $("#lightbox").hidden = false; }
 
 /* ---------- map ---------- */
 const map = L.map("map", {zoomControl:false, attributionControl:true}).setView(CONFIG.CENTER, CONFIG.ZOOM);
@@ -528,32 +614,41 @@ function tagsHtml(s){
 function popupHtml(s){
   const v = visited.has(s.id), sk = skipped.has(s.id);
   const d = me ? `<div class="muted small">${fmtM(walk(dist(me, s)))} · asi ${fmtMin(dist(me, s))} pěšky</div>` : "";
-  return `<h3>${esc(s.name)}</h3>
+  const cover = (s.photos || [])[0];
+  return `${cover ? `<img class="pop-cover" src="${esc(cover.url)}" alt="Fotka stanoviště" data-photo="${esc(cover.url)}">` : ""}
+    <h3>${esc(s.name)}</h3>
     <div class="muted small">${esc(s.address)}</div>
-    <div class="small" style="margin-top:4px"><span class="ghosts">${ghosts(s.scare)}</span> ${scareLabel(s.scare)}</div>
+    <div class="small" style="margin-top:4px">${ratingHtml(s)}${myRatings[s.id] ? ` <span class="muted">· vy ${myRatings[s.id]}★</span>` : ""}</div>
+    <div class="small" style="margin-top:2px"><span class="ghosts">${ghosts(s.scare)}</span> ${scareLabel(s.scare)}</div>
     ${d}${hoursHtml(s)}${tagsHtml(s)}
     ${s.note ? `<p class="small" style="margin:8px 0 0">${esc(s.note)}</p>` : ""}
+    ${thumbsHtml(s, 1, 5, false)}
     <div class="popup-actions">
       <a class="btn sm primary" href="${gmaps(s)}" target="_blank" rel="noopener">Navigovat</a>
-      <a class="btn sm" href="${mapy(s)}" target="_blank" rel="noopener">Mapy.com</a>
       <button class="btn sm ${v ? "" : "teal"}" type="button" data-visit="${esc(s.id)}">${v ? "Zrušit odškrtnutí" : "Navštíveno ✓"}</button>
       ${!v ? `<button class="btn sm ghost" type="button" data-skip="${esc(s.id)}">${sk ? "Zařadit do trasy" : "Vynechat"}</button>` : ""}
+      <button class="btn sm" type="button" data-addphoto="${esc(s.id)}">📷 Přidat foto</button>
+      <button class="btn sm" type="button" data-rate="${esc(s.id)}">★ ${myRatings[s.id] ? "Změnit hodnocení" : "Přidat hodnocení"}</button>
       ${ADMIN ? `<button class="btn sm ghost" type="button" data-admindel="${esc(s.id)}">Smazat (správce)</button>` : ""}
     </div>`;
 }
+let markers = {};
 function drawMap(){
-  markerLayer.clearLayers();
+  const openId = Object.keys(markers).find(id => markers[id].isPopupOpen());
+  markerLayer.clearLayers(); markers = {};
   const order = new Map(route.map((id, i) => [id, i + 1]));
   stations.forEach(s => {
     if (!matches(s) && !visited.has(s.id)) return;
     const m = L.marker([s.lat, s.lng], {icon: icon(s, order.get(s.id)), title: s.name, zIndexOffset: order.has(s.id) ? 500 - order.get(s.id) : 0});
     m.bindPopup(() => popupHtml(s));
+    markers[s.id] = m;
     markerLayer.addLayer(m);
   });
   if (routeLine) map.removeLayer(routeLine);
   const pts = route.map(byId).filter(Boolean).map(s => [s.lat, s.lng]);
   if (me && pts.length) pts.unshift([me.lat, me.lng]);
   routeLine = pts.length > 1 ? L.polyline(pts, {color:"#ffd36b", weight:3, opacity:.8, dashArray:"2 9", lineCap:"round"}).addTo(map) : null;
+  if (openId && markers[openId]) markers[openId].openPopup();
   drawNext();
 }
 function drawNext(){
@@ -577,6 +672,7 @@ function drawRoute(){
     return `<li>
       <div class="num ${s.allergyFree ? "teal" : ""}">${i + 1}</div>
       <div><div class="nm">${esc(s.name)}</div>
+        <div class="meta">${ratingHtml(s)}</div>
         <div class="meta">${esc(s.address)}${leg ? ` · ${fmtM(walk(leg))}` : ""} · otevřeno ${esc(hours(s))}${timeNote(s) ? ` · ${timeNote(s)}` : ""}</div>
         ${tagsHtml(s)}</div>
       <div class="row" style="flex-direction:column;gap:6px">
@@ -606,8 +702,11 @@ function drawMine(){
   const list = stations.filter(s => mine[s.id]);
   $("#mineWrap").hidden = !list.length;
   $("#mineList").innerHTML = list.map(s => `<li style="grid-template-columns:1fr">
-    <div><div class="nm">${esc(s.name)}</div><div class="meta">${esc(s.address)} · otevřeno ${esc(hours(s))}</div>${tagsHtml(s)}</div>
+    <div><div class="nm">${esc(s.name)}</div><div class="meta">${esc(s.address)} · otevřeno ${esc(hours(s))}</div>
+      <div class="meta">${ratingHtml(s)}</div>${tagsHtml(s)}
+      ${thumbsHtml(s, 0, 30, true)}</div>
     <div class="row">
+      <button class="btn sm" type="button" data-addphoto="${esc(s.id)}">📷 Přidat foto</button>
       ${s.status === "open"
         ? `<button class="btn sm" type="button" data-status="out" data-id="${esc(s.id)}">Došly bonbony</button>`
         : `<button class="btn sm teal" type="button" data-status="open" data-id="${esc(s.id)}">Znovu otevřeno</button>`}
@@ -714,6 +813,45 @@ document.addEventListener("click", async e => {
   }
 });
 $("#btnLogin").addEventListener("click", doLogin);
+document.addEventListener("click", e => {
+  const del = e.target.closest("[data-delphoto]");
+  if (del){ e.preventDefault(); e.stopPropagation(); deletePhoto(del.dataset.id, del.dataset.delphoto); return; }
+  const ph = e.target.closest("[data-photo]");
+  if (ph){ e.preventDefault(); openLightbox(ph.dataset.photo); return; }
+  const ap = e.target.closest("[data-addphoto]");
+  if (ap){ pickPhoto(ap.dataset.addphoto); return; }
+  const rt = e.target.closest("[data-rate]");
+  if (rt){ openRate(rt.dataset.rate); }
+}, true);
+$("#photoInput").addEventListener("change", async () => {
+  const f = $("#photoInput").files[0], id = photoTarget;
+  if (!f || !id) return;
+  toast("Nahrávám fotku…", true, 60000);
+  try{
+    const image = await shrink(f, 1280, 0.8);
+    await api.post({action:"photo", id, image, voter:VOTER, token:mine[id]});
+    toast("Fotka je nahraná. Díky!");
+    await load();
+  }catch(err){ toast(err.message || "Fotku se nepodařilo nahrát.", false); }
+});
+$$("#starPick button:not([disabled])").forEach(b => {
+  b.addEventListener("mouseenter", () => paintStars(+b.dataset.star));
+  b.addEventListener("mouseleave", () => paintStars(myRatings[rateId] || 0));
+  b.addEventListener("click", async () => {
+    const n = +b.dataset.star, id = rateId; if (!id) return;
+    paintStars(n);
+    try{
+      await api.post({action:"rate", id, stars:n, voter:VOTER});
+      myRatings[id] = n; store.set("hw-ratings", myRatings);
+      closeRate(); toast(`Díky za hodnocení ${n} ★`); await load();
+    }catch(err){ toast(err.message, false); }
+  });
+});
+$("#rateCancel").addEventListener("click", closeRate);
+$("#rateOverlay").addEventListener("click", e => { if (e.target.id === "rateOverlay") closeRate(); });
+$("#lbClose").addEventListener("click", () => { $("#lightbox").hidden = true; });
+$("#lightbox").addEventListener("click", e => { if (e.target.id === "lightbox") $("#lightbox").hidden = true; });
+document.addEventListener("keydown", e => { if (e.key === "Escape"){ $("#lightbox").hidden = true; closeRate(); } });
 $("#btnResetVisited").addEventListener("click", () => { visited.clear(); skipped.clear(); store.set("hw-visited", []); store.set("hw-skip", []); renderAll(); });
 
 /* ---------- form ---------- */
