@@ -118,7 +118,8 @@ function trashPhotos_(stationId) {
 }
 
 /* ---------- API ---------- */
-function doGet() {
+function doGet(e) {
+  if (!e) return json_({ ok: true, setup: setup() });   // spuštění z editoru = inicializace + oprávnění
   try {
     const stations = rows_().map(public_);
     const agg = {};

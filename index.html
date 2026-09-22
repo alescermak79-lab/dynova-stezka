@@ -260,12 +260,6 @@ legend{font-weight:800;padding:0 6px}
             <label><input type="radio" name="scare" value="3">Pro odvážné<br><span class="small">tma, masky, zvuky</span></label>
           </div>
         </fieldset>
-        <fieldset>
-          <legend>Co nabízíte</legend>
-          <label class="check"><input type="checkbox" id="fAllergy"><span><b>Mám i dobroty bez alergenů</b><br><span class="muted small">bez ořechů, lepku a mléka – na mapě tyrkysová dýně</span></span></label>
-          <label class="check"><input type="checkbox" id="fNonCandy"><span><b>Mám i nesladké dárky</b><br><span class="muted small">samolepky, svítící náramky, pastelky…</span></span></label>
-          <label class="check"><input type="checkbox" id="fAccess"><span><b>Dojde se bez schodů</b><br><span class="muted small">s kočárkem nebo na vozíku</span></span></label>
-        </fieldset>
         <div class="two">
           <label class="f">Otevřeno od<input type="time" id="fFrom" value="17:00"></label>
           <label class="f">do<input type="time" id="fTo" value="20:00"></label>
@@ -309,7 +303,6 @@ legend{font-weight:800;padding:0 6px}
         </div>
         <div class="panel rules">
           <h3>Pro rodiče</h3>
-          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><ellipse cx="20" cy="23" rx="15" ry="12" fill="#3cc9b5"/><path d="M13 20l3-3 3 3zM21 20l3-3 3 3z" fill="#1b1426"/></svg><div><b>Tyrkysová dýně = bez alergenů</b><p>Dům má i dobroty bez ořechů, lepku a mléka. Filtr „Bez alergenů“ nechá na mapě jen je.</p></div></div>
           <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><text x="4" y="28" font-size="20" fill="#ffd36b">👻</text></svg><div><b>Strašidelnost 1 až 3</b><p>1 = vlídné i pro batolata, 3 = tma, masky a zvuky. Filtr „Pro malé děti“ ukáže jen jedničky.</p></div></div>
           <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 30h28M10 30V14l10-6 10 6v16" fill="none" stroke="#b9aec9" stroke-width="3"/><path d="M4 22h8" stroke="#ff8a2a" stroke-width="3"/></svg><div><b>Navigace k dalšímu domu</b><p>Tlačítko „Navigovat“ otevře pěší trasu v Google Mapách nebo Mapy.com. Trasa počítá dětské tempo 3 km/h.</p></div></div>
           <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="14" fill="#7d7390"/><path d="M13 20h14" stroke="#1b1426" stroke-width="3"/></svg><div><b>Šedá dýně = došly bonbony</b><p>Hostitelé to přepínají živě, stránka se sama obnovuje každou minutu.</p></div></div>
@@ -889,7 +882,6 @@ function readForm(){
     name: $("#fName").value.trim(), address: $("#fAddress").value.trim(),
     lat: parseFloat($("#fLat").value), lng: parseFloat($("#fLng").value),
     scare: +(document.querySelector("input[name=scare]:checked")?.value || 1),
-    allergyFree: $("#fAllergy").checked, nonCandy: $("#fNonCandy").checked, accessible: $("#fAccess").checked,
     from: $("#fFrom").value, to: $("#fTo").value, note: $("#fNote").value.trim()
   };
 }
@@ -898,7 +890,6 @@ function fillForm(s){
   $("#fId").value = s.id; $("#fName").value = s.name; $("#fAddress").value = s.address || "";
   setLoc(s.lat, s.lng);
   const r = document.querySelector(`input[name=scare][value="${s.scare}"]`); if (r) r.checked = true;
-  $("#fAllergy").checked = !!s.allergyFree; $("#fNonCandy").checked = !!s.nonCandy; $("#fAccess").checked = !!s.accessible;
   $("#fFrom").value = s.from || ""; $("#fTo").value = s.to || ""; $("#fNote").value = s.note || "";
   $("#pinWrap").hidden = true; $("#fPin").value = "";
   $("#formTitle").textContent = "Upravit stanoviště"; $("#btnSave").textContent = "Uložit změny"; $("#btnCancelEdit").hidden = false;
