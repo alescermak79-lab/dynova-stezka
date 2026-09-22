@@ -31,6 +31,9 @@ a{color:var(--candle)}
 header.top{padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;display:flex;align-items:center;gap:12px;background:linear-gradient(180deg,#140e1d, var(--night));border-bottom:1px solid var(--line)}
 .logo{width:58px;height:58px;flex:none}
 .brand{min-width:0;flex:1}
+.home{display:flex;align-items:center;gap:12px;flex:1;min-width:0;color:inherit;text-decoration:none;border-radius:12px}
+.home:hover .logo{transform:rotate(-6deg) scale(1.05)}
+@media (prefers-reduced-motion:no-preference){.logo{transition:transform .2s}}
 .brand h1{font:800 31px/1 var(--display);margin:0;letter-spacing:.3px;color:var(--pumpkin);text-shadow:0 0 18px rgba(255,138,42,.35)}
 .brand p{margin:2px 0 0;font-size:12.5px;color:var(--mist);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .count{flex:none;text-align:right;font-size:11px;color:var(--mist);line-height:1.2}
@@ -180,11 +183,13 @@ legend{font-weight:800;padding:0 6px}
 <body>
 
 <header class="top">
-  <svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 14c3-6 8-8 10-7-3 2-5 5-6 8" fill="none" stroke="#6bbf59" stroke-width="3" stroke-linecap="round"/><ellipse cx="22" cy="38" rx="14" ry="18" fill="#d96412"/><ellipse cx="42" cy="38" rx="14" ry="18" fill="#d96412"/><ellipse cx="32" cy="38" rx="13" ry="19" fill="#ff8a2a"/><path d="M22 33l5-5 5 5zM32 33l5-5 5 5z" fill="#ffd36b"/><path d="M20 43c4 5 20 5 24 0l-3 1-2 3-3-3-4 3-3-3-3 3-2-3z" fill="#ffd36b"/></svg>
-  <div class="brand">
-    <h1 id="evTitle">Dýňová stezka</h1>
-    <p id="evSub">Primavera &amp; Radlická čtvrť · Úvaly</p>
-  </div>
+  <a class="home" href="./" id="homeLink" aria-label="Úvodní stránka – mapa">
+    <svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 14c3-6 8-8 10-7-3 2-5 5-6 8" fill="none" stroke="#6bbf59" stroke-width="3" stroke-linecap="round"/><ellipse cx="22" cy="38" rx="14" ry="18" fill="#d96412"/><ellipse cx="42" cy="38" rx="14" ry="18" fill="#d96412"/><ellipse cx="32" cy="38" rx="13" ry="19" fill="#ff8a2a"/><path d="M22 33l5-5 5 5zM32 33l5-5 5 5z" fill="#ffd36b"/><path d="M20 43c4 5 20 5 24 0l-3 1-2 3-3-3-4 3-3-3-3 3-2-3z" fill="#ffd36b"/></svg>
+    <div class="brand">
+      <h1 id="evTitle">Dýňová stezka</h1>
+      <p id="evSub">Primavera &amp; Radlická čtvrť · Úvaly</p>
+    </div>
+  </a>
   <div class="count" id="countdown" aria-live="polite"></div>
 </header>
 <div class="demo-flag" id="demoFlag" hidden>Ukázkový režim – stanoviště jsou vymyšlená a ukládají se jen v tomto prohlížeči</div>
@@ -806,6 +811,17 @@ document.addEventListener("click", async e => {
   }
 });
 $("#btnLogin").addEventListener("click", doLogin);
+$("#homeLink").addEventListener("click", e => {
+  e.preventDefault();
+  if (picking) setPicking(false);
+  map.closePopup(); $("#lightbox").hidden = true; closeRate();
+  go("map");
+  setTimeout(() => {
+    if (stations.length) map.fitBounds(L.latLngBounds(stations.map(s => [s.lat, s.lng])).pad(0.25), {maxZoom:17});
+    else map.setView(CONFIG.CENTER, CONFIG.ZOOM);
+  }, 80);
+  window.scrollTo(0, 0);
+});
 document.addEventListener("click", e => {
   const del = e.target.closest("[data-delphoto]");
   if (del){ e.preventDefault(); e.stopPropagation(); deletePhoto(del.dataset.id, del.dataset.delphoto); return; }
