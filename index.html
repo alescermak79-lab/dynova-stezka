@@ -552,13 +552,14 @@ let baseLayers = [], baseIdx = 0;
 if (CONFIG.MAPY_API_KEY){
   const k = encodeURIComponent(CONFIG.MAPY_API_KEY);
   const size = (window.devicePixelRatio || 1) > 1 ? "256@2x" : "256";
-  const url = set => `https://api.mapy.com/v1/maptiles/${set}/${size}/{z}/{x}/{y}?apikey=${k}`;
+  // letecká mapa a popisky existují jen v 256 px (verze @2x vrací 404), základní mapa i v @2x pro ostré displeje
+  const url = (set, sz = size) => `https://api.mapy.com/v1/maptiles/${set}/${sz}/{z}/{x}/{y}?apikey=${k}`;
   const attr = '<a href="https://api.mapy.com/copyright" target="_blank" rel="noopener">&copy; Seznam.cz a.s. a další</a>';
   baseLayers = [
     {name:"Mapa", filter:NIGHT, layer:L.tileLayer(url("basic"), {maxZoom:19, minZoom:12, attribution:attr})},
     {name:"Letecká", filter:"none", layer:L.layerGroup([
-      L.tileLayer(url("aerial"), {maxZoom:20, minZoom:12, attribution:attr}),
-      L.tileLayer(url("names-overlay"), {maxZoom:20, minZoom:12})
+      L.tileLayer(url("aerial", "256"), {maxZoom:20, minZoom:12, attribution:attr}),
+      L.tileLayer(url("names-overlay", "256"), {maxZoom:20, minZoom:12})
     ])}
   ];
   // logo Mapy.com je podmínkou použití API
