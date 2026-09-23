@@ -1067,7 +1067,10 @@ function setPicking(on){
 $("#btnPick").addEventListener("click", () => {
   pickTarget = "station"; go("map"); setPicking(true);
   const lat = parseFloat($("#fLat").value), lng = parseFloat($("#fLng").value);
-  if (isFinite(lat)) map.setView([lat, lng], 19); else map.setView(locCenter(), Math.max(LOC ? LOC.zoom : 16, 17));
+  setTimeout(() => {                                   // mapa byla skrytá – nejdřív přepočítat velikost, pak vycentrovat
+    map.invalidateSize();
+    if (isFinite(lat)) map.setView([lat, lng], 19, {animate:false}); else map.setView(locCenter(), Math.max(LOC ? LOC.zoom : 16, 17), {animate:false});
+  }, 60);
 });
 $("#pickOk").addEventListener("click", () => {
   const c = map.getCenter(); setPicking(false);
@@ -1233,7 +1236,10 @@ $("#nlGps").addEventListener("click", () => {
 $("#nlPick").addEventListener("click", () => {
   $("#newLocOverlay").hidden = true; pickTarget = "loc"; go("map"); setPicking(true);
   const lat = parseFloat($("#nlLat").value), lng = parseFloat($("#nlLng").value);
-  if (isFinite(lat)) map.setView([lat, lng], 16); else if (me) map.setView([me.lat, me.lng], 15);
+  setTimeout(() => {
+    map.invalidateSize();
+    if (isFinite(lat)) map.setView([lat, lng], 16, {animate:false}); else if (me) map.setView([me.lat, me.lng], 15, {animate:false});
+  }, 60);
 });
 $("#nlSave").addEventListener("click", async () => {
   const id = $("#nlId").value, d = $("#nlDate").value, f = $("#nlFrom").value, t = $("#nlTo").value;
