@@ -86,7 +86,18 @@ nav.tabs button[aria-selected="true"]{color:var(--pumpkin)}
 .nextcard .t span{font-size:12.5px;color:var(--mist)}
 .pickbar{position:absolute;top:10px;left:10px;right:10px;z-index:600;background:var(--candle);color:#2a1a00;border-radius:var(--r);padding:10px 12px;font-weight:800;display:flex;align-items:center;gap:10px}
 .pickbar span{flex:1}
-.crosshair{position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;z-index:550;pointer-events:none;color:var(--candle)}
+.pickbar .btn.ghost{color:#2a1a00;border-color:rgba(42,26,0,.45)}
+.crosshair{position:absolute;left:50%;top:50%;width:72px;height:72px;margin:-36px 0 0 -36px;z-index:550;pointer-events:none}
+.crosshair svg{width:100%;height:100%;display:block;filter:drop-shadow(0 0 3px rgba(0,0,0,.7))}
+@media (prefers-reduced-motion:no-preference){.crosshair svg{animation:aim 1.6s ease-in-out infinite}}
+@keyframes aim{0%,100%{transform:scale(1)}50%{transform:scale(.88)}}
+.addrwrap{position:relative}
+.suggest{list-style:none;margin:4px 0 0;padding:4px;position:absolute;left:0;right:0;top:100%;z-index:30;background:var(--dusk);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.5);max-height:260px;overflow:auto}
+.suggest button{width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:9px 10px;color:var(--bone);cursor:pointer;display:flex;flex-direction:column;gap:1px}
+.suggest button:hover,.suggest button:focus-visible,.suggest button.act{background:var(--dusk2)}
+.suggest b{font-size:14px}
+.suggest small{color:var(--mist);font-size:12px}
+.suggest .none{padding:9px 10px;color:var(--mist);font-size:13px}
 
 /* buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;border:1px solid var(--line);background:var(--dusk2);padding:10px 14px;font-weight:800;cursor:pointer;text-decoration:none;color:var(--bone);min-height:44px}
@@ -207,8 +218,14 @@ legend{font-weight:800;padding:0 6px}
   <!-- MAPA -->
   <section class="view" id="v-map" aria-label="Mapa">
     <div id="map"></div>
-    <div class="pickbar" id="pickbar" hidden><span>Posuňte mapu tak, aby zaměřovač mířil na váš dům</span><button class="btn sm" id="pickOk" type="button">Tady</button><button class="btn sm ghost" id="pickCancel" type="button">Zrušit</button></div>
-    <svg class="crosshair" id="crosshair" hidden viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="9" fill="none" stroke="currentColor" stroke-width="3"/><path d="M17 0v10M17 24v10M0 17h10M24 17h10" stroke="currentColor" stroke-width="3"/></svg>
+    <div class="pickbar" id="pickbar" hidden><span>Posuňte mapu tak, aby červená tečka uprostřed terče mířila na váš dům</span><button class="btn sm" id="pickOk" type="button">Tady</button><button class="btn sm ghost" id="pickCancel" type="button">Zrušit</button></div>
+    <div class="crosshair" id="crosshair" hidden aria-hidden="true"><svg viewBox="0 0 64 64">
+      <g fill="none" stroke-linecap="round">
+        <g stroke="#140e1d" stroke-width="7"><circle cx="32" cy="32" r="15"/><path d="M32 2v14M32 48v14M2 32h14M48 32h14"/></g>
+        <g stroke="#ffd36b" stroke-width="3.5"><circle cx="32" cy="32" r="15"/><path d="M32 2v14M32 48v14M2 32h14M48 32h14"/></g>
+      </g>
+      <circle cx="32" cy="32" r="4.5" fill="#ff5f6d" stroke="#140e1d" stroke-width="2"/>
+    </svg></div>
     <div class="nextcard" id="nextcard" hidden></div>
     <button class="fab" id="fabLayer" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg><span>Letecká</span></button>
     <button class="fab" id="fabLocate" type="button" aria-label="Zobrazit moji polohu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
@@ -254,15 +271,17 @@ legend{font-weight:800;padding:0 6px}
         <label class="f">Název stanoviště
           <input type="text" id="fName" maxlength="60" required placeholder="např. Strašidelný hřbitov u Novákových" autocomplete="off">
         </label>
-        <label class="f">Ulice a číslo domu <small>Pomůže při hledání v tmě – na mapě se ukáže u pinu.</small>
-          <input type="text" id="fAddress" maxlength="80" placeholder="např. Lipová 1234" autocomplete="street-address">
-        </label>
+        <div class="addrwrap">
+          <label class="f" for="fAddress">Adresa – ulice a číslo popisné <small>Začněte psát (např. „Lipová 1234“) a vyberte adresu ze seznamu – dům se sám zaměří na mapě.</small></label>
+          <input type="text" id="fAddress" maxlength="80" placeholder="např. Lipová 1234" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="addrSuggest" aria-expanded="false" style="margin-top:6px">
+          <ul class="suggest" id="addrSuggest" role="listbox" hidden></ul>
+        </div>
         <fieldset>
           <legend>Poloha domu</legend>
           <div class="locbox">
             <span class="val" id="fLocVal">Zatím nevybráno</span>
             <button class="btn sm" type="button" id="btnGps">Jsem u domu – použít GPS</button>
-            <button class="btn sm" type="button" id="btnPick">Vybrat na mapě</button>
+            <button class="btn sm" type="button" id="btnPick">Vybrat / doladit na mapě</button>
           </div>
           <input type="hidden" id="fLat"><input type="hidden" id="fLng">
         </fieldset>
@@ -963,6 +982,67 @@ function setLoc(lat, lng){
   if (pickTemp) map.removeLayer(pickTemp);
   pickTemp = L.circleMarker([lat, lng], {radius:9, color:"#ffd36b", weight:3, fillOpacity:.3}).addTo(map);
 }
+/* ---------- vyhledání adresy (Mapy.com, záložně OpenStreetMap) ---------- */
+let sugT = null, sugSeq = 0, sugItems = [], sugAct = -1;
+async function geocodeAddr(q){
+  const city = LOC ? LOC.city : "";
+  const query = city && !q.toLowerCase().includes(city.toLowerCase()) ? `${q}, ${city}` : q;
+  let items = [];
+  if (CONFIG.MAPY_API_KEY){
+    const u = `https://api.mapy.com/v1/suggest?query=${encodeURIComponent(query)}&lang=cs&limit=8&apikey=${encodeURIComponent(CONFIG.MAPY_API_KEY)}`;
+    const j = await fetch(u).then(r => r.json());
+    items = (j.items || []).filter(i => i.position && /^regional\.(address|street)$/.test(i.type))
+      .map(i => ({name:i.name, sub:i.location || "", lat:i.position.lat, lng:i.position.lon, exact:i.type === "regional.address"}));
+  } else {
+    const u = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=8&countrycodes=cz,sk&q=${encodeURIComponent(query)}`;
+    const j = await fetch(u, {headers:{"Accept-Language":"cs"}}).then(r => r.json());
+    items = j.map(i => { const a = i.address || {};
+      const name = [a.road || a.pedestrian || a.hamlet, a.house_number].filter(Boolean).join(" ") || i.display_name.split(",")[0];
+      return {name, sub:a.city || a.town || a.village || "", lat:+i.lat, lng:+i.lon, exact:!!a.house_number}; });
+  }
+  const c = locCenter();
+  items.forEach(i => i.d = dist(i, c));
+  items.sort((a, b) => (b.exact - a.exact) || (a.d - b.d));
+  return items.slice(0, 6);
+}
+function closeSuggest(){ $("#addrSuggest").hidden = true; $("#fAddress").setAttribute("aria-expanded", "false"); sugAct = -1; }
+function drawSuggest(msg){
+  const ul = $("#addrSuggest");
+  ul.innerHTML = msg ? `<li class="none">${esc(msg)}</li>` : sugItems.map((i, n) => `<li><button type="button" role="option" data-sug="${n}" class="${n === sugAct ? "act" : ""}">
+      <b>${esc(i.name)}</b><small>${esc(i.sub)}${LOC ? " · " + fmtM(i.d) + " od středu lokality" : ""}${i.exact ? "" : " · bez čísla popisného"}</small></button></li>`).join("");
+  ul.hidden = false; $("#fAddress").setAttribute("aria-expanded", "true");
+}
+async function runSuggest(){
+  const q = $("#fAddress").value.trim();
+  if (q.length < 3) return closeSuggest();
+  const seq = ++sugSeq;
+  try{
+    const items = await geocodeAddr(q);
+    if (seq !== sugSeq) return;
+    sugItems = items; sugAct = -1;
+    if (!items.length) return drawSuggest("Adresu jsem nenašel. Zkuste ulici a číslo popisné, nebo polohu vyberte na mapě.");
+    drawSuggest();
+  }catch(e){ if (seq === sugSeq) drawSuggest("Vyhledávání adres teď nejde – vyberte polohu na mapě."); }
+}
+function pickSuggest(n){
+  const i = sugItems[n]; if (!i) return;
+  $("#fAddress").value = i.name; closeSuggest();
+  setLoc(i.lat, i.lng);
+  if (LOC && i.d > CONFIG.RADIUS_KM * 1000) return alertMsg(`Tahle adresa je ${fmtM(i.d)} od lokality ${LOC.city}. Nejste v jiné lokalitě?`);
+  alertMsg(i.exact ? "Dům je zaměřený podle adresy. Pokud pin nesedí přesně, dolaďte ho přes „Vybrat / doladit na mapě“."
+                   : "Našel jsem jen ulici – doplňte číslo popisné, nebo dům dolaďte na mapě.", i.exact);
+}
+$("#fAddress").addEventListener("input", () => { clearTimeout(sugT); sugT = setTimeout(runSuggest, 300); });
+$("#fAddress").addEventListener("keydown", e => {
+  if ($("#addrSuggest").hidden || !sugItems.length) return;
+  if (e.key === "ArrowDown" || e.key === "ArrowUp"){ e.preventDefault(); sugAct = (sugAct + (e.key === "ArrowDown" ? 1 : -1) + sugItems.length) % sugItems.length; drawSuggest(); }
+  else if (e.key === "Enter"){ e.preventDefault(); pickSuggest(sugAct < 0 ? 0 : sugAct); }
+  else if (e.key === "Escape") closeSuggest();
+});
+$("#fAddress").addEventListener("blur", () => setTimeout(closeSuggest, 200));
+$("#fAddress").addEventListener("focus", () => { if (window.innerHeight < 900) setTimeout(() => $("#fAddress").scrollIntoView({block:"start", behavior:"smooth"}), 250); });
+$("#addrSuggest").addEventListener("mousedown", e => { const b = e.target.closest("[data-sug]"); if (b){ e.preventDefault(); pickSuggest(+b.dataset.sug); } });
+
 $("#btnGps").addEventListener("click", () => {
   if (!navigator.geolocation) return alertMsg("Prohlížeč neumí zjistit polohu – použijte „Vybrat na mapě“.");
   $("#btnGps").textContent = "Zjišťuji…";
@@ -975,6 +1055,9 @@ $("#btnGps").addEventListener("click", () => {
 function setPicking(on){
   picking = on;
   $("#pickbar").hidden = !on; $("#crosshair").hidden = !on;
+  $("#pickbar span").textContent = pickTarget === "loc"
+    ? "Posuňte mapu tak, aby červená tečka mířila na střed vaší čtvrti"
+    : "Posuňte mapu tak, aby červená tečka uprostřed terče mířila na váš dům";
   drawNext();
 }
 $("#btnPick").addEventListener("click", () => {
