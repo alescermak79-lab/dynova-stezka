@@ -989,7 +989,8 @@ async function geocodeAddr(q){
   const query = city && !q.toLowerCase().includes(city.toLowerCase()) ? `${q}, ${city}` : q;
   let items = [];
   if (CONFIG.MAPY_API_KEY){
-    const u = `https://api.mapy.com/v1/suggest?query=${encodeURIComponent(query)}&lang=cs&limit=8&apikey=${encodeURIComponent(CONFIG.MAPY_API_KEY)}`;
+    const near = LOC ? `&preferNear=${LOC.lng},${LOC.lat}&preferNearPrecision=5000` : "";
+    const u = `https://api.mapy.com/v1/suggest?query=${encodeURIComponent(query)}&lang=cs&limit=8${near}&apikey=${encodeURIComponent(CONFIG.MAPY_API_KEY)}`;
     const j = await fetch(u).then(r => r.json());
     items = (j.items || []).filter(i => i.position && /^regional\.(address|street)$/.test(i.type))
       .map(i => ({name:i.name, sub:i.location || "", lat:i.position.lat, lng:i.position.lon, exact:i.type === "regional.address"}));
@@ -1001,14 +1002,16 @@ async function geocodeAddr(q){
       return {name, sub:a.city || a.town || a.village || "", lat:+i.lat, lng:+i.lon, exact:!!a.house_number}; });
   }
   const c = locCenter();
-  items.forEach(i => i.d = dist(i, c));
-  items.sort((a, b) => (b.exact - a.exact) || (a.d - b.d));
+  const R = CONFIG.RADIUS_KM * 1000;
+  items.forEach(i => { i.d = dist(i, c); i.near = !LOC || i.d <= R; });
+  if (LOC) items = items.filter(i => i.d <= R * 3);                  // adresy z jiných koutů republiky pryč
+  items.sort((a, b) => (b.near - a.near) || (b.exact - a.exact) || (a.d - b.d));
   return items.slice(0, 6);
 }
 function closeSuggest(){ $("#addrSuggest").hidden = true; $("#fAddress").setAttribute("aria-expanded", "false"); sugAct = -1; }
 function drawSuggest(msg){
   const ul = $("#addrSuggest");
-  ul.innerHTML = msg ? `<li class="none">${esc(msg)}</li>` : sugItems.map((i, n) => `<li><button type="button" role="option" data-sug="${n}" class="${n === sugAct ? "act" : ""}">
+  ul.innerHTML = msg ? `<li class="none">${esc(msg)}</li>` : sugItems.map((i, n) => i.hint ? `<li class="none">Dopište celé číslo popisné – přesná adresa se objeví v seznamu.</li>` : `<li><button type="button" role="option" data-sug="${n}" class="${n === sugAct ? "act" : ""}">
       <b>${esc(i.name)}</b><small>${esc(i.sub)}${LOC ? " · " + fmtM(i.d) + " od středu lokality" : ""}${i.exact ? "" : " · bez čísla popisného"}</small></button></li>`).join("");
   ul.hidden = false; $("#fAddress").setAttribute("aria-expanded", "true");
 }
@@ -1021,11 +1024,12 @@ async function runSuggest(){
     if (seq !== sugSeq) return;
     sugItems = items; sugAct = -1;
     if (!items.length) return drawSuggest("Adresu jsem nenašel. Zkuste ulici a číslo popisné, nebo polohu vyberte na mapě.");
+    if (!items.some(i => i.exact) && /\d/.test(q)) items.push({hint:true});
     drawSuggest();
   }catch(e){ if (seq === sugSeq) drawSuggest("Vyhledávání adres teď nejde – vyberte polohu na mapě."); }
 }
 function pickSuggest(n){
-  const i = sugItems[n]; if (!i) return;
+  const i = sugItems[n]; if (!i || i.hint) return;
   $("#fAddress").value = i.name; closeSuggest();
   setLoc(i.lat, i.lng);
   if (LOC && i.d > CONFIG.RADIUS_KM * 1000) return alertMsg(`Tahle adresa je ${fmtM(i.d)} od lokality ${LOC.city}. Nejste v jiné lokalitě?`);
