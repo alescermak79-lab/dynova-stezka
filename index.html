@@ -65,7 +65,7 @@ h3{margin:0;font-size:16px;font-weight:800}
 .small{font-size:13px}
 
 /* bottom nav */
-nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:1000;display:grid;grid-template-columns:repeat(4,1fr);background:rgba(20,14,29,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:1000;display:grid;grid-template-columns:repeat(5,1fr);background:rgba(20,14,29,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
 nav.tabs button{background:none;border:0;height:var(--nav-h);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:700;color:var(--mist);cursor:pointer}
 nav.tabs button svg{width:24px;height:24px}
 nav.tabs button[aria-selected="true"]{color:var(--pumpkin)}
@@ -180,13 +180,22 @@ legend{font-weight:800;padding:0 6px}
 .me-dot{width:18px;height:18px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 0 0 6px rgba(60,201,181,.3)}
 .popup-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .popup-actions .btn{flex:1 1 auto}
+ol.route.rank li{grid-template-columns:36px 56px 1fr;align-items:center}
+.rank .place{font:800 20px/1 var(--body);text-align:center;color:var(--mist);font-variant-numeric:tabular-nums}
+.rank .place.m{font-size:28px}
+.rank .ph{width:56px;height:56px;border-radius:10px;object-fit:cover;background:var(--dusk2);display:grid;place-items:center;font-size:24px}
+.rank .acts{grid-column:2 / -1;display:flex;gap:6px;flex-wrap:wrap}
+.rank .top{border-radius:12px;background:linear-gradient(90deg,rgba(255,211,107,.12),transparent);padding-left:6px;padding-right:6px}
+.seg2{display:flex;gap:6px;flex-wrap:wrap}
+.seg2 button{border:1px solid var(--line);background:var(--night);color:var(--mist);border-radius:999px;padding:6px 12px;font-weight:700;font-size:13px;cursor:pointer}
+.seg2 button[aria-pressed="true"]{background:var(--candle);border-color:var(--candle);color:#2a1a00}
 .pop-cover{display:block;width:100%;height:140px;object-fit:cover;border-radius:10px;margin:0 0 8px;background:var(--dusk2);cursor:zoom-in}
 .thumbs{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .thumbs button{padding:0;border:0;background:none;position:relative;cursor:zoom-in;border-radius:8px}
 .thumbs img{width:54px;height:54px;object-fit:cover;border-radius:8px;display:block;background:var(--dusk2)}
 .thumbs .x{position:absolute;top:-7px;right:-7px;width:24px;height:24px;border-radius:50%;background:var(--blood);color:#fff;font-weight:800;display:grid;place-items:center;font-size:14px;line-height:1;cursor:pointer}
 .stars{color:var(--candle);letter-spacing:1px}
-.stars .off{color:var(--line)}
+.stars .off{color:var(--grave);opacity:.45}
 .overlay{position:fixed;inset:0;z-index:2000;background:rgba(10,6,16,.72);display:flex;align-items:flex-end;justify-content:center;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))}
 .sheet{background:var(--dusk);border:1px solid var(--line);border-radius:18px;padding:18px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px}
 .starpick{display:flex;justify-content:center;gap:4px}
@@ -319,6 +328,25 @@ legend{font-weight:800;padding:0 6px}
     </div>
   </section>
 
+  <!-- ŽEBŘÍČEK -->
+  <section class="view" id="v-rank" hidden aria-label="Žebříček">
+    <div class="wrap">
+      <h2>Žebříček domů</h2>
+      <p class="muted small" id="rankIntro" style="margin:0">Hodnotí návštěvníci 3 až 5 hvězdičkami. Při podobném průměru má přednost dům s více hodnoceními.</p>
+      <div class="seg2" role="group" aria-label="Řazení">
+        <button type="button" data-rsort="score" aria-pressed="true">Nejlépe hodnocené</button>
+        <button type="button" data-rsort="count" aria-pressed="false">Nejvíc hodnocení</button>
+        <button type="button" data-rsort="photos" aria-pressed="false">Nejvíc fotek</button>
+      </div>
+      <div class="panel stat" id="rankStats"></div>
+      <div class="panel"><ol class="route rank" id="rankList"></ol></div>
+      <div id="unratedWrap" hidden>
+        <h3 style="margin:6px 0 8px">Zatím bez hodnocení</h3>
+        <div class="panel"><ol class="route rank" id="unratedList"></ol></div>
+      </div>
+    </div>
+  </section>
+
   <!-- INFO -->
   <section class="view" id="v-info" hidden aria-label="Informace">
     <div class="wrap">
@@ -440,6 +468,7 @@ legend{font-weight:800;padding:0 6px}
   <button role="tab" data-tab="map" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>Mapa</button>
   <button role="tab" data-tab="route" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5"/></svg>Trasa</button>
   <button role="tab" data-tab="add" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9H3z"/><path d="M12 11v6M9 14h6"/></svg>Můj dům</button>
+  <button role="tab" data-tab="rank" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg>Žebříček</button>
   <button role="tab" data-tab="info" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>Info</button>
 </nav>
 
@@ -841,7 +870,48 @@ async function doLogin(){
   $("#btnLogin").disabled = false;
 }
 
-function renderAll(replan = true){ if (replan) planRoute(); drawMap(); drawRoute(); drawMine(); drawLogin(); }
+function renderAll(replan = true){ if (replan) planRoute(); drawMap(); drawRoute(); drawMine(); drawLogin(); drawRank(); }
+
+/* ---------- žebříček ---------- */
+let rankSort = "score";
+function fairScore(r){ const n = r ? r.count : 0; return n ? (r.avg * n + 4 * 2) / (n + 2) : 0; }   // 2 „virtuální“ čtyřky – jeden hlas nepřeskočí dům s dvaceti
+function drawRank(){
+  const rated = stations.filter(s => s.rating && s.rating.count);
+  const key = {score: s => fairScore(s.rating), count: s => s.rating.count + fairScore(s.rating) / 10, photos: s => (s.photos || []).length * 100 + fairScore(s.rating)}[rankSort];
+  rated.sort((a, b) => key(b) - key(a));
+  const votes = rated.reduce((n, s) => n + s.rating.count, 0);
+  const avg = votes ? rated.reduce((n, s) => n + s.rating.avg * s.rating.count, 0) / votes : 0;
+  const photos = stations.reduce((n, s) => n + (s.photos || []).length, 0);
+  $("#rankStats").innerHTML = `<div>Hodnocených domů<b>${rated.length}/${stations.length}</b></div><div>Hodnocení celkem<b>${votes}</b></div><div>Průměr lokality<b>${votes ? String(Math.round(avg * 10) / 10).replace(".", ",") + " ★" : "–"}</b></div><div>Fotek<b>${photos}</b></div>`;
+  const medal = ["🥇", "🥈", "🥉"];
+  const row = (s, i) => {
+    const cover = (s.photos || [])[0];
+    return `<li class="${i < 3 && i >= 0 ? "top" : ""}">
+      <div class="place ${i >= 0 && i < 3 ? "m" : ""}">${i < 0 ? "–" : medal[i] || (i + 1) + "."}</div>
+      ${cover ? `<img class="ph" src="${esc(cover.url)}" alt="" loading="lazy" data-photo="${esc(cover.url)}">` : `<div class="ph" aria-hidden="true">🎃</div>`}
+      <div><div class="nm">${esc(s.name)}</div>
+        <div class="meta">${ratingHtml(s)}${(s.photos || []).length ? ` · 📷 ${(s.photos || []).length}` : ""}</div>
+        <div class="meta">${esc(s.address)}</div></div>
+      <div class="acts">
+        <button class="btn sm" type="button" data-showonmap="${esc(s.id)}">Ukázat na mapě</button>
+        <button class="btn sm ${myRatings[s.id] ? "ghost" : "teal"}" type="button" data-rate="${esc(s.id)}">${myRatings[s.id] ? "Vaše " + myRatings[s.id] + " ★ – změnit" : "★ Ohodnotit"}</button>
+      </div></li>`;
+  };
+  $("#rankList").innerHTML = rated.map(row).join("")
+    || `<li style="grid-template-columns:1fr"><div class="muted">${stations.length ? "Zatím nikdo nehodnotil. Buďte první – otevřete dům na mapě nebo níže a dejte mu hvězdičky." : LOC ? "V lokalitě zatím nejsou žádné domy." : "Nejdřív nahoře vyberte lokalitu."}</div></li>`;
+  const un = stations.filter(s => !(s.rating && s.rating.count));
+  $("#unratedWrap").hidden = !un.length || !rated.length && !stations.length;
+  $("#unratedList").innerHTML = un.map(s => row(s, -1)).join("");
+}
+$$("[data-rsort]").forEach(b => b.addEventListener("click", () => {
+  rankSort = b.dataset.rsort; $$("[data-rsort]").forEach(x => x.setAttribute("aria-pressed", x === b)); drawRank();
+}));
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-showonmap]"); if (!b) return;
+  const s = byId(b.dataset.showonmap); if (!s) return;
+  go("map");
+  setTimeout(() => { map.invalidateSize(); map.setView([s.lat, s.lng], 18, {animate:false}); if (markers[s.id]) markers[s.id].openPopup(); }, 80);
+});
 
 /* ---------- loading ---------- */
 async function load(fit){
@@ -1284,7 +1354,7 @@ $("#btnOrgLogout").addEventListener("click", () => { if (!LOC) return; delete or
 /* ---------- boot ---------- */
 $("#demoFlag").hidden = !DEMO;
 const initTab = (location.hash || "#map").slice(1);
-go(["map","route","add","info"].includes(initTab) ? initTab : "map");
+go(["map","route","add","rank","info"].includes(initTab) ? initTab : "map");
 drawHeader();
 load(true);
 setInterval(() => { if (!document.hidden && LOC) load(); }, 60000);
