@@ -6,6 +6,13 @@
 <title>Sousedský Halloween</title>
 <meta name="description" content="Sousedský Halloween – mapa domů, kde se v tvé čtvrti koleduje. Plánování trasy, navigace k dalšímu domu, každá obec má svou lokalitu.">
 <meta name="theme-color" content="#1b1426">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Halloween">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@600;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,800&display=swap">
@@ -32,7 +39,8 @@ header.top{padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;display:f
 .logo{width:58px;height:58px;flex:none}
 .brand{min-width:0;flex:1;display:flex;flex-direction:column;align-items:flex-start}
 .home-title{color:inherit;text-decoration:none}
-.locbtn{margin-top:3px;display:inline-flex;align-items:center;gap:5px;max-width:100%;background:var(--dusk2);border:1px solid var(--line);border-radius:999px;padding:3px 10px 3px 8px;font-size:12.5px;font-weight:700;color:var(--bone);cursor:pointer}
+.locbtn{position:relative;margin-top:4px;display:inline-flex;align-items:center;gap:5px;max-width:100%;min-height:32px;background:var(--dusk2);border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 10px;font-size:12.5px;font-weight:700;color:var(--bone);cursor:pointer}
+.locbtn::before{content:"";position:absolute;inset:-7px -4px}
 .locbtn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .locbtn:hover{border-color:var(--pumpkin)}
 .loclist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:48vh;overflow:auto}
@@ -49,7 +57,7 @@ header.top{padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;display:f
 .brand p{margin:2px 0 0;font-size:12.5px;color:var(--mist);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .count{flex:none;text-align:right;font-size:11px;color:var(--mist);line-height:1.2}
 .count b{display:block;font:800 18px/1.1 var(--body);color:var(--candle);font-variant-numeric:tabular-nums}
-@media(max-width:430px){.logo{width:48px;height:48px}.brand h1{font-size:23px;line-height:1.05}.count{font-size:10px}.count b{font-size:16px}}
+@media(max-width:430px){.logo{width:44px;height:44px}.brand h1{font-size:21px;line-height:1.1;white-space:nowrap}.count{font-size:10px}.count b{font-size:15px}header.top{padding-top:calc(env(safe-area-inset-top,0px) + 8px);padding-bottom:8px}}
 .demo-flag{background:var(--candle);color:#2a1a00;font-weight:800;font-size:12px;padding:5px 16px;text-align:center}
 
 /* views */
@@ -80,8 +88,10 @@ nav.tabs button[aria-selected="true"]{color:var(--pumpkin)}
 .fab svg{width:24px;height:24px}
 #fabLocate{bottom:calc(var(--nav-h) + 20px + env(safe-area-inset-bottom,0px))}
 #fabLocate.on{color:var(--teal)}
-.nextcard{position:absolute;left:12px;right:72px;bottom:calc(var(--nav-h) + 22px + env(safe-area-inset-bottom,0px));z-index:500;background:var(--dusk);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.45);max-width:460px}
-.nextcard .t{flex:1;min-width:0}
+.nextcard{position:absolute;left:12px;right:72px;bottom:calc(var(--nav-h) + 22px + env(safe-area-inset-bottom,0px));z-index:500;background:var(--dusk);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.45);max-width:460px}
+.nextcard .t{min-width:0}
+.nextcard .acts{grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.nextcard .acts .btn{min-height:46px;white-space:nowrap;padding-left:8px;padding-right:8px}
 .nextcard .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nextcard .t span{font-size:12.5px;color:var(--mist)}
 .pickbar{position:absolute;top:10px;left:10px;right:10px;z-index:600;background:var(--candle);color:#2a1a00;border-radius:var(--r);padding:10px 12px;font-weight:800;display:flex;align-items:center;gap:10px}
@@ -104,7 +114,7 @@ nav.tabs button[aria-selected="true"]{color:var(--pumpkin)}
 .btn.primary{background:var(--pumpkin);border-color:var(--pumpkin);color:#2a1300}
 .btn.teal{background:var(--teal);border-color:var(--teal);color:#062b26}
 .btn.ghost{background:transparent}
-.btn.sm{min-height:36px;padding:6px 10px;font-size:13px;border-radius:10px}
+.btn.sm{min-height:42px;padding:6px 12px;font-size:13.5px;border-radius:10px}
 .btn svg{width:18px;height:18px}
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .row>.btn{flex:1 1 auto}
@@ -169,7 +179,7 @@ legend{font-weight:800;padding:0 6px}
 .leaflet-control-attribution{background:rgba(20,14,29,.8)!important;color:var(--grave)!important;font-size:10px}
 .leaflet-control-attribution a{color:var(--mist)!important}
 .leaflet-control-zoom{display:none}
-.leaflet-top.leaflet-left{top:48px}
+.leaflet-top.leaflet-left{top:6px}
 .leaflet-bottom{bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px))}
 .mapy-logo{display:block;line-height:0;margin:0 0 0 10px!important}
 .mapy-logo img{height:30px;width:auto;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))}
@@ -189,6 +199,43 @@ ol.route.rank li{grid-template-columns:36px 56px 1fr;align-items:center}
 .seg2{display:flex;gap:6px;flex-wrap:wrap}
 .seg2 button{border:1px solid var(--line);background:var(--night);color:var(--mist);border-radius:999px;padding:6px 12px;font-weight:700;font-size:13px;cursor:pointer}
 .seg2 button[aria-pressed="true"]{background:var(--candle);border-color:var(--candle);color:#2a1a00}
+.fab.q{bottom:calc(var(--nav-h) + 132px + env(safe-area-inset-bottom,0px));font:800 20px/1 var(--body);color:var(--candle)}
+.legend{position:absolute;right:70px;bottom:calc(var(--nav-h) + 22px + env(safe-area-inset-bottom,0px));z-index:650;background:var(--dusk);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.5);width:min(290px,calc(100% - 90px));display:flex;flex-direction:column;gap:8px;font-size:13.5px}
+.legend .li{display:grid;grid-template-columns:34px 1fr;gap:8px;align-items:center}
+.legend .li svg{width:30px;height:33px}
+.legend .ln{height:0;border-top:3px dotted var(--candle);width:30px}
+.legend .dot{width:16px;height:16px;border-radius:50%;background:var(--teal);border:3px solid #fff;margin-left:6px}
+.legend .bdg{min-width:22px;height:22px;border-radius:11px;background:var(--bone);color:var(--night);font:800 12px/22px var(--body);text-align:center;margin-left:4px;padding:0 4px;display:inline-block}
+.statecard{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);z-index:560;background:var(--dusk);border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:0 12px 30px rgba(0,0,0,.5);width:min(320px,calc(100% - 40px));text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center}
+.statecard b{font-size:16px}
+.statecard p{margin:0;color:var(--mist);font-size:13.5px}
+.spin{width:28px;height:28px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--pumpkin)}
+@media (prefers-reduced-motion:no-preference){.spin{animation:spin .9s linear infinite}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.offline{position:absolute;left:50%;transform:translateX(-50%);top:10px;z-index:560;background:var(--blood);color:#fff;font-weight:800;font-size:12.5px;border-radius:999px;padding:6px 12px;border:0;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.hostcard{position:absolute;right:10px;top:10px;z-index:540;background:var(--dusk);border:1px solid var(--line);border-radius:14px;padding:8px 10px;box-shadow:0 8px 20px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:6px;max-width:min(230px,60%)}
+.hostcard .h{font-size:12px;color:var(--mist);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hostcard .h b{color:var(--bone)}
+.hint{display:flex;gap:10px;align-items:center;background:rgba(255,211,107,.1);border:1px solid rgba(255,211,107,.35);border-radius:var(--r);padding:12px}
+.hint p{margin:0;flex:1;font-size:13.5px}
+.req{color:var(--blood);font-weight:800}
+.seg2 button{min-height:40px}
+details.opt>summary,details.login>summary{min-height:44px}
+.opt{border:1px dashed var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:14px}
+.opt>summary{cursor:pointer;font-weight:800;list-style:none;display:flex;justify-content:space-between;align-items:center;min-height:30px}
+.opt>summary::after{content:"▾";color:var(--mist)}
+.opt[open]>summary::after{content:"▴"}
+.opt>summary small{font-weight:400;color:var(--mist)}
+details.login{border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;background:var(--dusk)}
+details.login>summary{cursor:pointer;font-weight:700;color:var(--candle);min-height:28px;display:flex;align-items:center}
+.onb ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px}
+.onb li{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start}
+.onb .n{width:30px;height:30px;border-radius:50%;background:var(--pumpkin);color:#2a1300;font-weight:800;display:grid;place-items:center}
+.onb li p{margin:2px 0 0;color:var(--mist);font-size:13.5px}
+.share{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.qr{background:#fff;padding:8px;border-radius:10px;line-height:0;width:148px;height:148px}
+.qr img,.qr canvas{width:132px!important;height:132px!important}
+.share .url{font-size:12.5px;color:var(--mist);word-break:break-all}
 .pop-cover{display:block;width:100%;height:140px;object-fit:cover;border-radius:10px;margin:0 0 8px;background:var(--dusk2);cursor:zoom-in}
 .thumbs{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .thumbs button{padding:0;border:0;background:none;position:relative;cursor:zoom-in;border-radius:8px}
@@ -236,6 +283,19 @@ ol.route.rank li{grid-template-columns:36px 56px 1fr;align-items:center}
       <circle cx="32" cy="32" r="4.5" fill="#ff5f6d" stroke="#140e1d" stroke-width="2"/>
     </svg></div>
     <div class="nextcard" id="nextcard" hidden></div>
+    <div class="hostcard" id="hostcard" hidden></div>
+    <button class="offline" id="offline" type="button" hidden>Nelze načíst data – zkusit znovu</button>
+    <div class="statecard" id="statecard" hidden></div>
+    <div class="legend" id="legend" hidden role="dialog" aria-label="Vysvětlivky mapy">
+      <b>Co je na mapě</b>
+      <div class="li"><svg viewBox="0 0 40 44"><ellipse cx="20" cy="27" rx="15" ry="13" fill="#ff8a2a"/><path d="M13 24l3.5-3.5L20 24zM20 24l3.5-3.5L27 24z" fill="#ffd36b"/></svg><span>Dům, kde se koleduje</span></div>
+      <div class="li"><svg viewBox="0 0 40 44"><ellipse cx="20" cy="27" rx="15" ry="13" fill="#7d7390"/><path d="M13 24l3.5-3.5L20 24zM20 24l3.5-3.5L27 24z" fill="#3a3148"/></svg><span>Došly bonbony nebo zavřeno</span></div>
+      <div class="li"><span class="bdg">3</span><span>Pořadí ve vaší trase</span></div>
+      <div class="li"><span class="bdg">✓</span><span>Už jste tam byli</span></div>
+      <div class="li"><span class="ln"></span><span>Vaše trasa</span></div>
+      <div class="li"><span class="dot"></span><span>Vy (když povolíte polohu)</span></div>
+    </div>
+    <button class="fab q" id="fabLegend" type="button" aria-label="Vysvětlivky mapy" aria-expanded="false">?</button>
     <button class="fab" id="fabLayer" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg><span>Letecká</span></button>
     <button class="fab" id="fabLocate" type="button" aria-label="Zobrazit moji polohu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
   </section>
@@ -245,6 +305,7 @@ ol.route.rank li{grid-template-columns:36px 56px 1fr;align-items:center}
     <div class="wrap">
       <h2>Vaše trasa</h2>
       <p class="muted small" id="routeIntro">Trasa začíná tam, kde právě jste, a vede vždy k nejbližšímu dalšímu otevřenému domu. Navštívené domy odškrtávejte – trasa se sama přepočítá.</p>
+      <div class="hint" id="gpsHint" hidden><p id="gpsHintText">Trasa teď začíná u středu čtvrti. Povolte polohu a povede přímo od vás.</p><button class="btn sm primary" type="button" id="btnGpsHint">Povolit polohu</button></div>
       <div class="panel stat" id="routeStats"></div>
       <div class="row">
         <button class="btn primary" id="btnReplan" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12a8 8 0 0 1 14-5l2 2M20 12a8 8 0 0 1-14 5l-2-2M20 4v5h-5M4 20v-5h5"/></svg>Přepočítat od mé polohy</button>
@@ -264,20 +325,10 @@ ol.route.rank li{grid-template-columns:36px 56px 1fr;align-items:center}
     <div class="wrap">
       <h2 id="formTitle">Zapojte svůj dům</h2>
       <p class="muted small">Stačí pár údajů. Rodiče pak uvidí váš dům na mapě a děti k vám dojdou po nejkratší trase. Údaje můžete z tohoto telefonu kdykoli upravit, smazat, nebo večer přepnout na „došly bonbony“.</p>
-      <div class="panel" id="loginPanel" hidden>
-        <h3>Už máte svůj dům na mapě?</h3>
-        <p class="muted small" style="margin:6px 0 10px">Přihlaste se PINem, který jste zadali při přidání. Pak můžete stanoviště upravit i z jiného telefonu nebo počítače.</p>
-        <div class="two">
-          <label class="f">Stanoviště<select id="lgStation"></select></label>
-          <label class="f">PIN<input type="password" id="lgPin" inputmode="numeric" maxlength="16" autocomplete="off"></label>
-        </div>
-        <div id="loginMsg" class="msg" hidden></div>
-        <div class="row" style="margin-top:10px"><button class="btn" type="button" id="btnLogin">Přihlásit se</button></div>
-      </div>
-
       <form id="form" novalidate>
         <input type="hidden" id="fId">
-        <label class="f">Název stanoviště
+        <p class="muted small" style="margin:0"><span class="req">*</span> povinné údaje</p>
+        <label class="f"><span>Název stanoviště <span class="req">*</span></span>
           <input type="text" id="fName" maxlength="60" required placeholder="např. Strašidelný hřbitov u Novákových" autocomplete="off">
         </label>
         <div class="addrwrap">
@@ -286,7 +337,7 @@ ol.route.rank li{grid-template-columns:36px 56px 1fr;align-items:center}
           <ul class="suggest" id="addrSuggest" role="listbox" hidden></ul>
         </div>
         <fieldset>
-          <legend>Poloha domu</legend>
+          <legend>Poloha domu <span class="req">*</span></legend>
           <div class="locbox">
             <span class="val" id="fLocVal">Zatím nevybráno</span>
             <button class="btn sm" type="button" id="btnGps">Jsem u domu – použít GPS</button>
@@ -294,30 +345,44 @@ ol.route.rank li{grid-template-columns:36px 56px 1fr;align-items:center}
           </div>
           <input type="hidden" id="fLat"><input type="hidden" id="fLng">
         </fieldset>
-        <fieldset>
-          <legend>Jak moc strašidelné?</legend>
-          <div class="seg">
-            <label><input type="radio" name="scare" value="1" checked>Vlídné<br><span class="small">i pro batolata</span></label>
-            <label><input type="radio" name="scare" value="2">Trochu strašidelné</label>
-            <label><input type="radio" name="scare" value="3">Pro odvážné<br><span class="small">tma, masky, zvuky</span></label>
-          </div>
-        </fieldset>
-        <div class="two">
-          <label class="f">Otevřeno od<input type="time" id="fFrom" value="17:00"></label>
-          <label class="f">do<input type="time" id="fTo" value="20:00"></label>
-        </div>
-        <label class="f" id="pinWrap">PIN pro pozdější úpravy <small>4 až 16 znaků, klidně číslice. Budete ho potřebovat, když budete chtít stanoviště upravit z jiného zařízení.</small>
+        <label class="f" id="pinWrap"><span>PIN pro pozdější úpravy <span class="req">*</span></span> <small>4 až 16 znaků, klidně číslice. Budete ho potřebovat, když budete chtít stanoviště upravit z jiného zařízení.</small>
           <input type="password" id="fPin" inputmode="numeric" maxlength="16" autocomplete="new-password">
         </label>
-        <label class="f">Poznámka pro rodiče <small>Nepovinné. Např. „zvoňte u branky“, „pes je zavřený“.</small>
-          <textarea id="fNote" maxlength="200"></textarea>
-        </label>
+        <details class="opt" id="optBox" open>
+          <summary>Podrobnosti <small>strašidelnost, otevírací doba, poznámka</small></summary>
+  <fieldset>
+            <legend>Jak moc strašidelné?</legend>
+            <div class="seg">
+              <label><input type="radio" name="scare" value="1" checked>Vlídné<br><span class="small">i pro batolata</span></label>
+              <label><input type="radio" name="scare" value="2">Trochu strašidelné</label>
+              <label><input type="radio" name="scare" value="3">Pro odvážné<br><span class="small">tma, masky, zvuky</span></label>
+            </div>
+          </fieldset>
+          <div class="two">
+            <label class="f">Otevřeno od<input type="time" id="fFrom" value="17:00"></label>
+            <label class="f">do<input type="time" id="fTo" value="20:00"></label>
+          </div>
+          <label class="f">Poznámka pro rodiče <small>Nepovinné. Např. „zvoňte u branky“, „pes je zavřený“.</small>
+            <textarea id="fNote" maxlength="200"></textarea>
+          </label>
+        </details>
         <div id="formMsg" class="msg" hidden></div>
         <div class="row">
           <button class="btn primary" type="submit" id="btnSave">Přidat na mapu</button>
           <button class="btn ghost" type="button" id="btnCancelEdit" hidden>Zrušit úpravy</button>
         </div>
       </form>
+
+      <details class="login" id="loginPanel" hidden>
+        <summary>Už máte svůj dům na mapě? Přihlaste se PINem</summary>
+        <p class="muted small" style="margin:10px 0">Přihlaste se PINem, který jste zadali při přidání. Pak můžete stanoviště upravit i z jiného telefonu nebo počítače.</p>
+        <div class="two">
+          <label class="f">Stanoviště<select id="lgStation"></select></label>
+          <label class="f">PIN<input type="password" id="lgPin" inputmode="numeric" maxlength="16" autocomplete="off"></label>
+        </div>
+        <div id="loginMsg" class="msg" hidden></div>
+        <div class="row" style="margin-top:10px"><button class="btn" type="button" id="btnLogin">Přihlásit se</button></div>
+      </details>
 
       <div id="mineWrap" hidden>
         <h3 style="margin:10px 0 8px">Vaše stanoviště</h3>
@@ -364,8 +429,8 @@ ol.route.rank li{grid-template-columns:36px 56px 1fr;align-items:center}
         </div>
         <div class="panel rules">
           <h3>Pro rodiče</h3>
-          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><text x="4" y="28" font-size="20" fill="#ffd36b">👻</text></svg><div><b>Strašidelnost 1 až 3</b><p>1 = vlídné i pro batolata, 3 = tma, masky a zvuky. Filtr „Pro malé děti“ ukáže jen jedničky.</p></div></div>
-          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 30h28M10 30V14l10-6 10 6v16" fill="none" stroke="#b9aec9" stroke-width="3"/><path d="M4 22h8" stroke="#ff8a2a" stroke-width="3"/></svg><div><b>Navigace k dalšímu domu</b><p>Tlačítko „Navigovat“ otevře pěší trasu v Google Mapách nebo Mapy.com. Trasa počítá dětské tempo 3 km/h.</p></div></div>
+          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><text x="4" y="28" font-size="20" fill="#ffd36b">👻</text></svg><div><b>Strašidelnost 1 až 3</b><p>1 = vlídné i pro batolata, 3 = tma, masky a zvuky. Počet duchů najdete u každého domu na mapě i v trase.</p></div></div>
+          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 30h28M10 30V14l10-6 10 6v16" fill="none" stroke="#b9aec9" stroke-width="3"/><path d="M4 22h8" stroke="#ff8a2a" stroke-width="3"/></svg><div><b>Navigace k dalšímu domu</b><p>Tlačítko „Navigovat“ otevře pěší trasu v Google Mapách. Trasa počítá dětské tempo 3 km/h.</p></div></div>
           <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="14" fill="#7d7390"/><path d="M13 20h14" stroke="#1b1426" stroke-width="3"/></svg><div><b>Šedá dýně = došly bonbony</b><p>Hostitelé to přepínají živě, stránka se sama obnovuje každou minutu.</p></div></div>
         </div>
       </div>
@@ -373,6 +438,21 @@ ol.route.rank li{grid-template-columns:36px 56px 1fr;align-items:center}
         <h3>Chcete se zapojit?</h3>
         <p class="muted small" style="margin:6px 0 10px">Postavte před dům svítící dýni, připravte misku a přidejte se na mapu. Zabere to minutu.</p>
         <button class="btn primary" type="button" data-go="add">Přidat svůj dům</button>
+      </div>
+      <div class="panel" id="sharePanel">
+        <h3>Pozvěte sousedy</h3>
+        <p class="muted small" style="margin:6px 0 10px">Odkaz otevře rovnou vaši lokalitu. QR kód můžete vytisknout na leták do schránek.</p>
+        <div class="share"><div class="qr" id="qrBox" aria-label="QR kód odkazu"></div>
+          <div style="flex:1;min-width:160px;display:flex;flex-direction:column;gap:8px">
+            <span class="url" id="shareUrl"></span>
+            <button class="btn primary" type="button" id="btnShare">Sdílet odkaz</button>
+            <button class="btn" type="button" id="btnCopy">Kopírovat odkaz</button>
+          </div></div>
+      </div>
+      <div class="panel" id="installPanel">
+        <h3>Mějte ji po ruce jako aplikaci</h3>
+        <p class="muted small" id="installText" style="margin:6px 0 10px">Na iPhonu: tlačítko Sdílet → „Přidat na plochu“. Na Androidu: menu ⋮ → „Přidat na plochu“ / „Instalovat aplikaci“.</p>
+        <button class="btn" type="button" id="btnInstall" hidden>Přidat na plochu</button>
       </div>
       <div class="panel" id="orgPanel">
         <h3>Organizátor lokality</h3>
@@ -460,6 +540,20 @@ ol.route.rank li{grid-template-columns:36px 56px 1fr;align-items:center}
     </div>
   </div>
 </div>
+<div class="overlay" id="onbOverlay" hidden>
+  <div class="sheet tall onb" role="dialog" aria-modal="true" aria-labelledby="onbTitle">
+    <h3 id="onbTitle" style="font:800 26px/1.1 var(--display);color:var(--candle)">Vítejte na Sousedském Halloweenu!</h3>
+    <ol>
+      <li><span class="n">1</span><div><b>Vaše lokalita: <span id="onbLoc"></span></b><p>Jiná obec? <button class="btn sm ghost" type="button" id="onbChange" style="min-height:34px;margin-top:4px">Změnit lokalitu</button></p></div></li>
+      <li><span class="n">2</span><div><b>Povolte polohu</b><p>Trasa pak povede od vás vždy k nejbližšímu dalšímu domu.</p></div></li>
+      <li><span class="n">3</span><div><b>Jděte podle čísel na dýních</b><p>U domu klepněte na „Byli jsme ✓“ a aplikace vás pošle dál. Šedá dýně = došly bonbony.</p></div></li>
+    </ol>
+    <div class="row">
+      <button class="btn primary" type="button" id="onbGo">Povolit polohu a začít</button>
+      <button class="btn ghost" type="button" id="onbSkip">Jen se podívat</button>
+    </div>
+  </div>
+</div>
 <div class="lightbox" id="lightbox" hidden><img id="lbImg" alt="Fotka stanoviště"><button class="btn sm close" type="button" id="lbClose">Zavřít</button></div>
 <div class="toast" id="toast" role="status" hidden></div>
 <input type="file" id="photoInput" accept="image/*" hidden>
@@ -473,6 +567,7 @@ ol.route.rank li{grid-template-columns:36px 56px 1fr;align-items:center}
 </nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 /* ================= NASTAVENÍ – upravte podle sebe ================= */
 const CONFIG = {
@@ -673,7 +768,8 @@ async function deletePhoto(id, photoId){
 }
 let rateId = null;
 function paintStars(n){ $$("#starPick button").forEach(b => b.classList.toggle("on", +b.dataset.star <= n)); }
-function openRate(id){ const s = byId(id); if (!s) return; rateId = id; $("#rateName").textContent = s.name; paintStars(myRatings[id] || 0); $("#rateOverlay").hidden = false; }
+function openRate(id, after){ const s = byId(id); if (!s) return; rateId = id; $("#rateName").textContent = s.name;
+  $("#rateTitle").textContent = after ? "Jak se vám tam líbilo?" : "Ohodnoťte stanoviště"; $("#rateCancel").textContent = after ? "Teď ne" : "Zavřít"; paintStars(myRatings[id] || 0); $("#rateOverlay").hidden = false; }
 function closeRate(){ $("#rateOverlay").hidden = true; rateId = null; }
 function openLightbox(url){ $("#lbImg").src = url; $("#lightbox").hidden = false; }
 
@@ -725,8 +821,8 @@ function pumpkinSvg(fill, face){
 }
 function icon(s, order){
   const out = s.status !== "open";
-  const fill = out ? "#7d7390" : s.allergyFree ? "#3cc9b5" : "#ff8a2a";
-  const face = out ? "#3a3148" : s.allergyFree ? "#0b3a34" : "#ffd36b";
+  const fill = out ? "#7d7390" : "#ff8a2a";
+  const face = out ? "#3a3148" : "#ffd36b";
   const badge = visited.has(s.id) ? "✓" : order ? order : "";
   return L.divIcon({className:"", iconSize:[40,44], iconAnchor:[20,42], popupAnchor:[0,-38],
     html:`<div class="pin">${pumpkinSvg(fill, face)}${badge ? `<i>${badge}</i>` : ""}</div>`});
@@ -737,9 +833,6 @@ function tagsHtml(s){
   const t = [];
   if (s.status === "out") t.push(`<span class="tag warn">Došly bonbony</span>`);
   if (s.status === "closed") t.push(`<span class="tag warn">Zavřeno</span>`);
-  if (s.allergyFree) t.push(`<span class="tag teal">bez alergenů</span>`);
-  if (s.nonCandy) t.push(`<span class="tag gold">nesladké dárky</span>`);
-  if (s.accessible) t.push(`<span class="tag">bez schodů</span>`);
   return `<div class="tags">${t.join("")}</div>`;
 }
 function popupHtml(s){
@@ -787,10 +880,12 @@ function drawNext(){
   const s = byId(route[0]);
   if (!s || picking){ card.hidden = true; return; }
   const d = me ? ` · ${fmtM(walk(dist(me, s)))}, ${fmtMin(dist(me, s))}` : "";
-  card.innerHTML = `<div class="num ${s.allergyFree ? "teal" : ""}">1</div>
-    <div class="t"><span>Další stanoviště${d} · otevřeno ${esc(hours(s))}</span><b>${esc(s.name)}</b></div>
-    <a class="btn sm primary" href="${gmaps(s)}" target="_blank" rel="noopener">Jít</a>
-    <button class="btn sm teal" type="button" data-visit="${esc(s.id)}" aria-label="Označit jako navštívené">✓</button>`;
+  card.innerHTML = `<div class="num">1</div>
+    <div class="t"><span>Další dům${d} · otevřeno ${esc(hours(s))}</span><b>${esc(s.name)}</b></div>
+    <div class="acts">
+      <a class="btn primary" href="${gmaps(s)}" target="_blank" rel="noopener">Navigovat</a>
+      <button class="btn teal" type="button" data-visit="${esc(s.id)}">Byli jsme ✓</button>
+    </div>`;
   card.hidden = false;
 }
 
@@ -801,7 +896,7 @@ function drawRoute(){
   const items = list.map((s, i) => {
     const leg = prev ? dist(prev, s) : 0; total += leg; prev = s;
     return `<li>
-      <div class="num ${s.allergyFree ? "teal" : ""}">${i + 1}</div>
+      <div class="num">${i + 1}</div>
       <div><div class="nm">${esc(s.name)}</div>
         <div class="meta">${ratingHtml(s)}</div>
         <div class="meta">${esc(s.address)}${leg ? ` · ${fmtM(walk(leg))}` : ""} · otevřeno ${esc(hours(s))}${timeNote(s) ? ` · ${timeNote(s)}` : ""}</div>
@@ -811,10 +906,14 @@ function drawRoute(){
         <button class="btn sm teal" type="button" data-visit="${esc(s.id)}">✓ Byli jsme</button>
       </div></li>`;
   });
-  $("#routeList").innerHTML = items.join("") || `<li style="grid-template-columns:1fr"><div class="muted">${stations.length ? "Žádné další otevřené stanoviště neodpovídá filtrům. Zkuste na mapě vypnout některý filtr." : "Zatím se nikdo nezapojil. Buďte první – přidejte svůj dům!"}</div></li>`;
+  $("#routeList").innerHTML = items.join("") || `<li style="grid-template-columns:1fr"><div class="muted">${stations.length ? (visited.size ? "Hotovo – další otevřený dům už nezbývá. Díky za procházku!" : "Žádný dům teď nemá otevřeno. Zkuste to v čase akce.") : "Zatím se nikdo nezapojil. Buďte první – přidejte svůj dům!"}</div></li>`;
   const mins = list.length ? Math.round(walk(total) / (CONFIG.KID_SPEED_KMH * 1000 / 60) + list.length * CONFIG.STOP_MIN) : 0;
   $("#routeStats").innerHTML = `<div>Zbývá domů<b>${list.length}</b></div><div>Pěšky<b>${fmtM(walk(total))}</b></div><div>Odhad s koledou<b>${mins} min</b></div><div>Navštíveno<b>${visited.size}</b></div>`;
   $("#routeIntro").hidden = false;
+  $("#gpsHint").hidden = !!me || !stations.length;
+  $("#gpsHintText").textContent = gpsDenied
+    ? "Poloha je v prohlížeči zakázaná. Povolte ji v nastavení prohlížeče u této stránky – trasa pak povede přímo od vás."
+    : "Trasa teď začíná u středu čtvrti. Povolte polohu a povede přímo od vás.";
   // Google Maps: max 9 zastávek po cestě
   const g = list.slice(0, 10);
   const a = $("#btnGmapsAll");
@@ -870,7 +969,63 @@ async function doLogin(){
   $("#btnLogin").disabled = false;
 }
 
-function renderAll(replan = true){ if (replan) planRoute(); drawMap(); drawRoute(); drawMine(); drawLogin(); drawRank(); }
+function renderAll(replan = true){ if (replan) planRoute(); drawMap(); drawRoute(); drawMine(); drawLogin(); drawRank(); drawHostCard(); }
+
+/* ---------- 9: rychlá karta hostitele na mapě ---------- */
+function drawHostCard(){
+  const c = $("#hostcard"), s = stations.find(x => mine[x.id]);
+  if (!s || picking){ c.hidden = true; return; }
+  const open = s.status === "open";
+  c.innerHTML = `<div class="h">🏠 Můj dům: <b>${esc(s.name)}</b></div>
+    ${open ? `<button class="btn sm" type="button" data-status="out" data-id="${esc(s.id)}">Došly bonbony</button>`
+           : `<button class="btn sm teal" type="button" data-status="open" data-id="${esc(s.id)}">Zase otevřeno</button>`}`;
+  c.hidden = false;
+}
+
+/* ---------- 6: legenda ---------- */
+$("#fabLegend").addEventListener("click", () => {
+  const l = $("#legend"); l.hidden = !l.hidden; $("#fabLegend").setAttribute("aria-expanded", String(!l.hidden));
+});
+map.on("click", () => { $("#legend").hidden = true; $("#fabLegend").setAttribute("aria-expanded", "false"); });
+
+/* ---------- 7: uvítání při první návštěvě ---------- */
+function maybeOnboard(){
+  if (!LOC || store.get("hw-onb", false) || !$("#locOverlay").hidden || !$("#newLocOverlay").hidden) return;
+  $("#onbLoc").textContent = locLabel(LOC);
+  $("#onbOverlay").hidden = false;
+}
+function closeOnb(){ store.set("hw-onb", true); $("#onbOverlay").hidden = true; }
+$("#onbGo").addEventListener("click", () => { closeOnb(); go("map"); locate(true); });
+$("#onbSkip").addEventListener("click", closeOnb);
+$("#onbChange").addEventListener("click", () => { $("#onbOverlay").hidden = true; openLocPicker(); });
+
+/* ---------- 13: sdílení lokality ---------- */
+function shareLink(){ const u = new URL(location.href); u.hash = ""; u.search = LOC ? "?l=" + encodeURIComponent(LOC.id) : ""; return u.toString(); }
+let qrFor = "";
+function drawShare(){
+  $("#sharePanel").hidden = !LOC; if (!LOC) return;
+  const url = shareLink(); $("#shareUrl").textContent = url;
+  if (qrFor !== url && typeof QRCode !== "undefined"){
+    $("#qrBox").innerHTML = ""; qrFor = url;
+    try{ new QRCode($("#qrBox"), {text:url, width:132, height:132, colorDark:"#1b1426", colorLight:"#ffffff", correctLevel:QRCode.CorrectLevel.M}); }catch(e){}
+  }
+  $("#qrBox").hidden = typeof QRCode === "undefined";
+}
+$("#btnShare").addEventListener("click", async () => {
+  const url = shareLink(), text = LOC ? `Sousedský Halloween – ${LOC.city}: mapa domů, kde se koleduje` : "Sousedský Halloween";
+  if (navigator.share){ try{ await navigator.share({title:"Sousedský Halloween", text, url}); }catch(e){} }
+  else { try{ await navigator.clipboard.writeText(url); toast("Odkaz je zkopírovaný."); }catch(e){ toast(url, true, 8000); } }
+});
+$("#btnCopy").addEventListener("click", async () => {
+  try{ await navigator.clipboard.writeText(shareLink()); toast("Odkaz je zkopírovaný."); }catch(e){ toast(shareLink(), true, 8000); }
+});
+
+/* ---------- 14: instalace na plochu ---------- */
+let installEvt = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; $("#btnInstall").hidden = false; });
+$("#btnInstall").addEventListener("click", async () => { if (!installEvt) return; installEvt.prompt(); try{ await installEvt.userChoice; }catch(e){} installEvt = null; $("#btnInstall").hidden = true; });
+if (window.matchMedia && matchMedia("(display-mode: standalone)").matches) $("#installPanel").hidden = true;
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
 /* ---------- žebříček ---------- */
 let rankSort = "score";
@@ -914,14 +1069,24 @@ document.addEventListener("click", e => {
 });
 
 /* ---------- loading ---------- */
+let loadedOnce = false, lastOk = 0;
+function showState(kind){
+  const c = $("#statecard");
+  if (kind === "loading") c.innerHTML = `<div class="spin" aria-hidden="true"></div><b>Načítám mapu…</b>`;
+  else if (kind === "error") c.innerHTML = `<b>Data se nepodařilo načíst</b><p>Zkontrolujte připojení k internetu.</p><button class="btn primary" type="button" id="btnRetry">Zkusit znovu</button>`;
+  else if (kind === "empty") c.innerHTML = `<b>Zatím tu nikdo není 🎃</b><p>V lokalitě ${esc(LOC ? LOC.city : "")} ještě nikdo nepřidal svůj dům. Buďte první!</p><button class="btn primary" type="button" data-go="add">Přidat první dům</button>`;
+  c.hidden = !kind;
+}
+document.addEventListener("click", e => { if (e.target.closest("#btnRetry, #offline")){ $("#offline").hidden = true; showState(loadedOnce ? "" : "loading"); load(!loadedOnce); } });
 async function load(fit){
+  if (!loadedOnce) showState("loading");
   try{
     const res = await api.list();
     locations = (res.locations || []).map(l => Object.assign({}, l, {lat:+l.lat, lng:+l.lng, zoom:+l.zoom || 16}));
     const prevLoc = LOC && LOC.id;
     LOC = locations.find(l => l.id === curLoc) || null;
     if (!LOC && locations.length === 1){ return switchLoc(locations[0].id); }
-    if (!LOC){ curLoc = ""; stations = []; drawHeader(); renderAll(); drawLocList(); if (!$("#newLocOverlay").hidden) return; $("#locOverlay").hidden = false; return; }
+    if (!LOC){ curLoc = ""; stations = []; loadedOnce = true; showState(""); drawHeader(); renderAll(); drawLocList(); if (!$("#newLocOverlay").hidden) return; $("#locOverlay").hidden = false; return; }
     const list = (res.stations || []).filter(x => (x.loc || "uvaly") === LOC.id);
     if (prevLoc !== LOC.id) fit = true;
     drawHeader();
@@ -930,9 +1095,17 @@ async function load(fit){
     Object.keys(mine).forEach(id => { if (!byId(id)) delete mine[id]; }); store.set("hw-mine", mine);
     const before = route.join();
     planRoute();
+    if (prevLoc !== LOC.id) formDefaults();
     renderAll(false);
     if (fit) fitLoc();
-  }catch(e){ console.warn(e); }
+    loadedOnce = true; lastOk = Date.now(); $("#offline").hidden = true;
+    showState(stations.length ? "" : "empty");
+    maybeOnboard();
+  }catch(e){
+    console.warn(e);
+    if (!loadedOnce) showState("error");
+    else { const t = new Date(lastOk); $("#offline").textContent = `Offline – data z ${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}. Zkusit znovu`; $("#offline").hidden = false; }
+  }
 }
 
 /* ---------- tabs ---------- */
@@ -948,7 +1121,7 @@ document.addEventListener("click", e => { const g = e.target.closest("[data-go]"
 /* ---------- filters ---------- */
 
 /* ---------- location ---------- */
-let watchId = null, firstFix = true;
+let watchId = null, firstFix = true, gpsDenied = false;
 function locate(center){
   if (!navigator.geolocation){ alertMsg("Tento prohlížeč neumí zjistit polohu."); return; }
   if (watchId === null){
@@ -958,18 +1131,26 @@ function locate(center){
       if (!meMarker) meMarker = L.marker([me.lat, me.lng], {icon:L.divIcon({className:"", html:'<div class="me-dot"></div>', iconSize:[18,18]}), interactive:false, zIndexOffset:1000}).addTo(map);
       else meMarker.setLatLng([me.lat, me.lng]);
       $("#fabLocate").classList.add("on");
+      gpsDenied = false;
       if (firstFix){ firstFix = false; if (center) map.setView([me.lat, me.lng], 17); renderAll(); }
       else if (moved){ drawMap(); drawRoute(); }
-    }, err => { $("#fabLocate").classList.remove("on"); }, {enableHighAccuracy:true, maximumAge:10000});
+    }, err => {
+      $("#fabLocate").classList.remove("on");
+      if (err && err.code === 1){ gpsDenied = true; watchId !== null && navigator.geolocation.clearWatch(watchId); watchId = null; toast("Poloha je zakázaná – povolte ji v nastavení prohlížeče.", false, 5000); }
+      drawRoute();
+    }, {enableHighAccuracy:true, maximumAge:10000});
   } else if (me) map.setView([me.lat, me.lng], 17);
 }
 $("#fabLocate").addEventListener("click", () => locate(true));
 $("#btnReplan").addEventListener("click", () => { locate(false); renderAll(); });
+$("#btnGpsHint").addEventListener("click", () => { if (gpsDenied) toast("Poloha je zakázaná – povolte ji v nastavení prohlížeče (ikona zámku vedle adresy).", false, 6000); locate(false); });
 
 /* ---------- visited / skip / status actions ---------- */
 function toggleVisit(id){
-  visited.has(id) ? visited.delete(id) : visited.add(id);
+  const add = !visited.has(id);
+  add ? visited.add(id) : visited.delete(id);
   store.set("hw-visited", [...visited]); map.closePopup(); renderAll();
+  if (add && !myRatings[id] && byId(id)) setTimeout(() => openRate(id, true), 250);
 }
 document.addEventListener("click", async e => {
   const t = e.target.closest("button"); if (!t) return;
@@ -977,7 +1158,7 @@ document.addEventListener("click", async e => {
   else if (t.dataset.skip){ const id = t.dataset.skip; skipped.has(id) ? skipped.delete(id) : skipped.add(id); store.set("hw-skip", [...skipped]); map.closePopup(); renderAll(); }
   else if (t.dataset.status){
     t.disabled = true;
-    try{ await api.post({action:"update", id:t.dataset.id, token:mine[t.dataset.id], station:{status:t.dataset.status}}); await load(); }
+    try{ await api.post({action:"update", id:t.dataset.id, token:mine[t.dataset.id], station:{status:t.dataset.status}}); toast(t.dataset.status === "out" ? "Označeno: došly bonbony. Děti k vám už trasa nepošle." : "Dům je zase otevřený."); await load(); }
     catch(err){ alert(err.message); } t.disabled = false;
   }
   else if (t.dataset.edit){ fillForm(byId(t.dataset.edit)); }
@@ -1129,6 +1310,7 @@ $("#btnGps").addEventListener("click", () => {
 function setPicking(on){
   picking = on;
   $("#pickbar").hidden = !on; $("#crosshair").hidden = !on;
+  $("#legend").hidden = true; $("#statecard").hidden = on || $("#statecard").hidden; drawHostCard();
   $("#pickbar span").textContent = pickTarget === "loc"
     ? "Posuňte mapu tak, aby červená tečka mířila na střed vaší čtvrti"
     : "Posuňte mapu tak, aby červená tečka uprostřed terče mířila na váš dům";
@@ -1170,11 +1352,17 @@ function fillForm(s){
   $("#formTitle").textContent = "Upravit stanoviště"; $("#btnSave").textContent = "Uložit změny"; $("#btnCancelEdit").hidden = false;
   $("#formMsg").hidden = true; $("#v-add").scrollTop = 0;
 }
+function formDefaults(){
+  if (!LOC || $("#fId").value) return;
+  const pad = n => String(n).padStart(2, "0"), hm = d => pad(d.getHours()) + ":" + pad(d.getMinutes());
+  $("#fFrom").value = hm(locStart()); $("#fTo").value = hm(locEnd());
+}
 function resetForm(){
   $("#form").reset(); $("#fId").value = ""; $("#fLat").value = ""; $("#fLng").value = "";
   $("#fLocVal").textContent = "Zatím nevybráno"; $("#fLocVal").classList.remove("ok");
   if (pickTemp){ map.removeLayer(pickTemp); pickTemp = null; }
   $("#pinWrap").hidden = false;
+  formDefaults();
   $("#formTitle").textContent = "Zapojte svůj dům"; $("#btnSave").textContent = "Přidat na mapu"; $("#btnCancelEdit").hidden = true;
 }
 $("#btnCancelEdit").addEventListener("click", () => { resetForm(); $("#formMsg").hidden = true; });
@@ -1225,6 +1413,7 @@ function tick(){
 }
 tick(); setInterval(tick, 30000);
 function drawInfo(){
+  drawShare();
   if (!LOC){ $("#infoFacts").innerHTML = `<div>Lokalita<b style="font-size:17px">zatím nevybraná</b></div>`; $("#orgPanel").hidden = true; return; }
   const start = locStart(), end = locEnd();
   $("#infoFacts").innerHTML = `<div>Kdy<b style="font-size:17px">${dFmt.format(start)}</b></div>
