@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Sousedský Halloween</title>
-<meta name="description" content="Halloweenská stezka po domech v Primaveře a Radlické čtvrti v Úvalech – mapa stanovišť, plánování trasy a navigace k dalšímu domu.">
+<meta name="description" content="Sousedský Halloween – mapa domů, kde se v tvé čtvrti koleduje. Plánování trasy, navigace k dalšímu domu, každá obec má svou lokalitu.">
 <meta name="theme-color" content="#1b1426">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,8 +30,19 @@ a{color:var(--candle)}
 /* header */
 header.top{padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;display:flex;align-items:center;gap:12px;background:linear-gradient(180deg,#140e1d, var(--night));border-bottom:1px solid var(--line)}
 .logo{width:58px;height:58px;flex:none}
-.brand{min-width:0;flex:1}
-.home{display:flex;align-items:center;gap:12px;flex:1;min-width:0;color:inherit;text-decoration:none;border-radius:12px}
+.brand{min-width:0;flex:1;display:flex;flex-direction:column;align-items:flex-start}
+.home-title{color:inherit;text-decoration:none}
+.locbtn{margin-top:3px;display:inline-flex;align-items:center;gap:5px;max-width:100%;background:var(--dusk2);border:1px solid var(--line);border-radius:999px;padding:3px 10px 3px 8px;font-size:12.5px;font-weight:700;color:var(--bone);cursor:pointer}
+.locbtn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.locbtn:hover{border-color:var(--pumpkin)}
+.loclist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:48vh;overflow:auto}
+.loclist button{width:100%;text-align:left;background:var(--night);border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:2px 10px;color:var(--bone)}
+.loclist button[aria-current="true"]{border-color:var(--pumpkin);box-shadow:inset 0 0 0 1px var(--pumpkin)}
+.loclist b{font-size:15px}
+.loclist small{color:var(--mist);font-size:12.5px;grid-column:1}
+.loclist .km{grid-row:1 / span 2;grid-column:2;align-self:center;color:var(--candle);font-weight:800;font-size:13px}
+.sheet.tall{max-height:calc(100% - 24px);overflow:auto}
+.home{display:flex;align-items:center;flex:none;color:inherit;text-decoration:none;border-radius:12px}
 .home:hover .logo{transform:rotate(-6deg) scale(1.05)}
 @media (prefers-reduced-motion:no-preference){.logo{transition:transform .2s}}
 .brand h1{font:800 31px/1 var(--display);margin:0;letter-spacing:.3px;color:var(--pumpkin);text-shadow:0 0 18px rgba(255,138,42,.35)}
@@ -111,7 +122,7 @@ li .meta{font-size:12.5px;color:var(--mist)}
 form{display:flex;flex-direction:column;gap:14px}
 label.f{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:14px}
 label.f small{font-weight:400;color:var(--mist)}
-input[type=text],input[type=time],input[type=password],select,textarea{width:100%;background:var(--night);border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-height:44px}
+input[type=text],input[type=time],input[type=date],input[type=password],select,textarea{color-scheme:dark;width:100%;background:var(--night);border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-height:44px}
 textarea{min-height:70px;resize:vertical}
 fieldset{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:0;display:flex;flex-direction:column;gap:8px}
 legend{font-weight:800;padding:0 6px}
@@ -183,13 +194,11 @@ legend{font-weight:800;padding:0 6px}
 <body>
 
 <header class="top">
-  <a class="home" href="./" id="homeLink" aria-label="Úvodní stránka – mapa">
-    <svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 14c3-6 8-8 10-7-3 2-5 5-6 8" fill="none" stroke="#6bbf59" stroke-width="3" stroke-linecap="round"/><ellipse cx="22" cy="38" rx="14" ry="18" fill="#d96412"/><ellipse cx="42" cy="38" rx="14" ry="18" fill="#d96412"/><ellipse cx="32" cy="38" rx="13" ry="19" fill="#ff8a2a"/><path d="M22 33l5-5 5 5zM32 33l5-5 5 5z" fill="#ffd36b"/><path d="M20 43c4 5 20 5 24 0l-3 1-2 3-3-3-4 3-3-3-3 3-2-3z" fill="#ffd36b"/></svg>
-    <div class="brand">
-      <h1 id="evTitle">Sousedský Halloween</h1>
-      <p id="evSub">Primavera &amp; Radlická čtvrť · Úvaly</p>
-    </div>
-  </a>
+  <a class="home" href="./" id="homeLink" aria-label="Úvodní stránka – mapa"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 14c3-6 8-8 10-7-3 2-5 5-6 8" fill="none" stroke="#6bbf59" stroke-width="3" stroke-linecap="round"/><ellipse cx="22" cy="38" rx="14" ry="18" fill="#d96412"/><ellipse cx="42" cy="38" rx="14" ry="18" fill="#d96412"/><ellipse cx="32" cy="38" rx="13" ry="19" fill="#ff8a2a"/><path d="M22 33l5-5 5 5zM32 33l5-5 5 5z" fill="#ffd36b"/><path d="M20 43c4 5 20 5 24 0l-3 1-2 3-3-3-4 3-3-3-3 3-2-3z" fill="#ffd36b"/></svg></a>
+  <div class="brand">
+    <a class="home-title" href="./" id="homeLink2"><h1 id="evTitle">Sousedský Halloween</h1></a>
+    <button class="locbtn" type="button" id="locBtn" aria-haspopup="dialog">📍 <span id="evSub">Vyberte lokalitu</span> ▾</button>
+  </div>
   <div class="count" id="countdown" aria-live="polite"></div>
 </header>
 <div class="demo-flag" id="demoFlag" hidden>Ukázkový režim – stanoviště jsou vymyšlená a ukládají se jen v tomto prohlížeči</div>
@@ -246,7 +255,7 @@ legend{font-weight:800;padding:0 6px}
           <input type="text" id="fName" maxlength="60" required placeholder="např. Strašidelný hřbitov u Novákových" autocomplete="off">
         </label>
         <label class="f">Ulice a číslo domu <small>Pomůže při hledání v tmě – na mapě se ukáže u pinu.</small>
-          <input type="text" id="fAddress" maxlength="80" placeholder="např. Radlická 1234" autocomplete="street-address">
+          <input type="text" id="fAddress" maxlength="80" placeholder="např. Lipová 1234" autocomplete="street-address">
         </label>
         <fieldset>
           <legend>Poloha domu</legend>
@@ -303,7 +312,7 @@ legend{font-weight:800;padding:0 6px}
           <h3>Pro děti</h3>
           <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><ellipse cx="20" cy="23" rx="15" ry="12" fill="#ff8a2a"/><path d="M13 20l3-3 3 3zM21 20l3-3 3 3z" fill="#ffd36b"/><path d="M20 11c1-4 4-5 5-5" stroke="#6bbf59" stroke-width="2.5" fill="none"/></svg><div><b>Klepejte jen tam, kde svítí dýně</b><p>Na mapě jsou jen domy, které se zapojily. Ostatní sousedy nechte v klidu.</p></div></div>
           <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 34c0-14 5-26 12-26s12 12 12 26l-4-3-4 3-4-3-4 3-4-3z" fill="#f3ead9"/><circle cx="16" cy="18" r="2" fill="#1b1426"/><circle cx="24" cy="18" r="2" fill="#1b1426"/></svg><div><b>Vždycky s dospělým</b><p>Do domu ani na zahradu nechodíme. Koledujeme u dveří nebo u branky.</p></div></div>
-          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><rect x="12" y="6" width="16" height="28" rx="8" fill="#ffd36b"/><path d="M12 18h16" stroke="#1b1426" stroke-width="2"/></svg><div><b>Svítit a být vidět</b><p>Baterka, svítící náramek nebo reflexní pásek ke kostýmu. V Radlické jezdí auta.</p></div></div>
+          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><rect x="12" y="6" width="16" height="28" rx="8" fill="#ffd36b"/><path d="M12 18h16" stroke="#1b1426" stroke-width="2"/></svg><div><b>Svítit a být vidět</b><p>Baterka, svítící náramek nebo reflexní pásek ke kostýmu. Po ulicích jezdí auta.</p></div></div>
           <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="14" fill="none" stroke="#3cc9b5" stroke-width="3"/><path d="M13 20l5 5 9-10" stroke="#3cc9b5" stroke-width="3" fill="none"/></svg><div><b>Řekněte „děkuji“ a odškrtněte dům</b><p>Aplikace vás pak pošle k dalšímu nejbližšímu stanovišti.</p></div></div>
         </div>
         <div class="panel rules">
@@ -318,7 +327,27 @@ legend{font-weight:800;padding:0 6px}
         <p class="muted small" style="margin:6px 0 10px">Postavte před dům svítící dýni, připravte misku a přidejte se na mapu. Zabere to minutu.</p>
         <button class="btn primary" type="button" data-go="add">Přidat svůj dům</button>
       </div>
-      <p class="muted small">Pořádají sousedé z Primavery a Radlické čtvrti. Údaje o stanovištích vidí každý, kdo má odkaz – nepište sem telefon ani jména dětí.</p>
+      <div class="panel" id="orgPanel">
+        <h3>Organizátor lokality</h3>
+        <p class="muted small" id="orgInfo" style="margin:6px 0 10px"></p>
+        <div id="orgLogin">
+          <div class="two">
+            <label class="f">PIN organizátora<input type="password" id="orgPin" inputmode="numeric" maxlength="32" autocomplete="off"></label>
+            <div style="display:flex;align-items:flex-end"><button class="btn" type="button" id="btnOrgLogin" style="width:100%">Přihlásit se</button></div>
+          </div>
+        </div>
+        <div class="row" id="orgTools" hidden>
+          <button class="btn" type="button" id="btnOrgEdit">Upravit lokalitu</button>
+          <button class="btn ghost" type="button" id="btnOrgLogout">Odhlásit</button>
+        </div>
+        <div id="orgMsg" class="msg" hidden style="margin-top:10px"></div>
+      </div>
+      <div class="panel">
+        <h3>Chcete akci i u vás?</h3>
+        <p class="muted small" style="margin:6px 0 10px">Založte lokalitu pro svou obec nebo čtvrť. Dostane vlastní mapu, termín a stanoviště – s ostatními lokalitami se nemíchá.</p>
+        <button class="btn primary" type="button" id="btnNewLoc2">Založit novou lokalitu</button>
+      </div>
+      <p class="muted small" id="footNote">Údaje o stanovištích vidí každý, kdo má odkaz – nepište sem telefon ani jména dětí.</p>
     </div>
   </section>
 </main>
@@ -336,6 +365,52 @@ legend{font-weight:800;padding:0 6px}
     </div>
     <p class="muted small" style="margin:0;text-align:center">Dát lze 3 až 5 hvězdiček – každý, kdo se zapojil, si zaslouží pochvalu. Hodnocení můžete později změnit.</p>
     <div class="row"><button class="btn ghost" type="button" id="rateCancel">Zavřít</button></div>
+  </div>
+</div>
+<div class="overlay" id="locOverlay" hidden>
+  <div class="sheet tall" role="dialog" aria-modal="true" aria-labelledby="locTitle">
+    <h3 id="locTitle">Vyberte svou lokalitu</h3>
+    <p class="muted small" style="margin:0">Každá obec nebo čtvrť má vlastní mapu, termín a stanoviště.</p>
+    <input type="text" id="locSearch" placeholder="Hledat obec nebo čtvrť…" autocomplete="off">
+    <ul class="loclist" id="locList"></ul>
+    <div class="row">
+      <button class="btn primary" type="button" id="btnNewLoc">+ Založit novou lokalitu</button>
+      <button class="btn ghost" type="button" id="locClose">Zavřít</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="newLocOverlay" hidden>
+  <div class="sheet tall" role="dialog" aria-modal="true" aria-labelledby="nlTitle">
+    <h3 id="nlTitle">Nová lokalita</h3>
+    <p class="muted small" style="margin:0" id="nlIntro">Pro vaši obec nebo čtvrť vznikne samostatná mapa. Sousedé si ji najdou v přepínači lokalit.</p>
+    <input type="hidden" id="nlId">
+    <label class="f">Obec / město<input type="text" id="nlCity" maxlength="40" placeholder="např. Říčany" autocomplete="address-level2"></label>
+    <label class="f">Čtvrť nebo název akce<input type="text" id="nlName" maxlength="60" placeholder="např. Radošovice – ulice Na Vyhlídce" autocomplete="off"></label>
+    <div class="two">
+      <label class="f">Datum<input type="date" id="nlDate"></label>
+      <label class="f">Sraz <small>nepovinné</small><input type="text" id="nlMeet" maxlength="120" placeholder="16:45 u hřiště"></label>
+    </div>
+    <div class="two">
+      <label class="f">Od<input type="time" id="nlFrom" value="17:00"></label>
+      <label class="f">Do<input type="time" id="nlTo" value="20:00"></label>
+    </div>
+    <fieldset>
+      <legend>Střed mapy</legend>
+      <div class="locbox">
+        <span class="val" id="nlLocVal">Zatím nevybráno</span>
+        <button class="btn sm" type="button" id="nlGps">Jsem tady – GPS</button>
+        <button class="btn sm" type="button" id="nlPick">Vybrat na mapě</button>
+      </div>
+      <input type="hidden" id="nlLat"><input type="hidden" id="nlLng">
+    </fieldset>
+    <label class="f" id="nlPinWrap">PIN organizátora <small>4 až 32 znaků. S ním můžete lokalitu později upravit a mazat nevhodná stanoviště.</small>
+      <input type="password" id="nlPin" inputmode="numeric" maxlength="32" autocomplete="new-password">
+    </label>
+    <div id="nlMsg" class="msg" hidden></div>
+    <div class="row">
+      <button class="btn primary" type="button" id="nlSave">Založit lokalitu</button>
+      <button class="btn ghost" type="button" id="nlCancel">Zrušit</button>
+    </div>
   </div>
 </div>
 <div class="lightbox" id="lightbox" hidden><img id="lbImg" alt="Fotka stanoviště"><button class="btn sm close" type="button" id="lbClose">Zavřít</button></div>
@@ -358,13 +433,10 @@ const CONFIG = {
   // API klíč z developer.mapy.com (Seznam účet → Můj účet → API klíče). Prázdné = náhradní mapa OpenStreetMap.
   MAPY_API_KEY: "QLKoJzssPK3BWFiwNKVEnf9x7l6md2l7sVfUN6Ef2Xs",
   TITLE: "Sousedský Halloween",
-  AREA: "Primavera & Radlická čtvrť · Úvaly",
-  START: "2026-11-07T17:00:00+01:00",   // sobota 7. 11. 2026 – po změně času už platí SEČ (+01:00)
-  END:   "2026-11-07T20:00:00+01:00",
-  MEETING: "",                           // např. "Sraz v 16:45 u dětského hřiště" – nepovinné
-  CENTER: [50.0668, 14.7155],           // střed mapy (Radlická čtvrť, Úvaly) – klidně doladit
-  ZOOM: 16,
-  BOUNDS: [[50.03, 14.66], [50.10, 14.80]], // stanoviště mimo tento obdélník nepůjde uložit
+  // Termín, střed mapy a název má každá lokalita vlastní (list „Lokality“ v Google Tabulce).
+  CENTER: [49.8, 15.4],                 // přehled Česka, dokud není vybraná lokalita
+  ZOOM: 7,
+  RADIUS_KM: 6,                          // stanoviště musí být do této vzdálenosti od středu lokality
   KID_SPEED_KMH: 3,
   STOP_MIN: 3                            // minut na jedno zastavení
 };
@@ -389,6 +461,11 @@ let filters = {small:false, allergy:false, noncandy:false, access:false, open:tr
 let me = null;           // {lat,lng}
 let route = [];          // ordered station ids
 let picking = false;
+let pickTarget = "station";
+let locations = [];
+let LOC = null;                                   // aktuální lokalita
+let curLoc = params.get("l") || store.get("hw-loc", "");
+let orgTokens = store.get("hw-org", {});           // {lokalita: token organizátora}
 
 /* ---------- data layer ---------- */
 const DEMO = !CONFIG.API_URL;
@@ -399,12 +476,16 @@ const SAMPLE = [
   {id:"d4",name:"Netopýří jeskyně",address:"Radlická (ukázka)",lat:50.0684,lng:14.7160,scare:2,allergyFree:true,nonCandy:false,accessible:true,from:"17:00",to:"20:00",note:"Pes je zavřený.",status:"open"},
   {id:"d5",name:"Duchové u branky",address:"Radlická (ukázka)",lat:50.0671,lng:14.7189,scare:1,allergyFree:false,nonCandy:false,accessible:true,from:"17:00",to:"18:30",note:"",status:"out"}
 ];
+const DEMO_LOCS = [{id:"demo", name:"Ukázková čtvrť", city:"Úvaly", lat:50.0668, lng:14.7155, zoom:16, start:"2026-11-07T17:00:00+01:00", end:"2026-11-07T20:00:00+01:00", meeting:"", note:""}];
 const api = {
   async list(){
-    if (DEMO){ return store.get("hw-demo", null) || SAMPLE.slice(); }
-    const r = await fetch(CONFIG.API_URL + "?t=" + Date.now());
+    if (DEMO){
+      const locs = store.get("hw-demo-locs", null) || DEMO_LOCS;
+      return {locations:locs, stations:(store.get("hw-demo", null) || SAMPLE.slice()).map(x => Object.assign({loc:"demo"}, x)).filter(x => !curLoc || x.loc === curLoc)};
+    }
+    const r = await fetch(CONFIG.API_URL + "?t=" + Date.now() + (curLoc ? "&loc=" + encodeURIComponent(curLoc) : ""));
     const j = await r.json(); if (!j.ok) throw new Error(j.error || "Chyba serveru");
-    return j.stations;
+    return j;
   },
   async post(body){
     if (DEMO){
@@ -413,6 +494,8 @@ const api = {
       if (body.action === "update"){ list = list.map(s => s.id === body.id ? Object.assign({}, s, body.station) : s); store.set("hw-demo", list); return {ok:true}; }
       if (body.action === "delete"){ list = list.filter(s => s.id !== body.id); store.set("hw-demo", list); return {ok:true}; }
       if (body.action === "login"){ return {ok:true, token:"demo"}; }
+      if (body.action === "addloc"){ const locs = store.get("hw-demo-locs", null) || DEMO_LOCS.slice(); const id = "demo" + Date.now().toString(36); locs.push(Object.assign({id}, body.location)); store.set("hw-demo-locs", locs); return {ok:true, id, token:"demo"}; }
+      if (body.action === "loginloc" || body.action === "updloc"){ return {ok:true, token:"demo"}; }
       if (body.action === "rate"){ list = list.map(s => s.id === body.id ? Object.assign({}, s, {rating:{avg:body.stars, count:1}}) : s); store.set("hw-demo", list); return {ok:true}; }
       if (body.action === "photo"){ list = list.map(s => s.id === body.id ? Object.assign({}, s, {photos:[{id:"p" + Date.now(), url:body.image, host:!!body.token}].concat(s.photos || [])}) : s); store.set("hw-demo", list); return {ok:true}; }
       if (body.action === "delphoto"){ list = list.map(s => s.id === body.id ? Object.assign({}, s, {photos:(s.photos || []).filter(p => p.id !== body.photoId)}) : s); store.set("hw-demo", list); return {ok:true}; }
@@ -435,10 +518,11 @@ const fmtM = m => m < 1000 ? Math.round(m/10)*10 + " m" : (m/1000).toFixed(1).re
 const fmtMin = m => Math.max(1, Math.round(walk(m) / (CONFIG.KID_SPEED_KMH * 1000 / 60))) + " min";
 const byId = id => stations.find(s => s.id === id);
 /* ---------- otevírací doba stanoviště ---------- */
-const EV_DAY = CONFIG.START.slice(0, 10);
+const locStart = () => new Date(LOC ? LOC.start : "2100-01-01T00:00:00Z");
+const locEnd = () => new Date(LOC ? LOC.end : "2100-01-01T00:00:00Z");
+const dayKey = d => { const p = n => String(n).padStart(2, "0"); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };
 const toMin = t => { const m = /^(\d{1,2}):(\d{2})$/.exec(t || ""); return m ? +m[1] * 60 + +m[2] : null; };
-function isEventDay(){ const d = new Date(), p = n => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}` === EV_DAY; }
+function isEventDay(){ return !!LOC && dayKey(new Date()) === dayKey(locStart()); }
 function hours(s){ return (s.from || s.to) ? `${s.from || "?"}–${s.to || "?"}` : "neuvedeno"; }
 function timeState(s){                       // "before" | "open" | "after" | null (mimo den akce)
   if (!isEventDay()) return null;
@@ -473,7 +557,7 @@ function planRoute(){
   if (!cand.length){ route = []; return; }
   let start = me;
   if (!start){ // bez polohy začni u domu nejblíž středu
-    const c = {lat:CONFIG.CENTER[0], lng:CONFIG.CENTER[1]};
+    const c = locCenter();
     start = cand.reduce((a, b) => dist(c, a) < dist(c, b) ? a : b);
   }
   // nejbližší soused
@@ -536,7 +620,7 @@ let photoTarget = null;
 function pickPhoto(id){ photoTarget = id; const inp = $("#photoInput"); inp.value = ""; inp.click(); }
 async function deletePhoto(id, photoId){
   if (!confirm("Smazat tuto fotku?")) return;
-  try{ await api.post({action:"delphoto", id, photoId, voter:VOTER, token:mine[id], admin:ADMIN || undefined}); toast("Fotka je smazaná."); await load(); }
+  try{ await api.post({action:"delphoto", id, photoId, voter:VOTER, token:mine[id], admin:ADMIN || undefined, orgToken:orgTok()}); toast("Fotka je smazaná."); await load(); }
   catch(err){ toast(err.message, false); }
 }
 let rateId = null;
@@ -628,7 +712,7 @@ function popupHtml(s){
       ${!v ? `<button class="btn sm ghost" type="button" data-skip="${esc(s.id)}">${sk ? "Zařadit do trasy" : "Vynechat"}</button>` : ""}
       <button class="btn sm" type="button" data-addphoto="${esc(s.id)}">📷 Přidat foto</button>
       <button class="btn sm" type="button" data-rate="${esc(s.id)}">★ ${myRatings[s.id] ? "Změnit hodnocení" : "Přidat hodnocení"}</button>
-      ${ADMIN ? `<button class="btn sm ghost" type="button" data-admindel="${esc(s.id)}">Smazat (správce)</button>` : ""}
+      ${ADMIN || orgTok() ? `<button class="btn sm ghost" type="button" data-admindel="${esc(s.id)}">Smazat (${ADMIN ? "správce" : "organizátor"})</button>` : ""}
     </div>`;
 }
 let markers = {};
@@ -743,14 +827,22 @@ function renderAll(replan = true){ if (replan) planRoute(); drawMap(); drawRoute
 /* ---------- loading ---------- */
 async function load(fit){
   try{
-    const list = await api.list();
+    const res = await api.list();
+    locations = (res.locations || []).map(l => Object.assign({}, l, {lat:+l.lat, lng:+l.lng, zoom:+l.zoom || 16}));
+    const prevLoc = LOC && LOC.id;
+    LOC = locations.find(l => l.id === curLoc) || null;
+    if (!LOC && locations.length === 1){ return switchLoc(locations[0].id); }
+    if (!LOC){ curLoc = ""; stations = []; drawHeader(); renderAll(); drawLocList(); if (!$("#newLocOverlay").hidden) return; $("#locOverlay").hidden = false; return; }
+    const list = (res.stations || []).filter(x => (x.loc || "uvaly") === LOC.id);
+    if (prevLoc !== LOC.id) fit = true;
+    drawHeader();
     stations = list.filter(s => isFinite(s.lat) && isFinite(s.lng)).map(s => Object.assign({}, s, {lat:+s.lat, lng:+s.lng, scare:+s.scare || 1}));
     // odstraň tokeny ke smazaným stanovištím
     Object.keys(mine).forEach(id => { if (!byId(id)) delete mine[id]; }); store.set("hw-mine", mine);
     const before = route.join();
     planRoute();
     renderAll(false);
-    if (fit && stations.length) map.fitBounds(L.latLngBounds(stations.map(s => [s.lat, s.lng])).pad(0.25), {maxZoom:17});
+    if (fit) fitLoc();
   }catch(e){ console.warn(e); }
 }
 
@@ -807,22 +899,21 @@ document.addEventListener("click", async e => {
   }
   else if (t.dataset.admindel){
     if (!confirm("Smazat toto stanoviště jako správce?")) return;
-    try{ await api.post({action:"delete", id:t.dataset.admindel, admin:ADMIN}); map.closePopup(); await load(); }
+    try{ await api.post({action:"delete", id:t.dataset.admindel, admin:ADMIN || undefined, orgToken:orgTok()}); map.closePopup(); await load(); }
     catch(err){ alert(err.message); }
   }
 });
 $("#btnLogin").addEventListener("click", doLogin);
-$("#homeLink").addEventListener("click", e => {
+function goHome(e){
   e.preventDefault();
   if (picking) setPicking(false);
   map.closePopup(); $("#lightbox").hidden = true; closeRate();
   go("map");
-  setTimeout(() => {
-    if (stations.length) map.fitBounds(L.latLngBounds(stations.map(s => [s.lat, s.lng])).pad(0.25), {maxZoom:17});
-    else map.setView(CONFIG.CENTER, CONFIG.ZOOM);
-  }, 80);
+  setTimeout(fitLoc, 80);
   window.scrollTo(0, 0);
-});
+}
+$("#homeLink").addEventListener("click", goHome);
+$("#homeLink2").addEventListener("click", goHome);
 document.addEventListener("click", e => {
   const del = e.target.closest("[data-delphoto]");
   if (del){ e.preventDefault(); e.stopPropagation(); deletePhoto(del.dataset.id, del.dataset.delphoto); return; }
@@ -887,12 +978,19 @@ function setPicking(on){
   drawNext();
 }
 $("#btnPick").addEventListener("click", () => {
-  go("map"); setPicking(true);
+  pickTarget = "station"; go("map"); setPicking(true);
   const lat = parseFloat($("#fLat").value), lng = parseFloat($("#fLng").value);
-  if (isFinite(lat)) map.setView([lat, lng], 19); else map.setZoom(Math.max(map.getZoom(), 18));
+  if (isFinite(lat)) map.setView([lat, lng], 19); else map.setView(locCenter(), Math.max(LOC ? LOC.zoom : 16, 17));
 });
-$("#pickOk").addEventListener("click", () => { const c = map.getCenter(); setLoc(c.lat, c.lng); setPicking(false); go("add"); });
-$("#pickCancel").addEventListener("click", () => { setPicking(false); go("add"); });
+$("#pickOk").addEventListener("click", () => {
+  const c = map.getCenter(); setPicking(false);
+  if (pickTarget === "loc"){ setNlLoc(c.lat, c.lng); $("#newLocOverlay").hidden = false; }
+  else { setLoc(c.lat, c.lng); go("add"); }
+});
+$("#pickCancel").addEventListener("click", () => {
+  setPicking(false);
+  if (pickTarget === "loc") $("#newLocOverlay").hidden = false; else go("add");
+});
 
 function readForm(){
   return {
@@ -925,8 +1023,8 @@ $("#form").addEventListener("submit", async e => {
   const s = readForm(), id = $("#fId").value;
   if (!s.name) return alertMsg("Vyplňte název stanoviště."), $("#fName").focus();
   if (!isFinite(s.lat)) return alertMsg("Chybí poloha domu – klepněte na „Použít GPS“ nebo „Vybrat na mapě“.");
-  const [[a, b], [c, d]] = CONFIG.BOUNDS;
-  if (s.lat < a || s.lat > c || s.lng < b || s.lng > d) return alertMsg("Poloha je mimo Úvaly. Zkontrolujte ji přes „Vybrat na mapě“.");
+  if (!LOC) return alertMsg("Nejdřív nahoře vyberte lokalitu.");
+  if (dist(s, locCenter()) > CONFIG.RADIUS_KM * 1000) return alertMsg(`Poloha je víc než ${CONFIG.RADIUS_KM} km od lokality ${LOC.city}. Zkontrolujte ji přes „Vybrat na mapě“, nebo si vyberte jinou lokalitu.`);
   const pin = $("#fPin").value.trim();
   if (!id && pin.length < 4) return alertMsg("Zvolte PIN alespoň o 4 znacích – bez něj byste stanoviště nemohli upravit z jiného telefonu."), $("#fPin").focus();
   $("#btnSave").disabled = true;
@@ -935,7 +1033,7 @@ $("#form").addEventListener("submit", async e => {
       await api.post({action:"update", id, token:mine[id], admin:ADMIN || undefined, station:s});
       alertMsg("Uloženo. Změny už vidí všichni.", true);
     } else {
-      const r = await api.post({action:"add", pin, station:Object.assign({status:"open"}, s)});
+      const r = await api.post({action:"add", pin, loc:LOC.id, station:Object.assign({status:"open"}, s)});
       mine[r.id] = r.token; store.set("hw-mine", mine);
       alertMsg("Hotovo! Váš dům je na mapě. Upravit ho můžete dole v sekci Vaše stanoviště – z jiného zařízení se přihlaste svým PINem.", true);
     }
@@ -945,14 +1043,20 @@ $("#form").addEventListener("submit", async e => {
 });
 
 /* ---------- header / info ---------- */
-const start = new Date(CONFIG.START), end = new Date(CONFIG.END);
 const dFmt = new Intl.DateTimeFormat("cs-CZ", {weekday:"long", day:"numeric", month:"long"});
 const tFmt = new Intl.DateTimeFormat("cs-CZ", {hour:"2-digit", minute:"2-digit"});
 $("#evTitle").textContent = CONFIG.TITLE;
-$("#evSub").textContent = CONFIG.AREA;
 document.title = CONFIG.TITLE;
+function locLabel(l){ return l ? `${l.city} · ${l.name}` : "Vyberte lokalitu"; }
+function drawHeader(){
+  $("#evSub").textContent = locLabel(LOC);
+  document.title = LOC ? `${CONFIG.TITLE} – ${LOC.city}` : CONFIG.TITLE;
+  tick(); drawInfo();
+}
 function tick(){
   const now = new Date(), el = $("#countdown");
+  if (!LOC){ el.innerHTML = ""; return; }
+  const start = locStart(), end = locEnd();
   if (now < start){
     const ms = start - now, d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5), m = Math.floor(ms % 36e5 / 6e4);
     el.innerHTML = `začínáme za<b>${d ? d + " d " + h + " h" : h + " h " + m + " min"}</b>`;
@@ -961,19 +1065,136 @@ function tick(){
 }
 tick(); setInterval(tick, 30000);
 function drawInfo(){
+  if (!LOC){ $("#infoFacts").innerHTML = `<div>Lokalita<b style="font-size:17px">zatím nevybraná</b></div>`; $("#orgPanel").hidden = true; return; }
+  const start = locStart(), end = locEnd();
   $("#infoFacts").innerHTML = `<div>Kdy<b style="font-size:17px">${dFmt.format(start)}</b></div>
     <div>Čas<b style="font-size:17px">${tFmt.format(start)}–${tFmt.format(end)}</b></div>
-    <div>Kde<b style="font-size:17px">${esc(CONFIG.AREA)}</b></div>
-    ${CONFIG.MEETING ? `<div>Sraz<b style="font-size:17px">${esc(CONFIG.MEETING)}</b></div>` : ""}`;
+    <div>Kde<b style="font-size:17px">${esc(locLabel(LOC))}</b></div>
+    ${LOC.meeting ? `<div>Sraz<b style="font-size:17px">${esc(LOC.meeting)}</b></div>` : ""}`;
+  $("#orgPanel").hidden = false;
+  const on = !!orgTok();
+  $("#orgInfo").textContent = on
+    ? `Jste přihlášený organizátor lokality ${LOC.city}. Můžete upravit termín a mazat nevhodná stanoviště i fotky.`
+    : `Založili jste lokalitu ${LOC.city}? Přihlaste se PINem organizátora.`;
+  $("#orgLogin").hidden = on; $("#orgTools").hidden = !on;
 }
-drawInfo();
+
+/* ---------- lokality ---------- */
+function orgTok(){ return LOC ? orgTokens[LOC.id] : undefined; }
+function locCenter(){ return LOC ? {lat:LOC.lat, lng:LOC.lng} : {lat:CONFIG.CENTER[0], lng:CONFIG.CENTER[1]}; }
+function fitLoc(){
+  if (!LOC){ map.setView(CONFIG.CENTER, CONFIG.ZOOM); return; }
+  if (stations.length) map.fitBounds(L.latLngBounds(stations.map(s => [s.lat, s.lng]).concat([[LOC.lat, LOC.lng]])).pad(0.25), {maxZoom:17});
+  else map.setView([LOC.lat, LOC.lng], LOC.zoom || 16);
+}
+function switchLoc(id){
+  curLoc = id; store.set("hw-loc", id);
+  try{ const u = new URL(location.href); u.searchParams.set("l", id); history.replaceState(null, "", u.pathname + u.search + location.hash); }catch(e){}
+  route = []; stations = [];
+  $("#locOverlay").hidden = true;
+  map.closePopup();
+  return load(true);
+}
+function drawLocList(){
+  const q = $("#locSearch").value.trim().toLowerCase();
+  const norm = t => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  let list = locations.filter(l => !q || norm(l.city + " " + l.name).includes(norm(q)));
+  if (me) list.sort((a, b) => dist(me, a) - dist(me, b));
+  else list.sort((a, b) => (a.city + a.name).localeCompare(b.city + b.name, "cs"));
+  $("#locList").innerHTML = list.map(l => `<li><button type="button" data-loc="${esc(l.id)}" aria-current="${LOC && LOC.id === l.id}">
+      <b>${esc(l.city)}</b><small>${esc(l.name)} · ${dFmt.format(new Date(l.start))}</small>
+      ${me ? `<span class="km">${fmtM(dist(me, l))}</span>` : ""}</button></li>`).join("")
+    || `<li class="muted small">Nic nenalezeno. Založte novou lokalitu pro svou obec.</li>`;
+}
+function openLocPicker(){ $("#locSearch").value = ""; drawLocList(); $("#locOverlay").hidden = false; }
+$("#locBtn").addEventListener("click", openLocPicker);
+$("#locClose").addEventListener("click", () => { if (LOC) $("#locOverlay").hidden = true; });
+$("#locSearch").addEventListener("input", drawLocList);
+$("#locList").addEventListener("click", e => { const b = e.target.closest("[data-loc]"); if (b) switchLoc(b.dataset.loc); });
+
+// --- nová / upravená lokalita ---
+function nlMsg(t, ok){ const m = $("#nlMsg"); m.textContent = t; m.className = "msg " + (ok ? "ok" : "err"); m.hidden = false; }
+function setNlLoc(lat, lng){ $("#nlLat").value = lat.toFixed(6); $("#nlLng").value = lng.toFixed(6); const v = $("#nlLocVal"); v.textContent = "Uloženo: " + lat.toFixed(5) + ", " + lng.toFixed(5); v.classList.add("ok"); }
+function openNewLoc(edit){
+  $("#locOverlay").hidden = true; $("#nlMsg").hidden = true;
+  $("#nlId").value = edit ? LOC.id : "";
+  $("#nlTitle").textContent = edit ? "Upravit lokalitu" : "Nová lokalita";
+  $("#nlSave").textContent = edit ? "Uložit změny" : "Založit lokalitu";
+  $("#nlPinWrap").hidden = !!edit; $("#nlIntro").hidden = !!edit;
+  const pad = n => String(n).padStart(2, "0"), hm = d => pad(d.getHours()) + ":" + pad(d.getMinutes());
+  if (edit){
+    const a = locStart(), b = locEnd();
+    $("#nlCity").value = LOC.city; $("#nlName").value = LOC.name; $("#nlMeet").value = LOC.meeting || "";
+    $("#nlDate").value = dayKey(a); $("#nlFrom").value = hm(a); $("#nlTo").value = hm(b);
+    setNlLoc(LOC.lat, LOC.lng);
+  } else {
+    ["nlCity","nlName","nlMeet","nlPin","nlLat","nlLng"].forEach(i => $("#" + i).value = "");
+    $("#nlDate").value = "2026-10-31"; $("#nlFrom").value = "17:00"; $("#nlTo").value = "20:00";
+    $("#nlLocVal").textContent = "Zatím nevybráno"; $("#nlLocVal").classList.remove("ok");
+  }
+  $("#newLocOverlay").hidden = false;
+}
+$("#btnNewLoc").addEventListener("click", () => openNewLoc(false));
+$("#btnNewLoc2").addEventListener("click", () => openNewLoc(false));
+$("#btnOrgEdit").addEventListener("click", () => openNewLoc(true));
+$("#nlCancel").addEventListener("click", () => { $("#newLocOverlay").hidden = true; if (!LOC) $("#locOverlay").hidden = false; });
+$("#nlGps").addEventListener("click", () => {
+  if (!navigator.geolocation) return nlMsg("Prohlížeč neumí zjistit polohu – použijte „Vybrat na mapě“.");
+  navigator.geolocation.getCurrentPosition(p => setNlLoc(p.coords.latitude, p.coords.longitude),
+    () => nlMsg("Polohu se nepodařilo zjistit. Použijte „Vybrat na mapě“."), {enableHighAccuracy:true, timeout:15000});
+});
+$("#nlPick").addEventListener("click", () => {
+  $("#newLocOverlay").hidden = true; pickTarget = "loc"; go("map"); setPicking(true);
+  const lat = parseFloat($("#nlLat").value), lng = parseFloat($("#nlLng").value);
+  if (isFinite(lat)) map.setView([lat, lng], 16); else if (me) map.setView([me.lat, me.lng], 15);
+});
+$("#nlSave").addEventListener("click", async () => {
+  const id = $("#nlId").value, d = $("#nlDate").value, f = $("#nlFrom").value, t = $("#nlTo").value;
+  const iso = hm => { const x = new Date(`${d}T${hm}:00`); return isNaN(x) ? "" : x.toISOString().replace(/\.\d{3}Z$/, "Z"); };
+  const loc = {city:$("#nlCity").value.trim(), name:$("#nlName").value.trim(), meeting:$("#nlMeet").value.trim(),
+    lat:parseFloat($("#nlLat").value), lng:parseFloat($("#nlLng").value), start:iso(f), end:iso(t), zoom:16};
+  if (!loc.city) return nlMsg("Vyplňte obec nebo město.");
+  if (!loc.name) return nlMsg("Vyplňte čtvrť nebo název akce.");
+  if (!d || !loc.start || !loc.end) return nlMsg("Vyplňte datum a čas.");
+  if (loc.end <= loc.start) return nlMsg("Konec musí být po začátku.");
+  if (!isFinite(loc.lat)) return nlMsg("Vyberte střed mapy – GPS nebo „Vybrat na mapě“.");
+  const pin = $("#nlPin").value.trim();
+  if (!id && pin.length < 4) return nlMsg("Zvolte PIN organizátora alespoň o 4 znacích.");
+  $("#nlSave").disabled = true;
+  try{
+    if (id){
+      await api.post({action:"updloc", loc:id, token:orgTokens[id], admin:ADMIN || undefined, location:loc});
+      $("#newLocOverlay").hidden = true; toast("Lokalita je upravená."); await load(true);
+    } else {
+      const r = await api.post({action:"addloc", pin, location:loc});
+      orgTokens[r.id] = r.token; store.set("hw-org", orgTokens);
+      $("#newLocOverlay").hidden = true; toast("Lokalita je založená. Teď přidejte první dům!");
+      await switchLoc(r.id); go("add");
+    }
+  }catch(err){ nlMsg(err.message); }
+  $("#nlSave").disabled = false;
+});
+
+// --- organizátor ---
+function orgSay(t, ok){ const m = $("#orgMsg"); m.textContent = t; m.className = "msg " + (ok ? "ok" : "err"); m.hidden = false; }
+$("#btnOrgLogin").addEventListener("click", async () => {
+  const pin = $("#orgPin").value.trim(); if (!LOC) return;
+  if (!pin) return orgSay("Zadejte PIN organizátora.");
+  try{
+    const r = await api.post({action:"loginloc", loc:LOC.id, pin});
+    orgTokens[LOC.id] = r.token; store.set("hw-org", orgTokens); $("#orgPin").value = "";
+    orgSay("Přihlášeno.", true); drawInfo(); drawMap();
+  }catch(err){ orgSay(err.message); }
+});
+$("#btnOrgLogout").addEventListener("click", () => { if (!LOC) return; delete orgTokens[LOC.id]; store.set("hw-org", orgTokens); $("#orgMsg").hidden = true; drawInfo(); drawMap(); });
 
 /* ---------- boot ---------- */
 $("#demoFlag").hidden = !DEMO;
 const initTab = (location.hash || "#map").slice(1);
 go(["map","route","add","info"].includes(initTab) ? initTab : "map");
+drawHeader();
 load(true);
-setInterval(() => { if (!document.hidden) load(); }, 60000);
+setInterval(() => { if (!document.hidden && LOC) load(); }, 60000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
 // zkus polohu tiše, pokud už ji uživatel dříve povolil
 if (navigator.permissions) navigator.permissions.query({name:"geolocation"}).then(p => { if (p.state === "granted") locate(false); }).catch(() => {});
