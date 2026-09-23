@@ -1,20 +1,25 @@
 /**
- * Úvalský Halloween – backend nad Google Tabulkou.
- * Listy: Stanoviste (domy), Hodnoceni (hvězdičky 3–5), Fotky (odkazy na soubory v Google Disku).
+ * Sousedský Halloween – backend nad Google Tabulkou.
+ * Listy: Lokality (jednotlivé akce/obce), Stanoviste (domy), Hodnoceni (hvězdičky 3–5), Fotky (Google Disk).
  * Nasazení: Implementovat → Webová aplikace, Spustit jako: Já, Přístup: Kdokoli.
  * Po každé úpravě: Implementovat → Spravovat implementace → Verze: Nová verze.
  */
 const SHEET = 'Stanoviste';
 const SHEET_RATE = 'Hodnoceni';
 const SHEET_PHOTO = 'Fotky';
+const SHEET_LOC = 'Lokality';
 const ADMIN_KEY = 'dyne-2e41849e';            // heslo správce (?admin=HESLO)
-const MAX_STATIONS = 300;                      // pojistka proti spamu
+const MAX_STATIONS = 300;                      // pojistka proti spamu (na jednu lokalitu)
+const MAX_LOCS = 500;
+const RADIUS_KM = 6;                           // stanoviště musí být do této vzdálenosti od středu lokality
+const DEFAULT_LOC = 'uvaly';                   // stanoviště z doby před lokalitami
 const MAX_PHOTOS_PER_STATION = 30;
 const MAX_PHOTO_BYTES = 3 * 1024 * 1024;       // 3 MB po zmenšení v prohlížeči bohatě stačí
-const BOUNDS = { minLat: 50.03, maxLat: 50.10, minLng: 14.66, maxLng: 14.80 }; // Úvaly a okolí
-const COLS = ['id','token','pinHash','name','address','lat','lng','scare','allergyFree','nonCandy','accessible','from','to','note','status','created','updated'];
+const REGION = { minLat: 47.7, maxLat: 51.1, minLng: 12.0, maxLng: 22.6 }; // Česko + Slovensko
+const COLS = ['id','token','pinHash','name','address','lat','lng','scare','allergyFree','nonCandy','accessible','from','to','note','status','created','updated','loc'];
 const RATE_COLS = ['stationId','voter','stars','created','updated'];
 const PHOTO_COLS = ['id','stationId','fileId','by','voter','created'];
+const LOC_COLS = ['id','name','city','lat','lng','zoom','start','end','meeting','note','pinHash','token','created','updated'];
 
 /* ---------- listy ---------- */
 function aux_(name, cols) {
@@ -56,8 +61,54 @@ function public_(o) {
     lat: Number(o.lat), lng: Number(o.lng), scare: Number(o.scare) || 1,
     allergyFree: bool_(o.allergyFree), nonCandy: bool_(o.nonCandy), accessible: bool_(o.accessible),
     from: String(o.from), to: String(o.to), note: String(o.note),
-    status: ['open', 'out', 'closed'].indexOf(String(o.status)) >= 0 ? String(o.status) : 'open'
+    status: ['open', 'out', 'closed'].indexOf(String(o.status)) >= 0 ? String(o.status) : 'open',
+    loc: String(o.loc || DEFAULT_LOC)
   };
+}
+
+/* ---------- lokality ---------- */
+function locs_() {
+  const sh = aux_(SHEET_LOC, LOC_COLS);
+  let list = table_(sh).filter(function (o) { return o.id; });
+  if (!list.length) {                                   // první spuštění: založ Úvaly
+    const now = new Date().toISOString();
+    sh.appendRow([DEFAULT_LOC, 'Primavera & Radlická čtvrť', 'Úvaly', '50.0668', '14.7155', '16',
+      '2026-11-07T17:00:00+01:00', '2026-11-07T20:00:00+01:00', '', '', '', Utilities.getUuid(), now, now]);
+    list = table_(sh).filter(function (o) { return o.id; });
+  }
+  return list;
+}
+function locPublic_(o) {
+  return { id: String(o.id), name: String(o.name), city: String(o.city), lat: Number(o.lat), lng: Number(o.lng),
+    zoom: Number(o.zoom) || 16, start: String(o.start), end: String(o.end), meeting: String(o.meeting), note: String(o.note) };
+}
+const dt_ = v => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?([+-]\d{2}:\d{2}|Z)?$/.test(String(v)) ? String(v) : '';
+function locClean_(s, prev) {
+  prev = prev || {};
+  const get = (k) => (s[k] !== undefined ? s[k] : prev[k]);
+  const out = {
+    name: str_(get('name'), 60), city: str_(get('city'), 40),
+    lat: Number(get('lat')), lng: Number(get('lng')),
+    zoom: Math.min(18, Math.max(12, parseInt(get('zoom'), 10) || 16)),
+    start: dt_(get('start')), end: dt_(get('end')),
+    meeting: str_(get('meeting'), 120), note: str_(get('note'), 300)
+  };
+  if (!out.city) throw new Error('Vyplňte obec nebo město.');
+  if (!out.name) throw new Error('Vyplňte název čtvrti nebo akce.');
+  if (!out.start || !out.end) throw new Error('Vyplňte datum a čas akce.');
+  if (!(out.lat >= REGION.minLat && out.lat <= REGION.maxLat && out.lng >= REGION.minLng && out.lng <= REGION.maxLng))
+    throw new Error('Střed mapy musí být v Česku nebo na Slovensku.');
+  return out;
+}
+function slug_(t) {
+  return String(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'lokalita';
+}
+function km_(a, b) {
+  const R = 6371, r = function (x) { return x * Math.PI / 180; };
+  const dLa = r(b.lat - a.lat), dLo = r(b.lng - a.lng);
+  const h = Math.sin(dLa / 2) * Math.sin(dLa / 2) + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLo / 2) * Math.sin(dLo / 2);
+  return 2 * R * Math.asin(Math.sqrt(h));
 }
 
 function clean_(s, prev) {
@@ -74,7 +125,7 @@ function clean_(s, prev) {
     status: ['open', 'out', 'closed'].indexOf(String(get('status'))) >= 0 ? String(get('status')) : 'open'
   };
   if (!out.name) throw new Error('Chybí název stanoviště.');
-  if (!(out.lat >= BOUNDS.minLat && out.lat <= BOUNDS.maxLat && out.lng >= BOUNDS.minLng && out.lng <= BOUNDS.maxLng))
+  if (!(out.lat >= REGION.minLat && out.lat <= REGION.maxLat && out.lng >= REGION.minLng && out.lng <= REGION.maxLng))
     throw new Error('Poloha je mimo povolenou oblast.');
   return out;
 }
@@ -103,7 +154,7 @@ function folder_() {
   const props = PropertiesService.getScriptProperties();
   const id = props.getProperty('photoFolder');
   if (id) { try { return DriveApp.getFolderById(id); } catch (e) {} }
-  const f = DriveApp.createFolder('Úvalský Halloween – fotky');
+  const f = DriveApp.createFolder('Sousedský Halloween – fotky');
   props.setProperty('photoFolder', f.getId());
   return f;
 }
@@ -121,7 +172,9 @@ function trashPhotos_(stationId) {
 function doGet(e) {
   if (!e) return json_({ ok: true, setup: setup() });   // spuštění z editoru = inicializace + oprávnění
   try {
-    const stations = rows_().map(public_);
+    const locations = locs_().map(locPublic_);
+    const want = e.parameter && e.parameter.loc ? String(e.parameter.loc) : '';
+    const stations = rows_().map(public_).filter(function (s) { return !want || s.loc === want; });
     const agg = {};
     table_(aux_(SHEET_RATE, RATE_COLS)).forEach(function (r) {
       const s = Number(r.stars), k = String(r.stationId);
@@ -142,7 +195,7 @@ function doGet(e) {
         return (b.host - a.host) || (a.created < b.created ? 1 : -1);
       }).slice(0, 24);
     });
-    return json_({ ok: true, stations: stations });
+    return json_({ ok: true, locations: locations, stations: stations });
   } catch (err) {
     return json_({ ok: false, error: String(err.message || err) });
   }
@@ -157,10 +210,51 @@ function doPost(e) {
     const all = rows_();
     const now = new Date().toISOString();
     const isAdmin = body.admin && body.admin === ADMIN_KEY;
+    const locSh = aux_(SHEET_LOC, LOC_COLS);
+    const locList = locs_();
+    const findLoc = function (id) { return locList.filter(function (l) { return String(l.id) === String(id); })[0]; };
+
+    // --- lokality ---
+    if (body.action === 'addloc') {
+      if (locList.length >= MAX_LOCS) throw new Error('Lokalit je už příliš, ozvěte se správci.');
+      const L = locClean_(body.location || {});
+      const pin = String(body.pin || '');
+      if (pin.length < 4 || pin.length > 32) throw new Error('Zvolte PIN organizátora o délce 4 až 32 znaků.');
+      let id = slug_(L.city + '-' + L.name), base = id, n = 2;
+      while (findLoc(id)) id = base + '-' + (n++);
+      const token = Utilities.getUuid();
+      locSh.appendRow([id, L.name, L.city, String(L.lat), String(L.lng), String(L.zoom), L.start, L.end, L.meeting, L.note, hash_(pin, 'loc:' + id), token, now, now]);
+      return json_({ ok: true, id: id, token: token });
+    }
+    if (body.action === 'loginloc' || body.action === 'updloc' || body.action === 'delloc') {
+      const loc = findLoc(body.loc);
+      if (!loc) throw new Error('Lokalita nebyla nalezena.');
+      if (body.action === 'loginloc') {
+        if (!loc.pinHash) throw new Error('Tato lokalita nemá PIN organizátora, ozvěte se správci.');
+        if (hash_(String(body.pin || ''), 'loc:' + loc.id) !== String(loc.pinHash)) { Utilities.sleep(1000); throw new Error('Nesprávný PIN organizátora.'); }
+        return json_({ ok: true, loc: String(loc.id), token: String(loc.token) });
+      }
+      if (!isAdmin && String(body.token || '') !== String(loc.token)) throw new Error('Lokalitu může upravit jen její organizátor.');
+      if (body.action === 'updloc') {
+        const L = locClean_(body.location || {}, locPublic_(loc));
+        locSh.getRange(loc._row, 2, 1, 9).setValues([[L.name, L.city, String(L.lat), String(L.lng), String(L.zoom), L.start, L.end, L.meeting, L.note]]);
+        locSh.getRange(loc._row, 14).setValue(now);
+        return json_({ ok: true });
+      }
+      if (all.some(function (r) { return String(r.loc || DEFAULT_LOC) === String(loc.id); })) throw new Error('V lokalitě jsou ještě stanoviště – nejdřív je smažte.');
+      locSh.deleteRow(loc._row);
+      return json_({ ok: true });
+    }
 
     if (body.action === 'add') {
-      if (all.length >= MAX_STATIONS) throw new Error('Mapa je plná, ozvěte se organizátorovi.');
+      const loc = findLoc(body.loc || DEFAULT_LOC);
+      if (!loc) throw new Error('Lokalita nebyla nalezena.');
+      if (all.filter(function (r) { return String(r.loc || DEFAULT_LOC) === String(loc.id); }).length >= MAX_STATIONS)
+        throw new Error('Mapa je plná, ozvěte se organizátorovi.');
       const s = clean_(body.station || {});
+      if (km_(s, { lat: Number(loc.lat), lng: Number(loc.lng) }) > RADIUS_KM)
+        throw new Error('Dům je moc daleko od lokality „' + loc.city + ' – ' + loc.name + '“. Nejste v jiné lokalitě?');
+      s.loc = String(loc.id);
       const pin = String(body.pin || '');
       if (pin.length < 4 || pin.length > 32) throw new Error('Zvolte PIN o délce 4 až 32 znaků.');
       const id = Utilities.getUuid().slice(0, 8);
@@ -172,6 +266,8 @@ function doPost(e) {
     const row = all.filter(r => String(r.id) === String(body.id))[0];
     if (!row) throw new Error('Stanoviště nebylo nalezeno.');
     const isHost = !!body.token && String(body.token) === String(row.token);
+    const rowLoc = findLoc(row.loc || DEFAULT_LOC);
+    const isOrg = !!body.orgToken && !!rowLoc && String(body.orgToken) === String(rowLoc.token);
     const voter = str_(body.voter, 64);
 
     // --- hodnocení: kdokoli, jedno na zařízení a stanoviště (lze změnit) ---
@@ -208,7 +304,7 @@ function doPost(e) {
       const ps = aux_(SHEET_PHOTO, PHOTO_COLS);
       const p = table_(ps).filter(function (x) { return String(x.id) === String(body.photoId) && String(x.stationId) === String(row.id); })[0];
       if (!p) throw new Error('Fotka nebyla nalezena.');
-      if (!isAdmin && !isHost && !(voter && String(p.voter) === voter)) throw new Error('Tuto fotku smazat nemůžete.');
+      if (!isAdmin && !isOrg && !isHost && !(voter && String(p.voter) === voter)) throw new Error('Tuto fotku smazat nemůžete.');
       try { DriveApp.getFileById(String(p.fileId)).setTrashed(true); } catch (err) {}
       ps.deleteRow(p._row);
       return json_({ ok: true });
@@ -225,12 +321,13 @@ function doPost(e) {
       return json_({ ok: true, id: String(row.id), token: String(row.token) });
     }
 
-    if (!isAdmin && !isHost)
+    if (!isAdmin && !isHost && !(isOrg && body.action === 'delete'))
       throw new Error('Toto stanoviště může upravit jen jeho hostitel – přihlaste se PINem.');
 
     if (body.action === 'update') {
       const s = clean_(body.station || {}, public_(row));
-      writeRow_(sh, row._row, Object.assign({}, row, s, { updated: now }));
+      if (rowLoc && km_(s, { lat: Number(rowLoc.lat), lng: Number(rowLoc.lng) }) > RADIUS_KM) throw new Error('Dům je moc daleko od středu lokality.');
+      writeRow_(sh, row._row, Object.assign({}, row, s, { loc: String(row.loc || DEFAULT_LOC), updated: now }));
       return json_({ ok: true });
     }
     if (body.action === 'delete') {
@@ -248,6 +345,6 @@ function doPost(e) {
 
 // Spusťte jednou ručně: založí listy a vyžádá oprávnění k Google Disku (fotky).
 function setup() {
-  sheet_(); aux_(SHEET_RATE, RATE_COLS); aux_(SHEET_PHOTO, PHOTO_COLS);
+  sheet_(); locs_(); aux_(SHEET_RATE, RATE_COLS); aux_(SHEET_PHOTO, PHOTO_COLS);
   return folder_().getName();
 }
