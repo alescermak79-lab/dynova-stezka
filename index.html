@@ -1072,9 +1072,9 @@ function drawInfo(){
     <div>Kde<b style="font-size:17px">${esc(locLabel(LOC))}</b></div>
     ${LOC.meeting ? `<div>Sraz<b style="font-size:17px">${esc(LOC.meeting)}</b></div>` : ""}`;
   $("#orgPanel").hidden = false;
-  const on = !!orgTok();
+  const on = !!orgTok() || !!ADMIN;
   $("#orgInfo").textContent = on
-    ? `Jste přihlášený organizátor lokality ${LOC.city}. Můžete upravit termín a mazat nevhodná stanoviště i fotky.`
+    ? `${ADMIN && !orgTok() ? "Jste správce webu" : "Jste přihlášený organizátor lokality " + LOC.city}. Můžete upravit termín a mazat nevhodná stanoviště i fotky.`
     : `Založili jste lokalitu ${LOC.city}? Přihlaste se PINem organizátora.`;
   $("#orgLogin").hidden = on; $("#orgTools").hidden = !on;
 }
