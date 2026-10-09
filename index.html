@@ -57,7 +57,7 @@ header.top{padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;display:f
 .brand p{margin:2px 0 0;font-size:12.5px;color:var(--mist);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .count{flex:none;text-align:right;font-size:11px;color:var(--mist);line-height:1.2}
 .count b{display:block;font:800 18px/1.1 var(--body);color:var(--candle);font-variant-numeric:tabular-nums}
-@media(max-width:430px){.logo{width:44px;height:44px}.brand h1{font-size:21px;line-height:1.1;white-space:nowrap}.count{font-size:10px}.count b{font-size:15px}header.top{padding-top:calc(env(safe-area-inset-top,0px) + 8px);padding-bottom:8px}}
+@media(max-width:430px){.logo{width:38px;height:38px}.brand h1{font-size:20px;line-height:1.05;white-space:nowrap}.locbtn{margin-top:3px;min-height:30px;font-size:12px;padding:4px 10px 4px 8px}.count{font-size:10px}.count b{font-size:14px}header.top{gap:10px;padding:calc(env(safe-area-inset-top,0px) + 6px) 12px 6px}}
 .demo-flag{background:var(--candle);color:#2a1a00;font-weight:800;font-size:12px;padding:5px 16px;text-align:center}
 
 /* views */
@@ -73,9 +73,10 @@ h3{margin:0;font-size:16px;font-weight:800}
 .small{font-size:13px}
 
 /* bottom nav */
-nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:1000;display:grid;grid-template-columns:repeat(5,1fr);background:rgba(20,14,29,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
-nav.tabs button{background:none;border:0;height:var(--nav-h);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:700;color:var(--mist);cursor:pointer}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:1000;display:grid;grid-template-columns:repeat(4,1fr);background:rgba(20,14,29,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs button{background:none;border:0;height:var(--nav-h);line-height:1.15;text-align:center;padding:0 2px;white-space:nowrap;letter-spacing:-.1px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:700;color:var(--mist);cursor:pointer}
 nav.tabs button svg{width:24px;height:24px}
+@media(max-width:375px){nav.tabs button{font-size:11px}}
 nav.tabs button[aria-selected="true"]{color:var(--pumpkin)}
 
 /* map overlays */
@@ -86,9 +87,9 @@ nav.tabs button[aria-selected="true"]{color:var(--pumpkin)}
 .chip.teal[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:#062b26}
 .fab{position:absolute;right:12px;z-index:500;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--dusk);display:grid;place-items:center;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.4)}
 .fab svg{width:24px;height:24px}
-#fabLocate{bottom:calc(var(--nav-h) + 20px + env(safe-area-inset-bottom,0px))}
+#fabLocate{bottom:calc(var(--nav-h) + var(--dockh,0px) + 20px + env(safe-area-inset-bottom,0px))}
 #fabLocate.on{color:var(--teal)}
-.nextcard{position:absolute;left:12px;right:72px;bottom:calc(var(--nav-h) + 22px + env(safe-area-inset-bottom,0px));z-index:500;background:var(--dusk);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.45);max-width:460px}
+.nextcard{position:absolute;left:12px;right:12px;margin:0 auto;bottom:calc(var(--nav-h) + 22px + env(safe-area-inset-bottom,0px));z-index:500;background:var(--dusk);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.45);max-width:460px}
 .nextcard .t{min-width:0}
 .nextcard .acts{grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .nextcard .acts .btn{min-height:46px;white-space:nowrap;padding-left:8px;padding-right:8px}
@@ -183,7 +184,7 @@ legend{font-weight:800;padding:0 6px}
 .leaflet-bottom{bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px))}
 .mapy-logo{display:block;line-height:0;margin:0 0 0 10px!important}
 .mapy-logo img{height:30px;width:auto;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))}
-#fabLayer{bottom:calc(var(--nav-h) + 76px + env(safe-area-inset-bottom,0px));width:auto;min-width:48px;border-radius:24px;padding:0 12px;gap:6px;display:flex;align-items:center;font-weight:800;font-size:13px}
+#fabLayer{top:10px;bottom:auto;width:auto;min-width:48px;border-radius:24px;padding:0 12px;gap:6px;display:flex;align-items:center;font-weight:800;font-size:13px}
 .pin{position:relative;width:40px;height:44px}
 .pin svg{width:40px;height:44px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6))}
 .pin i{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;border-radius:10px;background:var(--bone);color:var(--night);font:800 11px/20px var(--body);font-style:normal;text-align:center;padding:0 4px}
@@ -199,8 +200,8 @@ ol.route.rank li{grid-template-columns:36px 56px 1fr;align-items:center}
 .seg2{display:flex;gap:6px;flex-wrap:wrap}
 .seg2 button{border:1px solid var(--line);background:var(--night);color:var(--mist);border-radius:999px;padding:6px 12px;font-weight:700;font-size:13px;cursor:pointer}
 .seg2 button[aria-pressed="true"]{background:var(--candle);border-color:var(--candle);color:#2a1a00}
-.fab.q{bottom:calc(var(--nav-h) + 132px + env(safe-area-inset-bottom,0px));font:800 20px/1 var(--body);color:var(--candle)}
-.legend{position:absolute;right:70px;bottom:calc(var(--nav-h) + 22px + env(safe-area-inset-bottom,0px));z-index:650;background:var(--dusk);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.5);width:min(290px,calc(100% - 90px));display:flex;flex-direction:column;gap:8px;font-size:13.5px}
+.fab.q{bottom:calc(var(--nav-h) + var(--dockh,0px) + 76px + env(safe-area-inset-bottom,0px));font:800 20px/1 var(--body);color:var(--candle)}
+.legend{position:absolute;right:70px;bottom:calc(var(--nav-h) + var(--dockh,0px) + 22px + env(safe-area-inset-bottom,0px));z-index:650;background:var(--dusk);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.5);width:min(290px,calc(100% - 90px));display:flex;flex-direction:column;gap:8px;font-size:13.5px}
 .legend .li{display:grid;grid-template-columns:34px 1fr;gap:8px;align-items:center}
 .legend .li svg{width:30px;height:33px}
 .legend .ln{height:0;border-top:3px dotted var(--candle);width:30px}
@@ -212,8 +213,8 @@ ol.route.rank li{grid-template-columns:36px 56px 1fr;align-items:center}
 .spin{width:28px;height:28px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--pumpkin)}
 @media (prefers-reduced-motion:no-preference){.spin{animation:spin .9s linear infinite}}
 @keyframes spin{to{transform:rotate(360deg)}}
-.offline{position:absolute;left:50%;transform:translateX(-50%);top:10px;z-index:560;background:var(--blood);color:#fff;font-weight:800;font-size:12.5px;border-radius:999px;padding:6px 12px;border:0;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.4)}
-.hostcard{position:absolute;right:10px;top:10px;z-index:540;background:var(--dusk);border:1px solid var(--line);border-radius:14px;padding:8px 10px;box-shadow:0 8px 20px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:6px;max-width:min(230px,60%)}
+.offline{position:absolute;left:50%;transform:translateX(-50%);top:62px;z-index:560;background:var(--blood);color:#fff;font-weight:800;font-size:12.5px;border-radius:999px;padding:6px 12px;border:0;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.hostcard{position:absolute;right:10px;top:66px;z-index:540;background:var(--dusk);border:1px solid var(--line);border-radius:14px;padding:8px 10px;box-shadow:0 8px 20px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:6px;max-width:min(230px,60%)}
 .hostcard .h{font-size:12px;color:var(--mist);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hostcard .h b{color:var(--bone)}
 .hint{display:flex;gap:10px;align-items:center;background:rgba(255,211,107,.1);border:1px solid rgba(255,211,107,.35);border-radius:var(--r);padding:12px}
@@ -256,6 +257,64 @@ details.login>summary{cursor:pointer;font-weight:700;color:var(--candle);min-hei
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + 96px + env(safe-area-inset-bottom,0px));z-index:2200;background:var(--bone);color:var(--night);font-weight:800;padding:10px 16px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:calc(100% - 32px);text-align:center}
 .toast.err{background:var(--blood);color:#fff}
 @media (prefers-reduced-motion:no-preference){.pin svg{transition:transform .15s}.pin:hover svg{transform:translateY(-3px)}}
+
+/* ---- detail domu: vysouvací panel zespodu ---- */
+.bsheet{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;z-index:700;max-height:min(80%,640px);overflow:auto;overscroll-behavior:contain;background:var(--dusk);border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0;padding:8px 16px calc(var(--nav-h) + 16px + env(safe-area-inset-bottom,0px));box-shadow:0 -12px 40px rgba(0,0,0,.55)}
+@media (prefers-reduced-motion:no-preference){.bsheet{animation:sheetUp .22s ease-out}}
+@keyframes sheetUp{from{transform:translateY(60px);opacity:.3}}
+.bsheet .grab{width:46px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 10px}
+.bs-x{position:absolute;top:6px;right:6px;width:44px;height:44px;border-radius:50%;border:0;background:transparent;color:var(--mist);font-size:28px;line-height:1;cursor:pointer}
+.bsheet h3{font-size:20px;margin:0 44px 2px 0;line-height:1.2}
+.bs-cover{width:100%;height:150px;object-fit:cover;border-radius:14px;display:block;margin:4px 0 10px;cursor:zoom-in;background:var(--dusk2)}
+.bs-meta{margin-top:4px;display:flex;gap:4px 10px;flex-wrap:wrap;align-items:center}
+.bs-note{margin:10px 0 0;font-size:14px;background:var(--night);border-radius:10px;padding:8px 10px}
+.bs-main{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.btn.big{min-height:54px;font-size:16px;border-radius:14px}
+.bs-icons{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:8px}
+.ibtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:58px;border-radius:14px;border:1px solid var(--line);background:var(--night);color:var(--bone);font-size:20px;line-height:1.1;cursor:pointer;padding:6px}
+.ibtn span{font-size:12.5px;font-weight:700;color:var(--mist)}
+.bs-admin{margin-top:10px;width:100%}
+/* ---- karta „další dům“ ---- */
+.nextcard button.num{border:0;cursor:pointer;padding:0}
+.nextcard button.t{border:0;background:none;text-align:left;padding:0;color:inherit;min-height:40px;display:flex;flex-direction:column;justify-content:center;cursor:pointer}
+/* ---- záložka Více ---- */
+.subtabs{position:sticky;top:-16px;z-index:5;margin:-16px -16px 14px;padding:10px 16px;background:var(--night);border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.subtabs button{min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--dusk);color:var(--mist);font-weight:800;cursor:pointer}
+.subtabs button[aria-selected="true"]{background:var(--candle);border-color:var(--candle);color:#2a1a00}
+/* ---- navigace „Jdeme koledovat“ ---- */
+body.nav header.top,body.nav .demo-flag,body.nav nav.tabs,body.nav #nextcard,body.nav #hostcard,body.nav #fabLegend,body.nav #legend,body.nav #fabLocate,body.nav #bsheet,body.nav #statecard,body.nav #offline{display:none!important}
+body.nav .leaflet-top{top:var(--navtop,120px)}
+body.nav .leaflet-bottom{bottom:var(--navbot,200px)}
+body.nav #fabLayer{top:var(--navtop,120px)}
+body.nav .toast{bottom:auto;top:calc(var(--navtop,120px) + 4px)}
+.navtop{position:absolute;left:10px;right:10px;top:calc(env(safe-area-inset-top,0px) + 10px);margin:0 auto;max-width:560px;z-index:900;background:rgba(27,20,38,.97);border:1px solid var(--line);border-radius:20px;padding:10px 10px 10px 12px;display:flex;align-items:center;gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.navtop .arrow{flex:none;width:64px;height:64px;border-radius:50%;background:var(--pumpkin);color:#2a1300;display:grid;place-items:center;box-shadow:0 0 0 4px rgba(255,138,42,.25)}
+.navtop .arrow svg{width:38px;height:38px}
+@media (prefers-reduced-motion:no-preference){.navtop .arrow svg{transition:transform .35s ease-out}}
+.navtop.plain .arrow{display:none}
+.navtop .nt{flex:1;min-width:0;display:flex;flex-direction:column}
+.navtop .nt b{font:800 30px/1.05 var(--body);font-variant-numeric:tabular-nums;color:var(--bone)}
+.navtop.plain .nt b{font-size:22px}
+.navtop .nt span{font-size:14px;color:var(--mist);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.navx{flex:none;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--dusk2);color:var(--bone);font-size:26px;line-height:1;cursor:pointer}
+.navbot{position:absolute;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);margin:0 auto;max-width:560px;z-index:900;background:rgba(27,20,38,.97);border:1px solid var(--line);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 -6px 30px rgba(0,0,0,.5)}
+.nb-h{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center}
+.nb-h b{display:block;font-size:18px;line-height:1.2;overflow-wrap:anywhere}
+.nb-h span{font-size:13px;color:var(--mist)}
+.nb-big{font:800 26px/1.1 var(--display);color:var(--candle)}
+.nb-note{margin:0;font-size:14px;background:var(--night);border-radius:10px;padding:8px 10px}
+.nb-acts{display:grid;grid-template-columns:2fr 1fr;gap:8px}
+.nb-acts.one{grid-template-columns:1fr}
+.nb-stars{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.nb-stars button{min-height:66px;border-radius:14px;border:1px solid var(--line);background:var(--night);color:var(--candle);font-size:19px;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;gap:2px}
+.nb-stars button small{color:var(--mist);font-size:12px;font-weight:700}
+.nb-small{margin:0;text-align:center;font-size:12.5px;color:var(--mist)}
+#navRecenter{z-index:901;left:12px;right:auto;bottom:calc(var(--navbot,200px) + 12px);width:auto;border-radius:24px;padding:0 14px;gap:6px;display:flex;align-items:center;font-weight:800;font-size:13.5px;color:var(--teal)}
+.pin.tgt svg{transform:scale(1.3);transform-origin:50% 90%}
+.pin.tgt::after{content:"";position:absolute;left:50%;top:64%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;border:3px solid var(--candle);opacity:.8;pointer-events:none}
+@media (prefers-reduced-motion:no-preference){.pin.tgt::after{animation:ping 1.6s ease-out infinite}}
+@keyframes ping{from{transform:scale(.45);opacity:.95}to{transform:scale(1.35);opacity:0}}
+body.nav .me-dot{width:22px;height:22px}
 </style>
 </head>
 <body>
@@ -283,6 +342,10 @@ details.login>summary{cursor:pointer;font-weight:700;color:var(--candle);min-hei
       <circle cx="32" cy="32" r="4.5" fill="#ff5f6d" stroke="#140e1d" stroke-width="2"/>
     </svg></div>
     <div class="nextcard" id="nextcard" hidden></div>
+    <div class="bsheet" id="bsheet" hidden role="dialog" aria-labelledby="bsTitle"><div class="grab" aria-hidden="true"></div><button class="bs-x" id="bsClose" type="button" aria-label="Zavřít detail">×</button><div id="bsBody"></div></div>
+    <div class="navtop" id="navTop" hidden><div class="arrow" id="navArrow" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M24 3l15 39-15-9-15 9z" fill="currentColor"/></svg></div><div class="nt"><b id="navDist">–</b><span id="navSub"></span></div><button class="navx" id="navExit" type="button" aria-label="Ukončit navigaci">×</button></div>
+    <div class="navbot" id="navBot" hidden></div>
+    <button class="fab" id="navRecenter" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Vycentrovat</button>
     <div class="hostcard" id="hostcard" hidden></div>
     <button class="offline" id="offline" type="button" hidden>Nelze načíst data – zkusit znovu</button>
     <div class="statecard" id="statecard" hidden></div>
@@ -304,12 +367,12 @@ details.login>summary{cursor:pointer;font-weight:700;color:var(--candle);min-hei
   <section class="view" id="v-route" hidden aria-label="Trasa">
     <div class="wrap">
       <h2>Vaše trasa</h2>
-      <p class="muted small" id="routeIntro">Trasa začíná tam, kde právě jste, a vede vždy k nejbližšímu dalšímu otevřenému domu. Navštívené domy odškrtávejte – trasa se sama přepočítá.</p>
+      <p class="muted small" id="routeIntro">Trasa začíná tam, kde právě jste, a vede vždy k nejbližšímu dalšímu otevřenému domu. Klepněte na „Jdeme koledovat“ – aplikace vás povede dům od domu.</p>
       <div class="hint" id="gpsHint" hidden><p id="gpsHintText">Trasa teď začíná u středu čtvrti. Povolte polohu a povede přímo od vás.</p><button class="btn sm primary" type="button" id="btnGpsHint">Povolit polohu</button></div>
       <div class="panel stat" id="routeStats"></div>
       <div class="row">
-        <button class="btn primary" id="btnReplan" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12a8 8 0 0 1 14-5l2 2M20 12a8 8 0 0 1-14 5l-2-2M20 4v5h-5M4 20v-5h5"/></svg>Přepočítat od mé polohy</button>
-        <a class="btn" id="btnGmapsAll" target="_blank" rel="noopener">Celá trasa v Google Mapách</a>
+        <button class="btn primary big" type="button" id="btnStartNav" data-navstart="1">🎃 Jdeme koledovat</button>
+        <button class="btn" id="btnReplan" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12a8 8 0 0 1 14-5l2 2M20 12a8 8 0 0 1-14 5l-2-2M20 4v5h-5M4 20v-5h5"/></svg>Přepočítat</button>
       </div>
       <div class="panel"><ol class="route" id="routeList"></ol></div>
       <div id="doneWrap" hidden>
@@ -323,6 +386,13 @@ details.login>summary{cursor:pointer;font-weight:700;color:var(--candle);min-hei
   <!-- PŘIDAT -->
   <section class="view" id="v-add" hidden aria-label="Přidat stanoviště">
     <div class="wrap">
+      <div id="mineWrap" hidden>
+        <h2>Váš dům</h2>
+        <div class="panel" style="margin-top:10px"><ol class="route" id="mineList"></ol></div>
+        <p class="muted small">Během večera klepněte na „Došly bonbony“, ať k vám děti zbytečně nechodí. Navigace je k vám pak už nepošle a dýně zešedne.</p>
+      </div>
+      <button class="btn" type="button" id="btnAddMore" hidden>+ Přidat další dům</button>
+      <div id="formBox" style="display:flex;flex-direction:column;gap:14px">
       <h2 id="formTitle">Zapojte svůj dům</h2>
       <p class="muted small">Stačí pár údajů. Rodiče pak uvidí váš dům na mapě a děti k vám dojdou po nejkratší trase. Údaje můžete z tohoto telefonu kdykoli upravit, smazat, nebo večer přepnout na „došly bonbony“.</p>
       <form id="form" novalidate>
@@ -372,6 +442,7 @@ details.login>summary{cursor:pointer;font-weight:700;color:var(--candle);min-hei
           <button class="btn ghost" type="button" id="btnCancelEdit" hidden>Zrušit úpravy</button>
         </div>
       </form>
+      </div>
 
       <details class="login" id="loginPanel" hidden>
         <summary>Už máte svůj dům na mapě? Přihlaste se PINem</summary>
@@ -383,19 +454,16 @@ details.login>summary{cursor:pointer;font-weight:700;color:var(--candle);min-hei
         <div id="loginMsg" class="msg" hidden></div>
         <div class="row" style="margin-top:10px"><button class="btn" type="button" id="btnLogin">Přihlásit se</button></div>
       </details>
-
-      <div id="mineWrap" hidden>
-        <h3 style="margin:10px 0 8px">Vaše stanoviště</h3>
-        <div class="panel"><ol class="route" id="mineList"></ol></div>
-        <p class="muted small">Během večera klepněte na „Došly bonbony“, ať k vám děti zbytečně nechodí. Stanoviště z mapy zmizí z tras, ale zůstane vidět šedě.</p>
-        <p class="muted small">Vaše fotky se u stanoviště zobrazí jako první. Fotky od návštěvníků tady můžete smazat křížkem.</p>
-      </div>
     </div>
   </section>
 
   <!-- ŽEBŘÍČEK -->
-  <section class="view" id="v-rank" hidden aria-label="Žebříček">
-    <div class="wrap">
+  <section class="view" id="v-more" hidden aria-label="Více">
+    <div class="subtabs" role="tablist" aria-label="Více">
+      <button type="button" role="tab" data-sub="rank" aria-selected="true">🏆 Žebříček</button>
+      <button type="button" role="tab" data-sub="info" aria-selected="false">ℹ️ Informace</button>
+    </div>
+    <div class="wrap" id="v-rank">
       <h2>Žebříček domů</h2>
       <p class="muted small" id="rankIntro" style="margin:0">Hodnotí návštěvníci 3 až 5 hvězdičkami. Při podobném průměru má přednost dům s více hodnoceními.</p>
       <div class="seg2" role="group" aria-label="Řazení">
@@ -410,11 +478,7 @@ details.login>summary{cursor:pointer;font-weight:700;color:var(--candle);min-hei
         <div class="panel"><ol class="route rank" id="unratedList"></ol></div>
       </div>
     </div>
-  </section>
-
-  <!-- INFO -->
-  <section class="view" id="v-info" hidden aria-label="Informace">
-    <div class="wrap">
+    <div class="wrap" id="v-info" hidden>
       <h2>Jak to funguje</h2>
       <div class="panel">
         <div class="stat" id="infoFacts"></div>
@@ -430,7 +494,7 @@ details.login>summary{cursor:pointer;font-weight:700;color:var(--candle);min-hei
         <div class="panel rules">
           <h3>Pro rodiče</h3>
           <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><text x="4" y="28" font-size="20" fill="#ffd36b">👻</text></svg><div><b>Strašidelnost 1 až 3</b><p>1 = vlídné i pro batolata, 3 = tma, masky a zvuky. Počet duchů najdete u každého domu na mapě i v trase.</p></div></div>
-          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 30h28M10 30V14l10-6 10 6v16" fill="none" stroke="#b9aec9" stroke-width="3"/><path d="M4 22h8" stroke="#ff8a2a" stroke-width="3"/></svg><div><b>Navigace k dalšímu domu</b><p>Tlačítko „Navigovat“ otevře pěší trasu v Google Mapách. Trasa počítá dětské tempo 3 km/h.</p></div></div>
+          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 30h28M10 30V14l10-6 10 6v16" fill="none" stroke="#b9aec9" stroke-width="3"/><path d="M4 22h8" stroke="#ff8a2a" stroke-width="3"/></svg><div><b>Navigace přímo v aplikaci</b><p>„Jdeme koledovat“ vás vede dům od domu: šipka, vzdálenost a cesta po chodníku. U domu se aplikace sama ozve a displej během navigace nezhasne.</p></div></div>
           <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="14" fill="#7d7390"/><path d="M13 20h14" stroke="#1b1426" stroke-width="3"/></svg><div><b>Šedá dýně = došly bonbony</b><p>Hostitelé to přepínají živě, stránka se sama obnovuje každou minutu.</p></div></div>
         </div>
       </div>
@@ -546,7 +610,7 @@ details.login>summary{cursor:pointer;font-weight:700;color:var(--candle);min-hei
     <ol>
       <li><span class="n">1</span><div><b>Vaše lokalita: <span id="onbLoc"></span></b><p>Jiná obec? <button class="btn sm ghost" type="button" id="onbChange" style="min-height:34px;margin-top:4px">Změnit lokalitu</button></p></div></li>
       <li><span class="n">2</span><div><b>Povolte polohu</b><p>Trasa pak povede od vás vždy k nejbližšímu dalšímu domu.</p></div></li>
-      <li><span class="n">3</span><div><b>Jděte podle čísel na dýních</b><p>U domu klepněte na „Byli jsme ✓“ a aplikace vás pošle dál. Šedá dýně = došly bonbony.</p></div></li>
+      <li><span class="n">3</span><div><b>Klepněte na „Jdeme koledovat“</b><p>Aplikace vás povede k nejbližšímu domu. U domu potvrdíte „Byli jsme ✓“ a pošle vás dál. Šedá dýně = došly bonbony.</p></div></li>
     </ol>
     <div class="row">
       <button class="btn primary" type="button" id="onbGo">Povolit polohu a začít</button>
@@ -562,8 +626,7 @@ details.login>summary{cursor:pointer;font-weight:700;color:var(--candle);min-hei
   <button role="tab" data-tab="map" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>Mapa</button>
   <button role="tab" data-tab="route" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5"/></svg>Trasa</button>
   <button role="tab" data-tab="add" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9H3z"/><path d="M12 11v6M9 14h6"/></svg>Můj dům</button>
-  <button role="tab" data-tab="rank" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg>Žebříček</button>
-  <button role="tab" data-tab="info" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>Info</button>
+  <button role="tab" data-tab="more" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg>Žebříček a info</button>
 </nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -684,7 +747,7 @@ function hoursHtml(s){
   const n = timeNote(s);
   return `<div class="small" style="margin-top:6px">🕕 Otevřeno <b>${esc(hours(s))}</b>${n ? ` · <span class="tag warn">${n}</span>` : ""}</div>`;
 }
-function gmaps(s){ return `https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}&travelmode=walking`; }
+const minsFor = m => Math.max(1, Math.round(m / (CONFIG.KID_SPEED_KMH * 1000 / 60))) + " min";   // m = skutečná délka cesty
 
 /* ---------- filtering & routing ---------- */
 function matches(s){
@@ -819,13 +882,13 @@ let routeLine = null, meMarker = null, pickTemp = null;
 function pumpkinSvg(fill, face){
   return `<svg viewBox="0 0 40 44" aria-hidden="true"><path d="M20 10c1-5 5-7 7-6" fill="none" stroke="#6bbf59" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="13" cy="27" rx="10" ry="12" fill="${fill}" opacity=".85"/><ellipse cx="27" cy="27" rx="10" ry="12" fill="${fill}" opacity=".85"/><ellipse cx="20" cy="27" rx="9.5" ry="13" fill="${fill}"/><path d="M13 24l3.5-3.5L20 24zM20 24l3.5-3.5L27 24z" fill="${face}"/><path d="M12 30c3 4 13 4 16 0l-2.5 1-1.5 2-2-2-2.5 2-2-2-2 2-1.5-2z" fill="${face}"/></svg>`;
 }
-function icon(s, order){
+function icon(s, order, tgt){
   const out = s.status !== "open";
   const fill = out ? "#7d7390" : "#ff8a2a";
   const face = out ? "#3a3148" : "#ffd36b";
   const badge = visited.has(s.id) ? "✓" : order ? order : "";
   return L.divIcon({className:"", iconSize:[40,44], iconAnchor:[20,42], popupAnchor:[0,-38],
-    html:`<div class="pin">${pumpkinSvg(fill, face)}${badge ? `<i>${badge}</i>` : ""}</div>`});
+    html:`<div class="pin${tgt ? " tgt" : ""}">${pumpkinSvg(fill, face)}${badge ? `<i>${badge}</i>` : ""}</div>`});
 }
 function scareLabel(n){ return ["", "vlídné", "trochu strašidelné", "pro odvážné"][n] || ""; }
 function ghosts(n){ return "👻".repeat(n) + "<span style='opacity:.25'>" + "👻".repeat(3 - n) + "</span>"; }
@@ -835,59 +898,70 @@ function tagsHtml(s){
   if (s.status === "closed") t.push(`<span class="tag warn">Zavřeno</span>`);
   return `<div class="tags">${t.join("")}</div>`;
 }
-function popupHtml(s){
-  const v = visited.has(s.id), sk = skipped.has(s.id);
-  const d = me ? `<div class="muted small">${fmtM(walk(dist(me, s)))} · asi ${fmtMin(dist(me, s))} pěšky</div>` : "";
+function sheetHtml(s){
+  const v = visited.has(s.id), sk = skipped.has(s.id), out = s.status !== "open";
   const cover = (s.photos || [])[0];
-  return `${cover ? `<img class="pop-cover" src="${esc(cover.url)}" alt="Fotka stanoviště" data-photo="${esc(cover.url)}">` : ""}
-    <h3>${esc(s.name)}</h3>
-    <div class="muted small">${esc(s.address)}</div>
-    <div class="small" style="margin-top:4px">${ratingHtml(s)}${myRatings[s.id] ? ` <span class="muted">· vy ${myRatings[s.id]}★</span>` : ""}</div>
-    <div class="small" style="margin-top:2px"><span class="ghosts">${ghosts(s.scare)}</span> ${scareLabel(s.scare)}</div>
-    ${d}${hoursHtml(s)}${tagsHtml(s)}
-    ${s.note ? `<p class="small" style="margin:8px 0 0">${esc(s.note)}</p>` : ""}
-    ${thumbsHtml(s, 1, 5, false)}
-    <div class="popup-actions">
-      <a class="btn sm primary" href="${gmaps(s)}" target="_blank" rel="noopener">Navigovat</a>
-      <button class="btn sm ${v ? "" : "teal"}" type="button" data-visit="${esc(s.id)}">${v ? "Zrušit odškrtnutí" : "Navštíveno ✓"}</button>
-      ${!v ? `<button class="btn sm ghost" type="button" data-skip="${esc(s.id)}">${sk ? "Zařadit do trasy" : "Vynechat"}</button>` : ""}
-      <button class="btn sm" type="button" data-addphoto="${esc(s.id)}">📷 Přidat foto</button>
-      <button class="btn sm" type="button" data-rate="${esc(s.id)}">★ ${myRatings[s.id] ? "Změnit hodnocení" : "Přidat hodnocení"}</button>
-      ${ADMIN || orgTok() ? `<button class="btn sm ghost" type="button" data-admindel="${esc(s.id)}">Smazat (${ADMIN ? "správce" : "organizátor"})</button>` : ""}
-    </div>`;
+  const d = me ? ` · ${fmtM(walk(dist(me, s)))}, ${fmtMin(dist(me, s))} pěšky` : "";
+  const id = esc(s.id);
+  return `${cover ? `<img class="bs-cover" src="${esc(cover.url)}" alt="Fotka stanoviště" data-photo="${esc(cover.url)}">` : ""}
+    <h3 id="bsTitle">${esc(s.name)}</h3>
+    <div class="muted small">${esc(s.address)}${d}</div>
+    <div class="small bs-meta"><span>${ratingHtml(s)}${myRatings[s.id] ? ` <span class="muted">· vy ${myRatings[s.id]}★</span>` : ""}</span><span><span class="ghosts">${ghosts(s.scare)}</span> ${scareLabel(s.scare)}</span></div>
+    ${hoursHtml(s)}${tagsHtml(s)}
+    ${s.note ? `<p class="bs-note">${esc(s.note)}</p>` : ""}
+    ${thumbsHtml(s, 1, 8, false)}
+    <div class="bs-main">
+      <button class="btn ${out || v ? "" : "primary"} big" type="button" data-navto="${id}">🚶 Jít sem</button>
+      <button class="btn ${v ? "" : "teal"} big" type="button" data-visit="${id}">${v ? "Zrušit ✓" : "Byli jsme ✓"}</button>
+    </div>
+    <div class="bs-icons">
+      <button class="ibtn" type="button" data-addphoto="${id}">📷<span>Přidat foto</span></button>
+      <button class="ibtn" type="button" data-rate="${id}">★<span>${myRatings[s.id] ? "Vaše " + myRatings[s.id] + " ★" : "Ohodnotit"}</span></button>
+      ${!v ? `<button class="ibtn" type="button" data-skip="${id}">${sk ? "↩" : "⤼"}<span>${sk ? "Zařadit zpět" : "Vynechat"}</span></button>` : ""}
+    </div>
+    ${ADMIN || orgTok() ? `<button class="btn sm ghost bs-admin" type="button" data-admindel="${id}">Smazat stanoviště (${ADMIN ? "správce" : "organizátor"})</button>` : ""}`;
 }
 let markers = {};
 function drawMap(){
-  const openId = Object.keys(markers).find(id => markers[id].isPopupOpen());
   markerLayer.clearLayers(); markers = {};
   const order = new Map(route.map((id, i) => [id, i + 1]));
   stations.forEach(s => {
     if (!matches(s) && !visited.has(s.id)) return;
-    const m = L.marker([s.lat, s.lng], {icon: icon(s, order.get(s.id)), title: s.name, zIndexOffset: order.has(s.id) ? 500 - order.get(s.id) : 0});
-    m.bindPopup(() => popupHtml(s));
+    const tgt = NAV.on && NAV.target === s.id;
+    const m = L.marker([s.lat, s.lng], {icon: icon(s, NAV.on ? undefined : order.get(s.id), tgt), title: s.name,
+      zIndexOffset: tgt ? 900 : order.has(s.id) ? 500 - order.get(s.id) : 0});
+    m.on("click", () => markerTap(s.id));
     markers[s.id] = m;
     markerLayer.addLayer(m);
   });
-  if (routeLine) map.removeLayer(routeLine);
-  const pts = route.map(byId).filter(Boolean).map(s => [s.lat, s.lng]);
-  if (me && pts.length) pts.unshift([me.lat, me.lng]);
-  routeLine = pts.length > 1 ? L.polyline(pts, {color:"#ffd36b", weight:3, opacity:.8, dashArray:"2 9", lineCap:"round"}).addTo(map) : null;
-  if (openId && markers[openId]) markers[openId].openPopup();
+  if (routeLine){ map.removeLayer(routeLine); routeLine = null; }
+  if (!NAV.on){
+    const pts = route.map(byId).filter(Boolean).map(s => [s.lat, s.lng]);
+    if (me && pts.length) pts.unshift([me.lat, me.lng]);
+    routeLine = pts.length > 1 ? L.polyline(pts, {color:"#ffd36b", weight:3, opacity:.8, dashArray:"2 9", lineCap:"round", interactive:false}).addTo(map) : null;
+  }
+  if (sheetId){
+    const s = byId(sheetId);
+    if (s){ const b = $("#bsheet"), y = b.scrollTop; $("#bsBody").innerHTML = sheetHtml(s); b.scrollTop = y; } else closeSheet();
+  }
   drawNext();
 }
 function drawNext(){
   const card = $("#nextcard");
   const s = byId(route[0]);
-  if (!s || picking){ card.hidden = true; return; }
+  if (!s || picking || sheetId || NAV.on){ card.hidden = true; dockSize(); return; }
   const d = me ? ` · ${fmtM(walk(dist(me, s)))}, ${fmtMin(dist(me, s))}` : "";
-  card.innerHTML = `<div class="num">1</div>
-    <div class="t"><span>Další dům${d} · otevřeno ${esc(hours(s))}</span><b>${esc(s.name)}</b></div>
+  const tn = timeNote(s);
+  card.innerHTML = `<button class="num" type="button" data-open="${esc(s.id)}" aria-label="Detail domu">1</button>
+    <button class="t" type="button" data-open="${esc(s.id)}"><span>Další dům${d}${tn ? " · " + tn : ""}</span><b>${esc(s.name)}</b></button>
     <div class="acts">
-      <a class="btn primary" href="${gmaps(s)}" target="_blank" rel="noopener">Navigovat</a>
+      <button class="btn primary" type="button" data-navstart="1">🎃 Jdeme koledovat</button>
       <button class="btn teal" type="button" data-visit="${esc(s.id)}">Byli jsme ✓</button>
     </div>`;
-  card.hidden = false;
+  card.hidden = false; dockSize();
 }
+function dockSize(){ const c = $("#nextcard"); document.documentElement.style.setProperty("--dockh", c.hidden ? "0px" : (c.offsetHeight + 10) + "px"); }
+if (window.ResizeObserver) new ResizeObserver(dockSize).observe($("#nextcard"));
 
 /* ---------- route view ---------- */
 function drawRoute(){
@@ -902,7 +976,7 @@ function drawRoute(){
         <div class="meta">${esc(s.address)}${leg ? ` · ${fmtM(walk(leg))}` : ""} · otevřeno ${esc(hours(s))}${timeNote(s) ? ` · ${timeNote(s)}` : ""}</div>
         ${tagsHtml(s)}</div>
       <div class="row" style="flex-direction:column;gap:6px">
-        <a class="btn sm primary" href="${gmaps(s)}" target="_blank" rel="noopener">Navigovat</a>
+        <button class="btn sm primary" type="button" data-navto="${esc(s.id)}">Jít sem</button>
         <button class="btn sm teal" type="button" data-visit="${esc(s.id)}">✓ Byli jsme</button>
       </div></li>`;
   });
@@ -914,14 +988,7 @@ function drawRoute(){
   $("#gpsHintText").textContent = gpsDenied
     ? "Poloha je v prohlížeči zakázaná. Povolte ji v nastavení prohlížeče u této stránky – trasa pak povede přímo od vás."
     : "Trasa teď začíná u středu čtvrti. Povolte polohu a povede přímo od vás.";
-  // Google Maps: max 9 zastávek po cestě
-  const g = list.slice(0, 10);
-  const a = $("#btnGmapsAll");
-  if (g.length){
-    const dest = g[g.length - 1], wps = g.slice(0, -1).map(s => `${s.lat},${s.lng}`).join("|");
-    a.href = `https://www.google.com/maps/dir/?api=1&travelmode=walking&destination=${dest.lat},${dest.lng}${wps ? "&waypoints=" + encodeURIComponent(wps) : ""}`;
-    a.hidden = false; a.textContent = list.length > 10 ? "Prvních 10 v Google Mapách" : "Celá trasa v Google Mapách";
-  } else a.hidden = true;
+  $("#btnStartNav").hidden = !list.length;
   const done = stations.filter(s => visited.has(s.id));
   $("#doneWrap").hidden = !done.length;
   $("#doneList").innerHTML = done.map(s => `<li><div class="num done">✓</div><div><div class="nm">${esc(s.name)}</div><div class="meta">${esc(s.address)}</div></div><button class="btn sm ghost" type="button" data-visit="${esc(s.id)}">Vrátit</button></li>`).join("");
@@ -932,7 +999,7 @@ function drawMine(){
   const list = stations.filter(s => mine[s.id]);
   $("#mineWrap").hidden = !list.length;
   $("#mineList").innerHTML = list.map(s => `<li style="grid-template-columns:1fr">
-    <div><div class="nm">${esc(s.name)}</div><div class="meta">${esc(s.address)} · otevřeno ${esc(hours(s))}</div>
+    <div><div class="nm">${esc(s.name)}</div><div class="meta">${s.address ? esc(s.address) + " · " : ""}otevřeno ${esc(hours(s))}</div>
       <div class="meta">${ratingHtml(s)}</div>${tagsHtml(s)}
       ${thumbsHtml(s, 0, 30, true)}</div>
     <div class="row">
@@ -943,7 +1010,12 @@ function drawMine(){
       <button class="btn sm ghost" type="button" data-edit="${esc(s.id)}">Upravit</button>
       <button class="btn sm ghost" type="button" data-del="${esc(s.id)}">Smazat</button>
     </div></li>`).join("");
+  const editing = !!$("#fId").value;
+  $("#formBox").hidden = !!list.length && !editing && !addMore;
+  $("#btnAddMore").hidden = !$("#formBox").hidden;
 }
+let addMore = false;
+$("#btnAddMore").addEventListener("click", () => { addMore = true; drawMine(); $("#fName").focus(); });
 
 function drawLogin(){
   const free = stations.filter(s => !mine[s.id]);
@@ -963,13 +1035,13 @@ async function doLogin(){
     const r = await api.post({action:"login", id, pin});
     mine[id] = r.token; store.set("hw-mine", mine);
     $("#lgPin").value = "";
-    say("Přihlášeno. Svoje stanoviště teď najdete dole a můžete ho upravit.", true);
+    say("Přihlášeno. Svůj dům teď najdete nahoře a můžete ho upravit.", true);
     await load();
   }catch(err){ say(err.message); }
   $("#btnLogin").disabled = false;
 }
 
-function renderAll(replan = true){ if (replan) planRoute(); drawMap(); drawRoute(); drawMine(); drawLogin(); drawRank(); drawHostCard(); }
+function renderAll(replan = true){ if (replan) planRoute(); drawMap(); drawRoute(); drawMine(); drawLogin(); drawRank(); drawHostCard(); if (NAV.on) navAfterData(); }
 
 /* ---------- 9: rychlá karta hostitele na mapě ---------- */
 function drawHostCard(){
@@ -986,7 +1058,7 @@ function drawHostCard(){
 $("#fabLegend").addEventListener("click", () => {
   const l = $("#legend"); l.hidden = !l.hidden; $("#fabLegend").setAttribute("aria-expanded", String(!l.hidden));
 });
-map.on("click", () => { $("#legend").hidden = true; $("#fabLegend").setAttribute("aria-expanded", "false"); });
+map.on("click", () => { $("#legend").hidden = true; $("#fabLegend").setAttribute("aria-expanded", "false"); if (sheetId) closeSheet(); });
 
 /* ---------- 7: uvítání při první návštěvě ---------- */
 function maybeOnboard(){
@@ -1065,7 +1137,7 @@ document.addEventListener("click", e => {
   const b = e.target.closest("[data-showonmap]"); if (!b) return;
   const s = byId(b.dataset.showonmap); if (!s) return;
   go("map");
-  setTimeout(() => { map.invalidateSize(); map.setView([s.lat, s.lng], 18, {animate:false}); if (markers[s.id]) markers[s.id].openPopup(); }, 80);
+  setTimeout(() => { map.invalidateSize(); map.setView([s.lat, s.lng], 18, {animate:false}); openSheet(s.id); }, 80);
 });
 
 /* ---------- loading ---------- */
@@ -1109,12 +1181,22 @@ async function load(fit){
 }
 
 /* ---------- tabs ---------- */
-function go(tab){
+let moreSub = "rank";
+function go(tab, sub){
+  if (tab === "rank" || tab === "info"){ sub = tab; tab = "more"; }
+  if (tab !== "map"){ if (NAV.on) exitNav(); if (sheetId) closeSheet(); }
   $$("nav.tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tab));
   $$(".view").forEach(v => v.hidden = v.id !== "v-" + tab);
+  if (tab === "more"){
+    if (sub) moreSub = sub;
+    $$(".subtabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.sub === moreSub));
+    $("#v-rank").hidden = moreSub !== "rank"; $("#v-info").hidden = moreSub !== "info";
+    if (sub) $("#v-more").scrollTop = 0;
+  }
   if (tab === "map") setTimeout(() => map.invalidateSize(), 50);
-  try{ history.replaceState(null, "", "#" + tab); }catch(e){}
+  try{ history.replaceState(history.state, "", "#" + (tab === "more" ? moreSub : tab)); }catch(e){}
 }
+$$(".subtabs button").forEach(b => b.addEventListener("click", () => go("more", b.dataset.sub)));
 $$("nav.tabs button").forEach(b => b.addEventListener("click", () => go(b.dataset.tab)));
 document.addEventListener("click", e => { const g = e.target.closest("[data-go]"); if (g) go(g.dataset.go); });
 
@@ -1132,13 +1214,14 @@ function locate(center){
       else meMarker.setLatLng([me.lat, me.lng]);
       $("#fabLocate").classList.add("on");
       gpsDenied = false;
-      if (firstFix){ firstFix = false; if (center) map.setView([me.lat, me.lng], 17); renderAll(); }
+      if (firstFix){ firstFix = false; if (center && !NAV.on) map.setView([me.lat, me.lng], 17); renderAll(); }
       else if (moved){ drawMap(); drawRoute(); }
+      navOnFix(p);
     }, err => {
       $("#fabLocate").classList.remove("on");
       if (err && err.code === 1){ gpsDenied = true; watchId !== null && navigator.geolocation.clearWatch(watchId); watchId = null; toast("Poloha je zakázaná – povolte ji v nastavení prohlížeče.", false, 5000); }
-      drawRoute();
-    }, {enableHighAccuracy:true, maximumAge:10000});
+      drawRoute(); if (NAV.on) navRender();
+    }, {enableHighAccuracy:true, maximumAge:5000});
   } else if (me) map.setView([me.lat, me.lng], 17);
 }
 $("#fabLocate").addEventListener("click", () => locate(true));
@@ -1149,13 +1232,13 @@ $("#btnGpsHint").addEventListener("click", () => { if (gpsDenied) toast("Poloha 
 function toggleVisit(id){
   const add = !visited.has(id);
   add ? visited.add(id) : visited.delete(id);
-  store.set("hw-visited", [...visited]); map.closePopup(); renderAll();
+  store.set("hw-visited", [...visited]); closeSheet(); renderAll();
   if (add && !myRatings[id] && byId(id)) setTimeout(() => openRate(id, true), 250);
 }
 document.addEventListener("click", async e => {
   const t = e.target.closest("button"); if (!t) return;
   if (t.dataset.visit){ toggleVisit(t.dataset.visit); }
-  else if (t.dataset.skip){ const id = t.dataset.skip; skipped.has(id) ? skipped.delete(id) : skipped.add(id); store.set("hw-skip", [...skipped]); map.closePopup(); renderAll(); }
+  else if (t.dataset.skip){ const id = t.dataset.skip; skipped.has(id) ? skipped.delete(id) : skipped.add(id); store.set("hw-skip", [...skipped]); closeSheet(); renderAll(); }
   else if (t.dataset.status){
     t.disabled = true;
     try{ await api.post({action:"update", id:t.dataset.id, token:mine[t.dataset.id], station:{status:t.dataset.status}}); toast(t.dataset.status === "out" ? "Označeno: došly bonbony. Děti k vám už trasa nepošle." : "Dům je zase otevřený."); await load(); }
@@ -1169,7 +1252,7 @@ document.addEventListener("click", async e => {
   }
   else if (t.dataset.admindel){
     if (!confirm("Smazat toto stanoviště jako správce?")) return;
-    try{ await api.post({action:"delete", id:t.dataset.admindel, admin:ADMIN || undefined, orgToken:orgTok()}); map.closePopup(); await load(); }
+    try{ await api.post({action:"delete", id:t.dataset.admindel, admin:ADMIN || undefined, orgToken:orgTok()}); closeSheet(); await load(); }
     catch(err){ alert(err.message); }
   }
 });
@@ -1177,7 +1260,8 @@ $("#btnLogin").addEventListener("click", doLogin);
 function goHome(e){
   e.preventDefault();
   if (picking) setPicking(false);
-  map.closePopup(); $("#lightbox").hidden = true; closeRate();
+  if (NAV.on) exitNav();
+  closeSheet(); $("#lightbox").hidden = true; closeRate();
   go("map");
   setTimeout(fitLoc, 80);
   window.scrollTo(0, 0);
@@ -1222,7 +1306,7 @@ $("#rateCancel").addEventListener("click", closeRate);
 $("#rateOverlay").addEventListener("click", e => { if (e.target.id === "rateOverlay") closeRate(); });
 $("#lbClose").addEventListener("click", () => { $("#lightbox").hidden = true; });
 $("#lightbox").addEventListener("click", e => { if (e.target.id === "lightbox") $("#lightbox").hidden = true; });
-document.addEventListener("keydown", e => { if (e.key === "Escape"){ $("#lightbox").hidden = true; closeRate(); } });
+document.addEventListener("keydown", e => { if (e.key === "Escape"){ $("#lightbox").hidden = true; closeRate(); if (sheetId) closeSheet(); } });
 $("#btnResetVisited").addEventListener("click", () => { visited.clear(); skipped.clear(); store.set("hw-visited", []); store.set("hw-skip", []); renderAll(); });
 
 /* ---------- form ---------- */
@@ -1350,7 +1434,7 @@ function fillForm(s){
   $("#fFrom").value = s.from || ""; $("#fTo").value = s.to || ""; $("#fNote").value = s.note || "";
   $("#pinWrap").hidden = true; $("#fPin").value = "";
   $("#formTitle").textContent = "Upravit stanoviště"; $("#btnSave").textContent = "Uložit změny"; $("#btnCancelEdit").hidden = false;
-  $("#formMsg").hidden = true; $("#v-add").scrollTop = 0;
+  $("#formMsg").hidden = true; $("#formBox").hidden = false; $("#btnAddMore").hidden = true; $("#v-add").scrollTop = 0;
 }
 function formDefaults(){
   if (!LOC || $("#fId").value) return;
@@ -1364,6 +1448,7 @@ function resetForm(){
   $("#pinWrap").hidden = false;
   formDefaults();
   $("#formTitle").textContent = "Zapojte svůj dům"; $("#btnSave").textContent = "Přidat na mapu"; $("#btnCancelEdit").hidden = true;
+  addMore = false; drawMine();
 }
 $("#btnCancelEdit").addEventListener("click", () => { resetForm(); $("#formMsg").hidden = true; });
 $("#form").addEventListener("submit", async e => {
@@ -1379,11 +1464,11 @@ $("#form").addEventListener("submit", async e => {
   try{
     if (id){
       await api.post({action:"update", id, token:mine[id], admin:ADMIN || undefined, station:s});
-      alertMsg("Uloženo. Změny už vidí všichni.", true);
+      alertMsg("Uloženo. Změny už vidí všichni.", true); toast("Uloženo – změny už vidí všichni.");
     } else {
       const r = await api.post({action:"add", pin, loc:LOC.id, station:Object.assign({status:"open"}, s)});
       mine[r.id] = r.token; store.set("hw-mine", mine);
-      alertMsg("Hotovo! Váš dům je na mapě. Upravit ho můžete dole v sekci Vaše stanoviště – z jiného zařízení se přihlaste svým PINem.", true);
+      alertMsg("Hotovo! Váš dům je na mapě. Upravit ho můžete nahoře v sekci Váš dům – z jiného zařízení se přihlaste svým PINem.", true); toast("Hotovo! Váš dům je na mapě 🎃", true, 5000); $("#v-add").scrollTop = 0;
     }
     resetForm(); await load();
   }catch(err){ alertMsg(err.message + " Zkuste to prosím znovu."); }
@@ -1439,9 +1524,10 @@ function fitLoc(){
 function switchLoc(id){
   curLoc = id; store.set("hw-loc", id);
   try{ const u = new URL(location.href); u.searchParams.set("l", id); history.replaceState(null, "", u.pathname + u.search + location.hash); }catch(e){}
+  if (NAV.on) exitNav();
   route = []; stations = [];
   $("#locOverlay").hidden = true;
-  map.closePopup();
+  closeSheet();
   return load(true);
 }
 function drawLocList(){
@@ -1540,10 +1626,311 @@ $("#btnOrgLogin").addEventListener("click", async () => {
 });
 $("#btnOrgLogout").addEventListener("click", () => { if (!LOC) return; delete orgTokens[LOC.id]; store.set("hw-org", orgTokens); $("#orgMsg").hidden = true; drawInfo(); drawMap(); });
 
+/* ---------- tlačítko Zpět v telefonu zavírá panel / navigaci ---------- */
+let uiPushed = 0, ignorePop = false;
+function pushUi(){ try{ history.pushState({hwui:1}, ""); uiPushed++; }catch(e){} }
+function popUi(){ if (uiPushed > 0 && history.state && history.state.hwui){ uiPushed--; ignorePop = true; history.back(); } }
+window.addEventListener("popstate", () => {
+  if (ignorePop){ ignorePop = false; return; }
+  if (uiPushed > 0) uiPushed--;
+  if (NAV.on) exitNav(true); else if (sheetId) closeSheet(true);
+});
+
+/* ---------- detail domu: vysouvací panel zespodu ---------- */
+let sheetId = null;
+function openSheet(id){
+  const s = byId(id); if (!s) return;
+  if (!sheetId) pushUi();
+  sheetId = id;
+  const b = $("#bsheet");
+  $("#bsBody").innerHTML = sheetHtml(s);
+  b.style.transform = ""; b.hidden = false; b.scrollTop = 0;
+  $("#legend").hidden = true; drawNext();
+  // dýni posuň nad panel, ať je vidět
+  setTimeout(() => {
+    const H = map.getSize().y, free = H - b.offsetHeight;
+    const pt = map.latLngToContainerPoint([s.lat, s.lng]);
+    if (pt.y > free - 40 || pt.y < 70) map.panBy([0, pt.y - Math.max(90, free / 2)], {animate:true});
+  }, 40);
+}
+function closeSheet(fromPop){
+  if (!sheetId) return;
+  sheetId = null; $("#bsheet").hidden = true; $("#bsheet").style.transform = "";
+  if (!fromPop) popUi();
+  drawNext();
+}
+$("#bsClose").addEventListener("click", () => closeSheet());
+(() => {                                     // stáhnout panel prstem dolů = zavřít
+  const b = $("#bsheet"); let y0 = null, dy = 0;
+  b.addEventListener("touchstart", e => { if (b.scrollTop > 0) return; y0 = e.touches[0].clientY; dy = 0; }, {passive:true});
+  b.addEventListener("touchmove", e => { if (y0 === null) return; dy = e.touches[0].clientY - y0; if (dy > 0) b.style.transform = `translateY(${dy}px)`; }, {passive:true});
+  b.addEventListener("touchend", () => { if (y0 === null) return; if (dy > 90) closeSheet(); else b.style.transform = ""; y0 = null; });
+})();
+function markerTap(id){
+  if (picking) return;
+  if (NAV.on){                               // během navigace klepnutí na jinou dýni = jdeme tam
+    const s = byId(id); if (!s || id === NAV.target) return;
+    if (visited.has(id)) return toast(`${s.name} – tady už jste byli.`);
+    NAV.fixed = id; navPick(); toast(`Míříme k: ${s.name}`);
+    return;
+  }
+  openSheet(id);
+}
+document.addEventListener("click", e => {
+  const n = e.target.closest("[data-navto],[data-navstart],[data-open]"); if (!n) return;
+  if (n.dataset.open) openSheet(n.dataset.open);
+  else startNav(n.dataset.navto || null);
+});
+
+/* ================= NAVIGACE V APLIKACI – režim „Jdeme koledovat“ ================= */
+const NAV = {on:false, fixed:null, target:null, state:"go", path:null, pathFor:null, prog:null, fetchedAt:0, seq:0,
+  follow:true, lastView:null, heading:null, gpsHeading:null, lock:null, arrivedFor:null, rateFor:null};
+let navLine = null;
+const toRad = x => x * Math.PI / 180;
+function bearing(a, b){
+  const y = Math.sin(toRad(b.lng - a.lng)) * Math.cos(toRad(b.lat));
+  const x = Math.cos(toRad(a.lat)) * Math.sin(toRad(b.lat)) - Math.sin(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.cos(toRad(b.lng - a.lng));
+  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+}
+// kde na trase jsem: odchylka od trasy, zbývající metry a bod ~20 m před námi (kam míří šipka)
+function pathProgress(path, p){
+  const kx = Math.cos(toRad(p.lat)) * 111320, ky = 110540;
+  const pts = path.map(q => [(q[1] - p.lng) * kx, (q[0] - p.lat) * ky]);
+  if (pts.length < 2) return null;
+  const seg = i => Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]);
+  let best = {d:Infinity, i:0, t:0, px:0, py:0};
+  for (let i = 0; i < pts.length - 1; i++){
+    const [ax, ay] = pts[i], [bx, by] = pts[i + 1], dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+    const t = l2 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / l2)) : 0;
+    const px = ax + t * dx, py = ay + t * dy, d = Math.hypot(px, py);
+    if (d < best.d) best = {d, i, t, px, py};
+  }
+  let remain = (1 - best.t) * seg(best.i);
+  for (let i = best.i + 1; i < pts.length - 1; i++) remain += seg(i);
+  let need = 20, i = best.i, cx = best.px, cy = best.py, ahead = null;
+  while (i < pts.length - 1){
+    const [bx, by] = pts[i + 1], l = Math.hypot(bx - cx, by - cy);
+    if (l >= need){ const k = need / l; ahead = [cx + (bx - cx) * k, cy + (by - cy) * k]; break; }
+    need -= l; cx = bx; cy = by; i++;
+  }
+  if (!ahead) ahead = pts[pts.length - 1];
+  return {off:best.d, remain, ahead:{lat:p.lat + ahead[1] / ky, lng:p.lng + ahead[0] / kx}};
+}
+// kompas telefonu (když ho má), jinak směr pohybu z GPS, jinak sever nahoře jako na mapě
+function onOrient(e){
+  let h = null;
+  if (typeof e.webkitCompassHeading === "number") h = e.webkitCompassHeading;
+  else if (e.absolute && typeof e.alpha === "number") h = 360 - e.alpha;
+  if (h === null) return;
+  const so = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+  NAV.heading = (h + so + 360) % 360; navArrow();
+}
+function compass(on){
+  if (on){
+    try{ if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") DeviceOrientationEvent.requestPermission().catch(() => {}); }catch(e){}
+    window.addEventListener("deviceorientationabsolute", onOrient); window.addEventListener("deviceorientation", onOrient);
+  } else {
+    window.removeEventListener("deviceorientationabsolute", onOrient); window.removeEventListener("deviceorientation", onOrient);
+    NAV.heading = null; NAV.gpsHeading = null;
+  }
+}
+async function wake(on){                      // displej během navigace nezhasne
+  try{
+    if (on && "wakeLock" in navigator && !NAV.lock){ NAV.lock = await navigator.wakeLock.request("screen"); NAV.lock.addEventListener("release", () => { NAV.lock = null; }); }
+    else if (!on && NAV.lock){ const l = NAV.lock; NAV.lock = null; await l.release(); }
+  }catch(e){}
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && NAV.on) wake(true); });
+
+function startNav(id){
+  compass(true);                              // iOS chce povolení kompasu přímo po klepnutí
+  if (!LOC) return openLocPicker();
+  const had = !!sheetId; closeSheet(true); if (!had && !NAV.on) pushUi();
+  $("#legend").hidden = true; closeRate();
+  go("map");
+  Object.assign(NAV, {on:true, fixed:id || null, follow:true, lastView:null, prog:null, arrivedFor:null});
+  document.body.classList.add("nav");
+  $("#navRecenter").hidden = true;
+  wake(true);
+  if (!me) locate(false);
+  navPick();
+  setTimeout(() => { map.invalidateSize(); navResize(); navView(true); }, 80);
+}
+function exitNav(fromPop){
+  if (!NAV.on) return;
+  NAV.on = false; document.body.classList.remove("nav"); compass(false); wake(false);
+  if (navLine){ map.removeLayer(navLine); navLine = null; }
+  $("#navTop").hidden = true; $("#navBot").hidden = true; $("#navRecenter").hidden = true;
+  if (!fromPop) popUi();
+  renderAll();
+  setTimeout(() => map.invalidateSize(), 80);
+}
+function navPick(){                            // vyber cíl: zvolený dům, jinak nejbližší další z trasy
+  if (NAV.fixed && byId(NAV.fixed) && !visited.has(NAV.fixed)) NAV.target = NAV.fixed;
+  else { NAV.fixed = null; planRoute(); NAV.target = route[0] || null; }
+  NAV.path = null; NAV.pathFor = null; NAV.prog = null; NAV.lastView = null; NAV.rateFor = null;
+  NAV.state = NAV.target ? "go" : "done";
+  drawMap(); drawNavLine(); navRender();
+  const s = byId(NAV.target);
+  if (me) { fetchPath(true); navView(true); }
+  else if (s) map.setView([s.lat, s.lng], 17);
+}
+async function fetchPath(force){              // pěší trasa po chodnících z Mapy.com
+  const s = byId(NAV.target); if (!s || !me) return;
+  if (!force && Date.now() - NAV.fetchedAt < 12000) return;
+  NAV.fetchedAt = Date.now(); NAV.pathFor = s.id;
+  if (!CONFIG.MAPY_API_KEY){ NAV.path = null; return; }
+  const seq = ++NAV.seq, from = {lat:me.lat, lng:me.lng};
+  try{
+    const u = `https://api.mapy.com/v1/routing/route?start=${from.lng},${from.lat}&end=${s.lng},${s.lat}&routeType=foot_fast&format=geojson&lang=cs&apikey=${encodeURIComponent(CONFIG.MAPY_API_KEY)}`;
+    const r = await fetch(u); if (!r.ok) throw new Error("routing " + r.status);
+    const j = await r.json();
+    if (seq !== NAV.seq || NAV.target !== s.id) return;
+    const c = j.geometry && j.geometry.geometry && j.geometry.geometry.coordinates;
+    if (!c || c.length < 2) throw new Error("bez trasy");
+    const path = c.map(q => [q[1], q[0]]);
+    if (dist({lat:path[0][0], lng:path[0][1]}, from) > 4) path.unshift([from.lat, from.lng]);
+    const last = path[path.length - 1]; if (dist({lat:last[0], lng:last[1]}, s) > 4) path.push([s.lat, s.lng]);
+    NAV.path = path;
+  }catch(e){ console.warn(e); if (seq === NAV.seq) NAV.path = null; }
+  if (NAV.on && me){ NAV.prog = NAV.path ? pathProgress(NAV.path, me) : null; drawNavLine(); navRender(); }
+}
+function drawNavLine(){
+  if (navLine){ map.removeLayer(navLine); navLine = null; }
+  const s = byId(NAV.target); if (!NAV.on || !s || !me || NAV.state === "done" || NAV.state === "rate") return;
+  const pts = NAV.path || [[me.lat, me.lng], [s.lat, s.lng]];
+  navLine = L.layerGroup([
+    L.polyline(pts, {color:"#140e1d", weight:11, opacity:.55, lineCap:"round", lineJoin:"round", interactive:false}),
+    L.polyline(pts, NAV.path
+      ? {color:"#ffd36b", weight:6, opacity:.95, lineCap:"round", lineJoin:"round", interactive:false}
+      : {color:"#ffd36b", weight:4, opacity:.9, dashArray:"2 10", lineCap:"round", interactive:false})
+  ]).addTo(map);
+}
+function navView(force){                      // mapa drží v záběru vás i cílový dům
+  if (!NAV.on || !NAV.follow || !me) return;
+  if (!force && NAV.lastView && dist(NAV.lastView, me) < 8) return;
+  NAV.lastView = {lat:me.lat, lng:me.lng};
+  const s = byId(NAV.target);
+  const top = $("#navTop").offsetTop + $("#navTop").offsetHeight + 24, bot = $("#navBot").offsetHeight + 34;
+  if (s && NAV.state !== "done") map.fitBounds([[me.lat, me.lng], [s.lat, s.lng]], {paddingTopLeft:[50, top], paddingBottomRight:[50, bot], maxZoom:18, animate:true});
+  else map.setView([me.lat, me.lng], 18);
+}
+map.on("dragstart", () => { if (NAV.on){ NAV.follow = false; $("#navRecenter").hidden = false; } });
+$("#navRecenter").addEventListener("click", () => { NAV.follow = true; $("#navRecenter").hidden = true; navView(true); });
+$("#navExit").addEventListener("click", () => exitNav());
+function navResize(){
+  const r = document.documentElement.style;
+  r.setProperty("--navtop", ($("#navTop").offsetTop + $("#navTop").offsetHeight + 8) + "px");
+  r.setProperty("--navbot", ($("#navBot").offsetHeight + 20) + "px");
+}
+if (window.ResizeObserver){ const ro = new ResizeObserver(navResize); ro.observe($("#navTop")); ro.observe($("#navBot")); }
+
+function navOnFix(p){                          // každá nová poloha z GPS
+  if (!NAV.on) return;
+  if (p && p.coords && p.coords.heading != null && !isNaN(p.coords.heading) && p.coords.speed > 0.6) NAV.gpsHeading = p.coords.heading;
+  const s = byId(NAV.target);
+  if (s && NAV.state !== "done"){
+    if (NAV.path){ NAV.prog = pathProgress(NAV.path, me); if (NAV.prog && NAV.prog.off > 40) fetchPath(); }
+    else if (NAV.pathFor !== s.id || Date.now() - NAV.fetchedAt > 20000) fetchPath(NAV.pathFor !== s.id);
+    const acc = p && p.coords ? p.coords.accuracy : 20;
+    if (NAV.state === "go" && NAV.arrivedFor !== s.id && dist(me, s) <= Math.max(25, Math.min(acc, 45))){
+      NAV.arrivedFor = s.id; NAV.state = "here";
+      try{ navigator.vibrate && navigator.vibrate([180, 80, 180]); }catch(e){}
+    }
+  }
+  drawNavLine(); navRender(); navView();
+}
+function navAfterData(){                       // po obnovení dat (každou minutu)
+  if (NAV.state === "done"){ planRoute(); if (route.length) navPick(); else navRender(); return; }
+  if (NAV.state === "rate"){ navRender(); return; }
+  const s = byId(NAV.target);
+  if (!s || (s.status !== "open" && NAV.fixed !== s.id)){
+    if (s) toast(`${s.name}: došly bonbony – vedu vás jinam.`, true, 5000);
+    NAV.fixed = null; navPick(); return;
+  }
+  drawMap(); drawNavLine(); navRender();
+}
+function navArrow(){
+  const a = $("#navArrow"); if (!NAV.on) return;
+  const s = byId(NAV.target);
+  if (!s || !me){ a.style.visibility = "hidden"; return; }
+  const goal = NAV.prog ? NAV.prog.ahead : s;
+  const h = NAV.heading != null ? NAV.heading : NAV.gpsHeading;
+  a.style.visibility = "";
+  a.querySelector("svg").style.transform = `rotate(${Math.round(bearing(me, goal) - (h || 0))}deg)`;
+}
+const domu = n => n === 1 ? "dům" : n > 1 && n < 5 ? "domy" : "domů";
+function navRender(){
+  if (!NAV.on) return;
+  const top = $("#navTop"), bot = $("#navBot"); top.hidden = false; bot.hidden = false;
+  const s = byId(NAV.target), D = $("#navDist"), S = $("#navSub");
+  const left = route.filter(id => id !== NAV.target).length;
+  const nth = visited.size + 1;
+  let plain = true;
+  if (NAV.state === "done"){ D.textContent = "Hotovo! 🎉"; S.textContent = "Všechny otevřené domy jsou obejité"; }
+  else if (NAV.state === "here" || NAV.state === "rate"){ D.textContent = "Jste tady! 🎃"; S.textContent = s ? s.name : ""; }
+  else if (!me){ D.textContent = gpsDenied ? "Poloha je vypnutá" : "Hledám polohu…"; S.textContent = gpsDenied ? "Povolte ji v prohlížeči u této stránky" : "Chvilku vydržte, GPS se chytá"; }
+  else if (s){
+    plain = false;
+    const m = NAV.prog ? NAV.prog.remain + (NAV.prog.off > 15 ? NAV.prog.off : 0) : walk(dist(me, s));
+    D.textContent = fmtM(m); S.textContent = `${minsFor(m)} · ${s.name}`;
+  }
+  top.classList.toggle("plain", plain);
+  navArrow();
+  const note = s && s.note ? `<p class="nb-note">💬 ${esc(s.note)}</p>` : "";
+  const head = s ? `<div class="nb-h"><div class="num">${nth}</div><div><b>${esc(s.name)}</b><span>${esc(s.address || "")}${timeNote(s) ? " · " + timeNote(s) : ""}${s.status !== "open" ? " · došly bonbony" : ""} · ${left ? `pak ještě ${left} ${domu(left)}` : "poslední dům"}</span></div></div>` : "";
+  let html = "";
+  if (NAV.state === "done"){
+    html = `<b class="nb-big">Obešli jste to! 🍬</b><p class="nb-small" style="text-align:left">Další otevřený dům už nezbývá. Díky za procházku a hezký Halloween!</p>
+      <div class="nb-acts one"><button class="btn primary big" type="button" data-nav="exit">Ukončit navigaci</button>
+      <button class="btn" type="button" data-nav="rank">Ohodnotit domy a žebříček</button></div>`;
+  } else if (NAV.state === "rate"){
+    const r = byId(NAV.rateFor);
+    html = `<b style="font-size:18px">Jak se vám líbilo${r ? " – " + esc(r.name) : ""}?</b>
+      <div class="nb-stars">
+        <button type="button" data-nav="r3">★★★<small>hezké</small></button>
+        <button type="button" data-nav="r4">★★★★<small>moc hezké</small></button>
+        <button type="button" data-nav="r5">★★★★★<small>nejlepší!</small></button>
+      </div>
+      <button class="btn ghost" type="button" data-nav="rskip">Přeskočit a jít dál</button>`;
+  } else if (NAV.state === "here"){
+    html = `${head}${note}<div class="nb-acts"><button class="btn teal big" type="button" data-nav="visit">Byli jsme ✓ – další dům</button>
+      <button class="btn ghost" type="button" data-nav="notyet">Ještě ne</button></div>`;
+  } else {
+    html = `${head}${note}${!me && gpsDenied ? `<button class="btn primary" type="button" data-nav="gps">Zkusit polohu znovu</button>` : ""}
+      <div class="nb-acts"><button class="btn teal big" type="button" data-nav="visit">Byli jsme ✓</button>
+      <button class="btn ghost" type="button" data-nav="skip">Přeskočit</button></div>`;
+  }
+  bot.innerHTML = html;
+  navResize();
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-nav]"); if (!b || !NAV.on) return;
+  const a = b.dataset.nav, s = byId(NAV.target);
+  if (a === "exit") exitNav();
+  else if (a === "visit" && s){
+    visited.add(s.id); store.set("hw-visited", [...visited]); NAV.fixed = null;
+    if (!myRatings[s.id]){ NAV.state = "rate"; NAV.rateFor = s.id; planRoute(); drawMap(); drawNavLine(); navRender(); }
+    else navPick();
+  }
+  else if (a === "skip" && s){ skipped.add(s.id); store.set("hw-skip", [...skipped]); NAV.fixed = null; toast(`${s.name} – vynecháno.`); navPick(); }
+  else if (a === "notyet"){ NAV.state = "go"; navRender(); }
+  else if (/^r[345]$/.test(a)){
+    const n = +a[1], id = NAV.rateFor;
+    if (id){ myRatings[id] = n; store.set("hw-ratings", myRatings);
+      api.post({action:"rate", id, stars:n, voter:VOTER}).then(() => load()).catch(err => { delete myRatings[id]; store.set("hw-ratings", myRatings); toast(err.message, false); });
+      toast(`Díky za ${n} ★`); }
+    navPick();
+  }
+  else if (a === "rskip") navPick();
+  else if (a === "gps") locate(false);
+  else if (a === "rank"){ exitNav(); go("more", "rank"); }
+});
+
 /* ---------- boot ---------- */
 $("#demoFlag").hidden = !DEMO;
 const initTab = (location.hash || "#map").slice(1);
-go(["map","route","add","rank","info"].includes(initTab) ? initTab : "map");
+go(["map","route","add","more","rank","info"].includes(initTab) ? initTab : "map");
 drawHeader();
 load(true);
 setInterval(() => { if (!document.hidden && LOC) load(); }, 60000);
