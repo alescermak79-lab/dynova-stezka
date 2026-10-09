@@ -170,11 +170,27 @@ function trashPhotos_(stationId) {
 }
 
 /* ---------- API ---------- */
+/* ---------- mezipaměť: čtení tabulky je pomalé, hotovou odpověď si pamatujeme ---------- */
+const CACHE_SEC = 300;                         // po každé změně (POST) se mezipaměť hned maže
+function cacheKey_(loc) { return 'get:' + (loc || ''); }
+function bust_() {
+  try {
+    const keys = [cacheKey_('')];
+    locs_().forEach(function (l) { keys.push(cacheKey_(l.id)); });
+    CacheService.getScriptCache().removeAll(keys);
+  } catch (err) {}
+}
+
 function doGet(e) {
   if (!e) return json_({ ok: true, setup: setup() });   // spuštění z editoru = inicializace + oprávnění
+  const want = e.parameter && e.parameter.loc ? String(e.parameter.loc) : '';
+  const cache = CacheService.getScriptCache();
+  try {
+    const hit = cache.get(cacheKey_(want));
+    if (hit) return ContentService.createTextOutput(hit).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {}
   try {
     const locations = locs_().map(locPublic_);
-    const want = e.parameter && e.parameter.loc ? String(e.parameter.loc) : '';
     const stations = rows_().map(public_).filter(function (s) { return !want || s.loc === want; });
     const agg = {};
     table_(aux_(SHEET_RATE, RATE_COLS)).forEach(function (r) {
@@ -198,13 +214,24 @@ function doGet(e) {
         return (b.host - a.host) || (a.created < b.created ? 1 : -1);
       }).slice(0, 24);
     });
-    return json_({ ok: true, locations: locations, stations: stations });
+    const out = JSON.stringify({ ok: true, locations: locations, stations: stations, cached: new Date().toISOString() });
+    try { if (out.length < 95000) cache.put(cacheKey_(want), out, CACHE_SEC); } catch (err) {}
+    return ContentService.createTextOutput(out).setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return json_({ ok: false, error: String(err.message || err) });
   }
 }
 
 function doPost(e) {
+  const res = doPost_(e);
+  try {
+    const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    if (['login', 'loginloc'].indexOf(String(body.action)) < 0 && JSON.parse(res.getContent()).ok) bust_();
+  } catch (err) {}
+  return res;
+}
+
+function doPost_(e) {
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {

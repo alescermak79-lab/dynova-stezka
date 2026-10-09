@@ -642,7 +642,6 @@ body.nav .me-dot{width:22px;height:22px}
 </nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 /* ================= NASTAVENÍ – upravte podle sebe ================= */
 const CONFIG = {
@@ -857,7 +856,9 @@ function ratersHtml(s){
 }
 
 /* ---------- map ---------- */
-const map = L.map("map", {zoomControl:false, attributionControl:true}).setView(CONFIG.CENTER, CONFIG.ZOOM);
+const cacheKey = () => "hw-cache:" + (curLoc || "_");
+const bootLoc = (() => { try{ const c = store.get(cacheKey(), null); return c && c.j && (c.j.locations || []).find(l => l.id === curLoc); }catch(e){ return null; } })();
+const map = L.map("map", {zoomControl:false, attributionControl:true}).setView(bootLoc ? [+bootLoc.lat, +bootLoc.lng] : CONFIG.CENTER, bootLoc ? (+bootLoc.zoom || 16) : CONFIG.ZOOM);
 const NIGHT = "brightness(.72) saturate(.75) hue-rotate(-10deg) contrast(1.05)"; // noční nádech mapy
 let baseLayers = [], baseIdx = 0;
 if (CONFIG.MAPY_API_KEY){
@@ -1098,10 +1099,16 @@ $("#onbChange").addEventListener("click", () => { $("#onbOverlay").hidden = true
 
 /* ---------- 13: sdílení lokality ---------- */
 function shareLink(){ const u = new URL(location.href); u.hash = ""; u.search = LOC ? "?l=" + encodeURIComponent(LOC.id) : ""; return u.toString(); }
-let qrFor = "";
+let qrFor = "", qrLoading = false;
+function loadQR(){                            // knihovnu QR stáhni až při otevření Info
+  if (qrLoading) return; qrLoading = true;
+  const sc = document.createElement("script"); sc.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
+  sc.onload = () => { qrFor = ""; drawShare(); }; document.head.appendChild(sc);
+}
 function drawShare(){
   $("#sharePanel").hidden = !LOC; if (!LOC) return;
   const url = shareLink(); $("#shareUrl").textContent = url;
+  if (typeof QRCode === "undefined"){ loadQR(); }
   if (qrFor !== url && typeof QRCode !== "undefined"){
     $("#qrBox").innerHTML = ""; qrFor = url;
     try{ new QRCode($("#qrBox"), {text:url, width:132, height:132, colorDark:"#1b1426", colorLight:"#ffffff", correctLevel:QRCode.CorrectLevel.M}); }catch(e){}
@@ -1176,9 +1183,26 @@ function showState(kind){
 }
 document.addEventListener("click", e => { if (e.target.closest("#btnRetry, #offline")){ $("#offline").hidden = true; showState(loadedOnce ? "" : "loading"); load(!loadedOnce); } });
 async function load(fit){
+  if (fit && !DEMO){                          // okamžitě ukaž naposledy stažená data, čerstvá dorazí za chvíli
+    const c = store.get(cacheKey(), null);
+    if (c && c.j && Date.now() - c.t < 14 * 864e5){
+      try{ applyData(c.j, true, true); lastOk = c.t; fit = false; }catch(e){ console.warn(e); }
+    }
+  }
   if (!loadedOnce) showState("loading");
   try{
+    const key = cacheKey();
     const res = await api.list();
+    if (!DEMO && res && res.ok !== false) store.set(key, {t:Date.now(), j:res});
+    applyData(res, fit, false);
+  }catch(e){
+    console.warn(e);
+    if (!loadedOnce) showState("error");
+    else { const t = new Date(lastOk); $("#offline").textContent = `Offline – data z ${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}. Zkusit znovu`; $("#offline").hidden = false; }
+  }
+}
+function applyData(res, fit, cached){
+  {
     locations = (res.locations || []).map(l => Object.assign({}, l, {lat:+l.lat, lng:+l.lng, zoom:+l.zoom || 16}));
     const prevLoc = LOC && LOC.id;
     LOC = locations.find(l => l.id === curLoc) || null;
@@ -1188,20 +1212,16 @@ async function load(fit){
     if (prevLoc !== LOC.id) fit = true;
     drawHeader();
     stations = list.filter(s => isFinite(s.lat) && isFinite(s.lng)).map(s => Object.assign({}, s, {lat:+s.lat, lng:+s.lng, scare:+s.scare || 1}));
-    // odstraň tokeny ke smazaným stanovištím
-    Object.keys(mine).forEach(id => { if (!byId(id)) delete mine[id]; }); store.set("hw-mine", mine);
+    // odstraň tokeny ke smazaným stanovištím (jen podle čerstvých dat, ne podle starší kopie v telefonu)
+    if (!cached){ Object.keys(mine).forEach(id => { if (!byId(id)) delete mine[id]; }); store.set("hw-mine", mine); }
     const before = route.join();
     planRoute();
     if (prevLoc !== LOC.id) formDefaults();
     renderAll(false);
     if (fit) fitLoc();
-    loadedOnce = true; lastOk = Date.now(); $("#offline").hidden = true;
+    loadedOnce = true; if (!cached){ lastOk = Date.now(); $("#offline").hidden = true; }
     showState(stations.length ? "" : "empty");
     maybeOnboard();
-  }catch(e){
-    console.warn(e);
-    if (!loadedOnce) showState("error");
-    else { const t = new Date(lastOk); $("#offline").textContent = `Offline – data z ${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}. Zkusit znovu`; $("#offline").hidden = false; }
   }
 }
 
