@@ -1878,7 +1878,7 @@ function navRender(){
   top.classList.toggle("plain", plain);
   navArrow();
   const note = s && s.note ? `<p class="nb-note">💬 ${esc(s.note)}</p>` : "";
-  const head = s ? `<div class="nb-h"><div class="num">${nth}</div><div><b>${esc(s.name)}</b><span>${esc(s.address || "")}${timeNote(s) ? " · " + timeNote(s) : ""}${s.status !== "open" ? " · došly bonbony" : ""} · ${left ? `pak ještě ${left} ${domu(left)}` : "poslední dům"}</span></div></div>` : "";
+  const head = s ? `<div class="nb-h"><div class="num">${nth}</div><div><b>${esc(s.name)}</b><span>${[s.address ? esc(s.address) : "", timeNote(s), s.status !== "open" ? "došly bonbony" : "", left ? `pak ještě ${left} ${domu(left)}` : "poslední dům"].filter(Boolean).join(" · ")}</span></div></div>` : "";
   let html = "";
   if (NAV.state === "done"){
     html = `<b class="nb-big">Obešli jste to! 🍬</b><p class="nb-small" style="text-align:left">Další otevřený dům už nezbývá. Díky za procházku a hezký Halloween!</p>
