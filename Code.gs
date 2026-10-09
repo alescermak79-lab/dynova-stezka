@@ -17,8 +17,8 @@ const MAX_PHOTOS_PER_STATION = 30;
 const MAX_PHOTO_BYTES = 3 * 1024 * 1024;       // 3 MB po zmenšení v prohlížeči bohatě stačí
 const REGION = { minLat: 47.7, maxLat: 51.1, minLng: 12.0, maxLng: 22.6 }; // Česko + Slovensko
 const COLS = ['id','token','pinHash','name','address','lat','lng','scare','allergyFree','nonCandy','accessible','from','to','note','status','created','updated','loc'];
-const RATE_COLS = ['stationId','voter','stars','created','updated'];
-const PHOTO_COLS = ['id','stationId','fileId','by','voter','created'];
+const RATE_COLS = ['stationId','voter','stars','created','updated','nick'];
+const PHOTO_COLS = ['id','stationId','fileId','by','voter','created','nick'];
 const LOC_COLS = ['id','name','city','lat','lng','zoom','start','end','meeting','note','pinHash','token','created','updated'];
 
 /* ---------- listy ---------- */
@@ -54,6 +54,7 @@ function rows_() { return table_(sheet_()).filter(function (o) { return o.id; })
 const bool_ = v => v === true || String(v).toLowerCase() === 'true';
 const str_ = (v, max) => String(v == null ? '' : v).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, max);
 const time_ = v => /^\d{1,2}:\d{2}$/.test(String(v)) ? String(v) : '';
+const nick_ = v => str_(v, 30).replace(/[<>]/g, '');   // přezdívka návštěvníka (nepovinná)
 
 function public_(o) {
   return {
@@ -179,18 +180,20 @@ function doGet(e) {
     table_(aux_(SHEET_RATE, RATE_COLS)).forEach(function (r) {
       const s = Number(r.stars), k = String(r.stationId);
       if (!(s >= 3 && s <= 5)) return;
-      agg[k] = agg[k] || { sum: 0, n: 0 };
+      agg[k] = agg[k] || { sum: 0, n: 0, who: [] };
       agg[k].sum += s; agg[k].n++;
+      if (r.nick) agg[k].who.push({ nick: String(r.nick), stars: s, at: String(r.updated || r.created) });
     });
     const ph = {};
     table_(aux_(SHEET_PHOTO, PHOTO_COLS)).forEach(function (p) {
       if (!p.fileId) return;
       const k = String(p.stationId);
-      (ph[k] = ph[k] || []).push({ id: String(p.id), url: photoUrl_(p.fileId), host: String(p.by) === 'host', created: String(p.created) });
+      (ph[k] = ph[k] || []).push({ id: String(p.id), url: photoUrl_(p.fileId), host: String(p.by) === 'host', created: String(p.created), nick: String(p.nick || '') });
     });
     stations.forEach(function (s) {
       const a = agg[s.id];
       s.rating = a ? { avg: Math.round(a.sum / a.n * 10) / 10, count: a.n } : { avg: 0, count: 0 };
+      s.raters = a ? a.who.sort(function (x, y) { return x.at < y.at ? 1 : -1; }).slice(0, 12).map(function (x) { return { nick: x.nick, stars: x.stars }; }) : [];
       s.photos = (ph[s.id] || []).sort(function (a, b) {
         return (b.host - a.host) || (a.created < b.created ? 1 : -1);
       }).slice(0, 24);
@@ -277,8 +280,9 @@ function doPost(e) {
       if (voter.length < 8) throw new Error('Nepodařilo se rozpoznat zařízení, obnovte stránku.');
       const rs = aux_(SHEET_RATE, RATE_COLS);
       const ex = table_(rs).filter(function (r) { return String(r.stationId) === String(row.id) && String(r.voter) === voter; })[0];
-      if (ex) rs.getRange(ex._row, 3, 1, 3).setValues([[String(stars), String(ex.created), now]]);
-      else rs.appendRow([String(row.id), voter, String(stars), now, now]);
+      const nick = nick_(body.nick);
+      if (ex) rs.getRange(ex._row, 3, 1, 4).setValues([[String(stars), String(ex.created), now, nick]]);
+      else rs.appendRow([String(row.id), voter, String(stars), now, now, nick]);
       return json_({ ok: true });
     }
 
@@ -295,7 +299,7 @@ function doPost(e) {
       const ext = m[2] === 'jpeg' ? 'jpg' : m[2];
       const file = folder_().createFile(Utilities.newBlob(bytes, m[1], row.id + '-' + pid + '.' + ext));
       file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-      ps.appendRow([pid, String(row.id), file.getId(), isHost ? 'host' : 'visitor', voter, now]);
+      ps.appendRow([pid, String(row.id), file.getId(), isHost ? 'host' : 'visitor', voter, now, nick_(body.nick)]);
       return json_({ ok: true, id: pid, url: photoUrl_(file.getId()), host: isHost });
     }
 

@@ -315,6 +315,11 @@ body.nav .toast{bottom:auto;top:calc(var(--navtop,120px) + 4px)}
 @media (prefers-reduced-motion:no-preference){.pin.tgt::after{animation:ping 1.6s ease-out infinite}}
 @keyframes ping{from{transform:scale(.45);opacity:.95}to{transform:scale(1.35);opacity:0}}
 body.nav .me-dot{width:22px;height:22px}
+.nick-in{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:700;color:var(--mist)}
+.nick-in input{min-height:44px}
+.raters{margin-top:6px;font-size:12.5px;color:var(--mist);line-height:1.5}
+.raters b{color:var(--bone);font-weight:700}
+.lightbox .cap{position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);text-align:center;color:#fff;font-weight:700;text-shadow:0 1px 4px #000}
 </style>
 </head>
 <body>
@@ -481,6 +486,11 @@ body.nav .me-dot{width:22px;height:22px}
     <div class="wrap" id="v-info" hidden>
       <h2>Jak to funguje</h2>
       <div class="panel">
+        <h3>Vaše přezdívka</h3>
+        <p class="muted small" style="margin:6px 0 10px">Podepíšete se jí u fotek a hodnocení – hostitelé uvidí, kdo je pochválil. Nepovinné, platí jen v tomto telefonu.</p>
+        <div class="two"><input type="text" id="infoNick" maxlength="30" autocomplete="nickname" placeholder="např. Dýňáci od rybníka" aria-label="Vaše přezdívka"><button class="btn" type="button" id="btnNick">Uložit</button></div>
+      </div>
+      <div class="panel">
         <div class="stat" id="infoFacts"></div>
       </div>
       <div class="split">
@@ -547,6 +557,7 @@ body.nav .me-dot{width:22px;height:22px}
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="rateTitle">
     <h3 id="rateTitle">Ohodnoťte stanoviště</h3>
     <div class="muted small" id="rateName"></div>
+    <label class="nick-in">Podepsat se přezdívkou <span style="font-weight:400">nepovinné – např. „Dýňáci od rybníka“, ne jména dětí</span><input type="text" id="rateNick" maxlength="30" autocomplete="nickname" placeholder="Vaše přezdívka"></label>
     <div class="starpick" id="starPick">
       <button type="button" data-star="1" disabled aria-label="1 hvězdička – nelze udělit">★</button>
       <button type="button" data-star="2" disabled aria-label="2 hvězdičky – nelze udělit">★</button>
@@ -612,13 +623,14 @@ body.nav .me-dot{width:22px;height:22px}
       <li><span class="n">2</span><div><b>Povolte polohu</b><p>Trasa pak povede od vás vždy k nejbližšímu dalšímu domu.</p></div></li>
       <li><span class="n">3</span><div><b>Klepněte na „Jdeme koledovat“</b><p>Aplikace vás povede k nejbližšímu domu. U domu potvrdíte „Byli jsme ✓“ a pošle vás dál. Šedá dýně = došly bonbony.</p></div></li>
     </ol>
+    <label class="nick-in">Vaše přezdívka <span style="font-weight:400">nepovinné – podepíšete se jí u fotek a hodnocení. Třeba „Dýňáci od rybníka“, ne jména dětí.</span><input type="text" id="onbNick" maxlength="30" autocomplete="nickname" placeholder="Přezdívka vaší party"></label>
     <div class="row">
       <button class="btn primary" type="button" id="onbGo">Povolit polohu a začít</button>
       <button class="btn ghost" type="button" id="onbSkip">Jen se podívat</button>
     </div>
   </div>
 </div>
-<div class="lightbox" id="lightbox" hidden><img id="lbImg" alt="Fotka stanoviště"><button class="btn sm close" type="button" id="lbClose">Zavřít</button></div>
+<div class="lightbox" id="lightbox" hidden><img id="lbImg" alt="Fotka stanoviště"><div class="cap" id="lbCap" hidden></div><button class="btn sm close" type="button" id="lbClose">Zavřít</button></div>
 <div class="toast" id="toast" role="status" hidden></div>
 <input type="file" id="photoInput" accept="image/*" hidden>
 
@@ -702,8 +714,8 @@ const api = {
       if (body.action === "login"){ return {ok:true, token:"demo"}; }
       if (body.action === "addloc"){ const locs = store.get("hw-demo-locs", null) || DEMO_LOCS.slice(); const id = "demo" + Date.now().toString(36); locs.push(Object.assign({id}, body.location)); store.set("hw-demo-locs", locs); return {ok:true, id, token:"demo"}; }
       if (body.action === "loginloc" || body.action === "updloc"){ return {ok:true, token:"demo"}; }
-      if (body.action === "rate"){ list = list.map(s => s.id === body.id ? Object.assign({}, s, {rating:{avg:body.stars, count:1}}) : s); store.set("hw-demo", list); return {ok:true}; }
-      if (body.action === "photo"){ list = list.map(s => s.id === body.id ? Object.assign({}, s, {photos:[{id:"p" + Date.now(), url:body.image, host:!!body.token}].concat(s.photos || [])}) : s); store.set("hw-demo", list); return {ok:true}; }
+      if (body.action === "rate"){ list = list.map(s => s.id === body.id ? Object.assign({}, s, {rating:{avg:body.stars, count:1}, raters:body.nick ? [{nick:body.nick, stars:body.stars}] : []}) : s); store.set("hw-demo", list); return {ok:true}; }
+      if (body.action === "photo"){ list = list.map(s => s.id === body.id ? Object.assign({}, s, {photos:[{id:"p" + Date.now(), url:body.image, host:!!body.token, nick:body.nick || ""}].concat(s.photos || [])}) : s); store.set("hw-demo", list); return {ok:true}; }
       if (body.action === "delphoto"){ list = list.map(s => s.id === body.id ? Object.assign({}, s, {photos:(s.photos || []).filter(p => p.id !== body.photoId)}) : s); store.set("hw-demo", list); return {ok:true}; }
     }
     const r = await fetch(CONFIG.API_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(body)});
@@ -802,7 +814,7 @@ function ratingHtml(s){
 function thumbsHtml(s, from, max, canDelete){
   const list = (s.photos || []).slice(from, from + max);
   if (!list.length) return "";
-  return `<div class="thumbs">${list.map(p => `<button type="button" data-photo="${esc(p.url)}" aria-label="Zvětšit fotku"><img src="${esc(p.url)}" alt="" loading="lazy">${canDelete ? `<span class="x" role="button" tabindex="0" data-delphoto="${esc(p.id)}" data-id="${esc(s.id)}" aria-label="Smazat fotku">×</span>` : ""}</button>`).join("")}</div>`;
+  return `<div class="thumbs">${list.map(p => `<button type="button" data-photo="${esc(p.url)}" data-nick="${esc(p.nick || "")}" aria-label="Zvětšit fotku${p.nick ? " – od " + esc(p.nick) : ""}"><img src="${esc(p.url)}" alt="" loading="lazy">${canDelete ? `<span class="x" role="button" tabindex="0" data-delphoto="${esc(p.id)}" data-id="${esc(s.id)}" aria-label="Smazat fotku">×</span>` : ""}</button>`).join("")}</div>`;
 }
 let toastT = null;
 function toast(msg, ok = true, ms = 3500){
@@ -831,10 +843,18 @@ async function deletePhoto(id, photoId){
 }
 let rateId = null;
 function paintStars(n){ $$("#starPick button").forEach(b => b.classList.toggle("on", +b.dataset.star <= n)); }
-function openRate(id, after){ const s = byId(id); if (!s) return; rateId = id; $("#rateName").textContent = s.name;
+function openRate(id, after){ const s = byId(id); if (!s) return; rateId = id; $("#rateName").textContent = s.name; $("#rateNick").value = NICK;
   $("#rateTitle").textContent = after ? "Jak se vám tam líbilo?" : "Ohodnoťte stanoviště"; $("#rateCancel").textContent = after ? "Teď ne" : "Zavřít"; paintStars(myRatings[id] || 0); $("#rateOverlay").hidden = false; }
 function closeRate(){ $("#rateOverlay").hidden = true; rateId = null; }
-function openLightbox(url){ $("#lbImg").src = url; $("#lightbox").hidden = false; }
+function openLightbox(url, by){ $("#lbImg").src = url; $("#lbCap").textContent = by ? "📷 " + by : ""; $("#lbCap").hidden = !by; $("#lightbox").hidden = false; }
+/* ---------- přezdívka návštěvníka ---------- */
+let NICK = store.get("hw-nick", "");
+function setNick(v){ NICK = String(v || "").replace(/[<>]/g, "").trim().slice(0, 30); store.set("hw-nick", NICK); ["#rateNick", "#onbNick", "#infoNick"].forEach(s => { const i = $(s); if (i && i !== document.activeElement) i.value = NICK; }); }
+function ratersHtml(s){
+  const r = (s.raters || []).filter(x => x.nick);
+  if (!r.length) return "";
+  return `<div class="raters">Pochválili: ${r.slice(0, 6).map(x => `<b>${esc(x.nick)}</b> ${x.stars}★`).join(", ")}${r.length > 6 ? ` a další` : ""}</div>`;
+}
 
 /* ---------- map ---------- */
 const map = L.map("map", {zoomControl:false, attributionControl:true}).setView(CONFIG.CENTER, CONFIG.ZOOM);
@@ -903,10 +923,11 @@ function sheetHtml(s){
   const cover = (s.photos || [])[0];
   const d = me ? ` · ${fmtM(walk(dist(me, s)))}, ${fmtMin(dist(me, s))} pěšky` : "";
   const id = esc(s.id);
-  return `${cover ? `<img class="bs-cover" src="${esc(cover.url)}" alt="Fotka stanoviště" data-photo="${esc(cover.url)}">` : ""}
+  return `${cover ? `<img class="bs-cover" src="${esc(cover.url)}" alt="Fotka stanoviště" data-photo="${esc(cover.url)}" data-nick="${esc(cover.nick || "")}">` : ""}
     <h3 id="bsTitle">${esc(s.name)}</h3>
     <div class="muted small">${esc(s.address)}${d}</div>
     <div class="small bs-meta"><span>${ratingHtml(s)}${myRatings[s.id] ? ` <span class="muted">· vy ${myRatings[s.id]}★</span>` : ""}</span><span><span class="ghosts">${ghosts(s.scare)}</span> ${scareLabel(s.scare)}</span></div>
+    ${ratersHtml(s)}
     ${hoursHtml(s)}${tagsHtml(s)}
     ${s.note ? `<p class="bs-note">${esc(s.note)}</p>` : ""}
     ${thumbsHtml(s, 1, 8, false)}
@@ -1000,7 +1021,7 @@ function drawMine(){
   $("#mineWrap").hidden = !list.length;
   $("#mineList").innerHTML = list.map(s => `<li style="grid-template-columns:1fr">
     <div><div class="nm">${esc(s.name)}</div><div class="meta">${s.address ? esc(s.address) + " · " : ""}otevřeno ${esc(hours(s))}</div>
-      <div class="meta">${ratingHtml(s)}</div>${tagsHtml(s)}
+      <div class="meta">${ratingHtml(s)}</div>${ratersHtml(s)}${tagsHtml(s)}
       ${thumbsHtml(s, 0, 30, true)}</div>
     <div class="row">
       <button class="btn sm" type="button" data-addphoto="${esc(s.id)}">📷 Přidat foto</button>
@@ -1067,7 +1088,11 @@ function maybeOnboard(){
   $("#onbOverlay").hidden = false;
 }
 function closeOnb(){ store.set("hw-onb", true); $("#onbOverlay").hidden = true; }
-$("#onbGo").addEventListener("click", () => { closeOnb(); go("map"); locate(true); });
+$("#onbGo").addEventListener("click", () => { setNick($("#onbNick").value); closeOnb(); go("map"); locate(true); });
+$("#onbSkip").addEventListener("click", () => setNick($("#onbNick").value));
+$("#btnNick").addEventListener("click", () => { setNick($("#infoNick").value); toast(NICK ? `Přezdívka uložena: ${NICK}` : "Přezdívka smazána."); });
+$("#infoNick").addEventListener("keydown", e => { if (e.key === "Enter") $("#btnNick").click(); });
+setNick(NICK);
 $("#onbSkip").addEventListener("click", closeOnb);
 $("#onbChange").addEventListener("click", () => { $("#onbOverlay").hidden = true; openLocPicker(); });
 
@@ -1272,7 +1297,7 @@ document.addEventListener("click", e => {
   const del = e.target.closest("[data-delphoto]");
   if (del){ e.preventDefault(); e.stopPropagation(); deletePhoto(del.dataset.id, del.dataset.delphoto); return; }
   const ph = e.target.closest("[data-photo]");
-  if (ph){ e.preventDefault(); openLightbox(ph.dataset.photo); return; }
+  if (ph){ e.preventDefault(); openLightbox(ph.dataset.photo, ph.dataset.nick); return; }
   const ap = e.target.closest("[data-addphoto]");
   if (ap){ pickPhoto(ap.dataset.addphoto); return; }
   const rt = e.target.closest("[data-rate]");
@@ -1284,7 +1309,7 @@ $("#photoInput").addEventListener("change", async () => {
   toast("Nahrávám fotku…", true, 60000);
   try{
     const image = await shrink(f, 1280, 0.8);
-    await api.post({action:"photo", id, image, voter:VOTER, token:mine[id]});
+    await api.post({action:"photo", id, image, voter:VOTER, token:mine[id], nick:NICK});
     toast("Fotka je nahraná. Díky!");
     await load();
   }catch(err){ toast(err.message || "Fotku se nepodařilo nahrát.", false); }
@@ -1294,9 +1319,9 @@ $$("#starPick button:not([disabled])").forEach(b => {
   b.addEventListener("mouseleave", () => paintStars(myRatings[rateId] || 0));
   b.addEventListener("click", async () => {
     const n = +b.dataset.star, id = rateId; if (!id) return;
-    paintStars(n);
+    paintStars(n); setNick($("#rateNick").value);
     try{
-      await api.post({action:"rate", id, stars:n, voter:VOTER});
+      await api.post({action:"rate", id, stars:n, voter:VOTER, nick:NICK});
       myRatings[id] = n; store.set("hw-ratings", myRatings);
       closeRate(); toast(`Díky za hodnocení ${n} ★`); await load();
     }catch(err){ toast(err.message, false); }
@@ -1887,6 +1912,7 @@ function navRender(){
   } else if (NAV.state === "rate"){
     const r = byId(NAV.rateFor);
     html = `<b style="font-size:18px">Jak se vám líbilo${r ? " – " + esc(r.name) : ""}?</b>
+      <label class="nick-in">Podepsat se <input type="text" id="navNick" maxlength="30" autocomplete="nickname" placeholder="Přezdívka (nepovinné)" value="${esc(NICK)}"></label>
       <div class="nb-stars">
         <button type="button" data-nav="r3">★★★<small>hezké</small></button>
         <button type="button" data-nav="r4">★★★★<small>moc hezké</small></button>
@@ -1901,7 +1927,10 @@ function navRender(){
       <div class="nb-acts"><button class="btn teal big" type="button" data-nav="visit">Byli jsme ✓</button>
       <button class="btn ghost" type="button" data-nav="skip">Přeskočit</button></div>`;
   }
+  const ni = $("#navNick"), keep = ni ? {v:ni.value, f:document.activeElement === ni} : null;
+  if (keep && keep.f && NAV.state === "rate"){ navResize(); return; }   // nepřepisuj, když uživatel právě píše
   bot.innerHTML = html;
+  const ni2 = $("#navNick"); if (ni2 && keep) ni2.value = keep.v;
   navResize();
 }
 document.addEventListener("click", e => {
@@ -1918,7 +1947,8 @@ document.addEventListener("click", e => {
   else if (/^r[345]$/.test(a)){
     const n = +a[1], id = NAV.rateFor;
     if (id){ myRatings[id] = n; store.set("hw-ratings", myRatings);
-      api.post({action:"rate", id, stars:n, voter:VOTER}).then(() => load()).catch(err => { delete myRatings[id]; store.set("hw-ratings", myRatings); toast(err.message, false); });
+      if ($("#navNick")) setNick($("#navNick").value);
+      api.post({action:"rate", id, stars:n, voter:VOTER, nick:NICK}).then(() => load()).catch(err => { delete myRatings[id]; store.set("hw-ratings", myRatings); toast(err.message, false); });
       toast(`Díky za ${n} ★`); }
     navPick();
   }
