@@ -346,6 +346,13 @@ body.nav .me-dot{width:22px;height:22px}
 .tour-pins{display:flex;gap:14px;align-items:flex-end;margin:6px 0 2px}
 .tour-pins span{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;color:var(--mist);font-weight:700}
 .tour-pins svg{width:34px;height:37px}
+/* ---- přepínač jazyka ---- */
+.brow{display:flex;align-items:center;gap:6px;max-width:100%;min-width:0}
+.brow .locbtn{min-width:0}
+.langbtn{position:relative;flex:none;margin-top:4px;display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);background:var(--dusk2);color:var(--bone);font-size:12.5px;font-weight:800;text-decoration:none;white-space:nowrap}
+.langbtn::before{content:"";position:absolute;inset:-7px -3px}
+.langbtn:hover{border-color:var(--pumpkin)}
+@media(max-width:430px){.langbtn{margin-top:3px;min-height:30px;font-size:12px;padding:4px 8px}}
 </style>
 </head>
 <body>
@@ -354,7 +361,10 @@ body.nav .me-dot{width:22px;height:22px}
   <a class="home" href="./" id="homeLink" aria-label="Úvodní stránka – mapa"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 14c3-6 8-8 10-7-3 2-5 5-6 8" fill="none" stroke="#6bbf59" stroke-width="3" stroke-linecap="round"/><ellipse cx="22" cy="38" rx="14" ry="18" fill="#d96412"/><ellipse cx="42" cy="38" rx="14" ry="18" fill="#d96412"/><ellipse cx="32" cy="38" rx="13" ry="19" fill="#ff8a2a"/><path d="M22 33l5-5 5 5zM32 33l5-5 5 5z" fill="#ffd36b"/><path d="M20 43c4 5 20 5 24 0l-3 1-2 3-3-3-4 3-3-3-3 3-2-3z" fill="#ffd36b"/></svg></a>
   <div class="brand">
     <a class="home-title" href="./" id="homeLink2"><h1 id="evTitle">Sousedský Halloween</h1></a>
-    <button class="locbtn" type="button" id="locBtn" aria-haspopup="dialog">📍 <span id="evSub">Vyberte lokalitu</span> ▾</button>
+    <div class="brow">
+      <button class="locbtn" type="button" id="locBtn" aria-haspopup="dialog">📍 <span id="evSub">Vyberte lokalitu</span> ▾</button>
+      <a class="langbtn" id="langBtn" href="en.html" hreflang="en" lang="en" aria-label="English (US) version">🇺🇸 EN</a>
+    </div>
   </div>
   <div class="count" id="countdown" aria-live="polite"></div>
 </header>
@@ -683,6 +693,14 @@ const CONFIG = {
 };
 /* ================================================================== */
 
+const LANG = document.documentElement.lang === "en" ? "en" : "cs";      // en.html = americká verze
+const LOCALE = LANG === "en" ? "en-US" : "cs-CZ";
+const hm = t => {                                  // "17:30" → "5:30 PM" v US verzi
+  if (!t || LANG !== "en") return t || "";
+  const m = /^(\d{1,2}):(\d{2})$/.exec(t); if (!m) return t;
+  const h = +m[1]; return `${h % 12 || 12}:${m[2]} ${h < 12 ? "AM" : "PM"}`;
+};
+const num1 = x => LANG === "en" ? String(x) : String(x).replace(".", ",");
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -755,7 +773,9 @@ function dist(a, b){ // metres
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 const walk = m => m * 1.3; // ulice nejsou vzdušnou čarou
-const fmtM = m => m < 1000 ? Math.round(m/10)*10 + " m" : (m/1000).toFixed(1).replace(".", ",") + " km";
+const fmtM = m => LANG === "en"
+  ? (m < 160 ? Math.max(10, Math.round(m * 3.28084 / 10) * 10) + " ft" : (m / 1609.344).toFixed(1) + " mi")
+  : (m < 1000 ? Math.round(m/10)*10 + " m" : (m/1000).toFixed(1).replace(".", ",") + " km");
 const fmtMin = m => Math.max(1, Math.round(walk(m) / (CONFIG.KID_SPEED_KMH * 1000 / 60))) + " min";
 const byId = id => stations.find(s => s.id === id);
 /* ---------- otevírací doba stanoviště ---------- */
@@ -764,7 +784,7 @@ const locEnd = () => new Date(LOC ? LOC.end : "2100-01-01T00:00:00Z");
 const dayKey = d => { const p = n => String(n).padStart(2, "0"); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };
 const toMin = t => { const m = /^(\d{1,2}):(\d{2})$/.exec(t || ""); return m ? +m[1] * 60 + +m[2] : null; };
 function isEventDay(){ return !!LOC && dayKey(new Date()) === dayKey(locStart()); }
-function hours(s){ return (s.from || s.to) ? `${s.from || "?"}–${s.to || "?"}` : "neuvedeno"; }
+function hours(s){ return (s.from || s.to) ? `${hm(s.from) || "?"}–${hm(s.to) || "?"}` : "neuvedeno"; }
 function timeState(s){                       // "before" | "open" | "after" | null (mimo den akce)
   if (!isEventDay()) return null;
   const d = new Date(), n = d.getHours() * 60 + d.getMinutes(), a = toMin(s.from), b = toMin(s.to);
@@ -774,11 +794,12 @@ function timeState(s){                       // "before" | "open" | "after" | nu
 }
 function timeNote(s){
   const st = timeState(s);
-  if (st === "before") return `otevírá v ${esc(s.from)}`;
-  if (st === "after") return `už zavřeno (do ${esc(s.to)})`;
+  if (st === "before") return `otevírá v ${esc(hm(s.from))}`;
+  if (st === "after") return `už zavřeno (do ${esc(hm(s.to))})`;
   if (st === null && LOC){
     if (new Date() > locEnd()) return "akce už skončila";
-    return `otevře ${locStart().getDate()}. ${locStart().getMonth() + 1}.${s.from ? " v " + esc(s.from) : ""}`;
+    const day = LANG === "en" ? locStart().toLocaleDateString("en-US", {month:"short", day:"numeric"}) : `${locStart().getDate()}. ${locStart().getMonth() + 1}.`;
+    return LANG === "en" ? `opens ${day}${s.from ? " at " + esc(hm(s.from)) : ""}` : `otevře ${day}${s.from ? " v " + esc(s.from) : ""}`;
   }
   return "";
 }
@@ -843,7 +864,7 @@ function starsHtml(avg){ const n = Math.round(avg || 0); return `<span class="st
 function ratingHtml(s){
   const r = s.rating || {avg:0, count:0};
   return r.count
-    ? `${starsHtml(r.avg)} <b>${String(r.avg).replace(".", ",")}</b> <span class="muted">(${r.count}×)</span>`
+    ? `${starsHtml(r.avg)} <b>${num1(r.avg)}</b> <span class="muted">(${r.count}×)</span>`
     : `<span class="muted">zatím bez hodnocení</span>`;
 }
 function thumbsHtml(s, from, max, canDelete){
@@ -1291,7 +1312,7 @@ function drawRank(){
   const votes = rated.reduce((n, s) => n + s.rating.count, 0);
   const avg = votes ? rated.reduce((n, s) => n + s.rating.avg * s.rating.count, 0) / votes : 0;
   const photos = stations.reduce((n, s) => n + (s.photos || []).length, 0);
-  $("#rankStats").innerHTML = `<div>Hodnocených domů<b>${rated.length}/${stations.length}</b></div><div>Hodnocení celkem<b>${votes}</b></div><div>Průměr lokality<b>${votes ? String(Math.round(avg * 10) / 10).replace(".", ",") + " ★" : "–"}</b></div><div>Fotek<b>${photos}</b></div>`;
+  $("#rankStats").innerHTML = `<div>Hodnocených domů<b>${rated.length}/${stations.length}</b></div><div>Hodnocení celkem<b>${votes}</b></div><div>Průměr lokality<b>${votes ? num1(Math.round(avg * 10) / 10) + " ★" : "–"}</b></div><div>Fotek<b>${photos}</b></div>`;
   const medal = ["🥇", "🥈", "🥉"];
   const row = (s, i) => {
     const cover = (s.photos || [])[0];
@@ -1520,13 +1541,13 @@ async function geocodeAddr(q){
   let items = [];
   if (CONFIG.MAPY_API_KEY){
     const near = LOC ? `&preferNear=${LOC.lng},${LOC.lat}&preferNearPrecision=5000` : "";
-    const u = `https://api.mapy.com/v1/suggest?query=${encodeURIComponent(query)}&lang=cs&limit=8${near}&apikey=${encodeURIComponent(CONFIG.MAPY_API_KEY)}`;
+    const u = `https://api.mapy.com/v1/suggest?query=${encodeURIComponent(query)}&lang=${LANG}&limit=8${near}&apikey=${encodeURIComponent(CONFIG.MAPY_API_KEY)}`;
     const j = await fetch(u).then(r => r.json());
     items = (j.items || []).filter(i => i.position && /^regional\.(address|street)$/.test(i.type))
       .map(i => ({name:i.name, sub:i.location || "", lat:i.position.lat, lng:i.position.lon, exact:i.type === "regional.address"}));
   } else {
     const u = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=8&countrycodes=cz,sk&q=${encodeURIComponent(query)}`;
-    const j = await fetch(u, {headers:{"Accept-Language":"cs"}}).then(r => r.json());
+    const j = await fetch(u, {headers:{"Accept-Language":LANG}}).then(r => r.json());
     items = j.map(i => { const a = i.address || {};
       const name = [a.road || a.pedestrian || a.hamlet, a.house_number].filter(Boolean).join(" ") || i.display_name.split(",")[0];
       return {name, sub:a.city || a.town || a.village || "", lat:+i.lat, lng:+i.lon, exact:!!a.house_number}; });
@@ -1671,8 +1692,8 @@ $("#form").addEventListener("submit", async e => {
 });
 
 /* ---------- header / info ---------- */
-const dFmt = new Intl.DateTimeFormat("cs-CZ", {weekday:"long", day:"numeric", month:"long"});
-const tFmt = new Intl.DateTimeFormat("cs-CZ", {hour:"2-digit", minute:"2-digit"});
+const dFmt = new Intl.DateTimeFormat(LOCALE, {weekday:"long", day:"numeric", month:"long", timeZone:"Europe/Prague"});
+const tFmt = new Intl.DateTimeFormat(LOCALE, LANG === "en" ? {hour:"numeric", minute:"2-digit", timeZone:"Europe/Prague"} : {hour:"2-digit", minute:"2-digit", timeZone:"Europe/Prague"});   // čas akce vždy podle místa konání
 $("#evTitle").textContent = CONFIG.TITLE;
 document.title = CONFIG.TITLE;
 function locLabel(l){ return l ? `${l.city} · ${l.name}` : "Vyberte lokalitu"; }
@@ -1980,7 +2001,7 @@ async function fetchPath(force){              // pěší trasa po chodnících z
   if (!CONFIG.MAPY_API_KEY){ NAV.path = null; return; }
   const seq = ++NAV.seq, from = {lat:me.lat, lng:me.lng};
   try{
-    const u = `https://api.mapy.com/v1/routing/route?start=${from.lng},${from.lat}&end=${s.lng},${s.lat}&routeType=foot_fast&format=geojson&lang=cs&apikey=${encodeURIComponent(CONFIG.MAPY_API_KEY)}`;
+    const u = `https://api.mapy.com/v1/routing/route?start=${from.lng},${from.lat}&end=${s.lng},${s.lat}&routeType=foot_fast&format=geojson&lang=${LANG}&apikey=${encodeURIComponent(CONFIG.MAPY_API_KEY)}`;
     const r = await fetch(u); if (!r.ok) throw new Error("routing " + r.status);
     const j = await r.json();
     if (seq !== NAV.seq || NAV.target !== s.id) return;
@@ -2057,7 +2078,7 @@ function navArrow(){
   a.style.visibility = "";
   a.querySelector("svg").style.transform = `rotate(${Math.round(bearing(me, goal) - (h || 0))}deg)`;
 }
-const domu = n => n === 1 ? "dům" : n > 1 && n < 5 ? "domy" : "domů";
+const domu = n => LANG === "en" ? (n === 1 ? "house" : "houses") : n === 1 ? "dům" : n > 1 && n < 5 ? "domy" : "domů";
 function navRender(){
   if (!NAV.on) return;
   const top = $("#navTop"), bot = $("#navBot"); top.hidden = false; bot.hidden = false;
@@ -2128,6 +2149,13 @@ document.addEventListener("click", e => {
   else if (a === "rskip") navPick();
   else if (a === "gps") locate(false);
   else if (a === "rank"){ exitNav(); go("more", "rank"); }
+});
+
+/* ---------- přepínač CZ / US ---------- */
+$("#langBtn").addEventListener("click", e => {
+  e.preventDefault();
+  try{ store.set("hw-lang", LANG === "en" ? "cs" : "en"); }catch(err){}
+  location.href = (LANG === "en" ? "./" : "en.html") + location.search + location.hash;
 });
 
 /* ---------- boot ---------- */

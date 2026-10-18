@@ -1,0 +1,2173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Neighborhood Halloween</title>
+<meta name="description" content="Neighborhood Halloween – a map of the houses giving out treats in your neighborhood. Route planning, walking directions to the next house, every town gets its own map.">
+<meta name="theme-color" content="#1b1426">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Halloween">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@600;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,800&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --night:#1b1426; --dusk:#261c35; --dusk2:#33264a; --line:#46365f;
+  --bone:#f3ead9; --mist:#b9aec9; --pumpkin:#ff8a2a; --pumpkin-d:#d96412;
+  --candle:#ffd36b; --teal:#3cc9b5; --grave:#7d7390; --blood:#ff5f6d;
+  --r:14px; --nav-h:64px;
+  --display:"Grenze Gotisch", "Georgia", serif;
+  --body:"Nunito Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--night);color:var(--bone);font:15px/1.5 var(--body);display:flex;flex-direction:column;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--candle)}
+:focus-visible{outline:3px solid var(--candle);outline-offset:2px}
+
+/* header */
+header.top{padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;display:flex;align-items:center;gap:12px;background:linear-gradient(180deg,#140e1d, var(--night));border-bottom:1px solid var(--line)}
+.logo{width:58px;height:58px;flex:none}
+.brand{min-width:0;flex:1;display:flex;flex-direction:column;align-items:flex-start}
+.home-title{color:inherit;text-decoration:none}
+.locbtn{position:relative;margin-top:4px;display:inline-flex;align-items:center;gap:5px;max-width:100%;min-height:32px;background:var(--dusk2);border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 10px;font-size:12.5px;font-weight:700;color:var(--bone);cursor:pointer}
+.locbtn::before{content:"";position:absolute;inset:-7px -4px}
+.locbtn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.locbtn:hover{border-color:var(--pumpkin)}
+.loclist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:48vh;overflow:auto}
+.loclist button{width:100%;text-align:left;background:var(--night);border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:2px 10px;color:var(--bone)}
+.loclist button[aria-current="true"]{border-color:var(--pumpkin);box-shadow:inset 0 0 0 1px var(--pumpkin)}
+.loclist b{font-size:15px}
+.loclist small{color:var(--mist);font-size:12.5px;grid-column:1}
+.loclist .km{grid-row:1 / span 2;grid-column:2;align-self:center;color:var(--candle);font-weight:800;font-size:13px}
+.sheet.tall{max-height:calc(100% - 24px);overflow:auto}
+.home{display:flex;align-items:center;flex:none;color:inherit;text-decoration:none;border-radius:12px}
+.home:hover .logo{transform:rotate(-6deg) scale(1.05)}
+@media (prefers-reduced-motion:no-preference){.logo{transition:transform .2s}}
+.brand h1{font:800 31px/1 var(--display);margin:0;letter-spacing:.3px;color:var(--pumpkin);text-shadow:0 0 18px rgba(255,138,42,.35)}
+.brand p{margin:2px 0 0;font-size:12.5px;color:var(--mist);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.count{flex:none;text-align:right;font-size:11px;color:var(--mist);line-height:1.2}
+.count b{display:block;font:800 18px/1.1 var(--body);color:var(--candle);font-variant-numeric:tabular-nums}
+@media(max-width:430px){.logo{width:38px;height:38px}.brand h1{font-size:20px;line-height:1.05;white-space:nowrap}.locbtn{margin-top:3px;min-height:30px;font-size:12px;padding:4px 10px 4px 8px}.count{font-size:10px}.count b{font-size:14px}header.top{gap:10px;padding:calc(env(safe-area-inset-top,0px) + 6px) 12px 6px}}
+.demo-flag{background:var(--candle);color:#2a1a00;font-weight:800;font-size:12px;padding:5px 16px;text-align:center}
+
+/* views */
+main{flex:1;min-height:0;position:relative}
+.view{position:absolute;inset:0;overflow:auto;padding:16px 16px calc(var(--nav-h) + 24px + env(safe-area-inset-bottom,0px))}
+.view[hidden]{display:none!important}
+#v-map{padding:0}
+#map{position:absolute;inset:0;background:#15101d}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h2{font:800 28px/1.1 var(--display);margin:4px 0 0;color:var(--candle);text-wrap:balance}
+h3{margin:0;font-size:16px;font-weight:800}
+.muted{color:var(--mist)}
+.small{font-size:13px}
+
+/* bottom nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:1000;display:grid;grid-template-columns:repeat(4,1fr);background:rgba(20,14,29,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs button{background:none;border:0;height:var(--nav-h);line-height:1.15;text-align:center;padding:0 2px;white-space:nowrap;letter-spacing:-.1px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:700;color:var(--mist);cursor:pointer}
+nav.tabs button svg{width:24px;height:24px}
+@media(max-width:375px){nav.tabs button{font-size:11px}}
+nav.tabs button[aria-selected="true"]{color:var(--pumpkin)}
+
+/* map overlays */
+.chips{position:absolute;top:10px;left:10px;right:10px;z-index:500;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:rgba(27,20,38,.92);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--pumpkin);border-color:var(--pumpkin);color:#2a1300}
+.chip.teal[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:#062b26}
+.fab{position:absolute;right:12px;z-index:500;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--dusk);display:grid;place-items:center;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.fab svg{width:24px;height:24px}
+#fabLocate{bottom:calc(var(--nav-h) + var(--dockh,0px) + 20px + env(safe-area-inset-bottom,0px))}
+#fabLocate.on{color:var(--teal)}
+.nextcard{position:absolute;left:12px;right:12px;margin:0 auto;bottom:calc(var(--nav-h) + 22px + env(safe-area-inset-bottom,0px));z-index:500;background:var(--dusk);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.45);max-width:460px}
+.nextcard .t{min-width:0}
+.nextcard .acts{grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.nextcard .acts .btn{min-height:46px;white-space:nowrap;padding-left:8px;padding-right:8px}
+.nextcard .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nextcard .t span{font-size:12.5px;color:var(--mist)}
+.pickbar{position:absolute;top:10px;left:10px;right:10px;z-index:600;background:var(--candle);color:#2a1a00;border-radius:var(--r);padding:10px 12px;font-weight:800;display:flex;align-items:center;gap:10px}
+.pickbar span{flex:1}
+.pickbar .btn.ghost{color:#2a1a00;border-color:rgba(42,26,0,.45)}
+.crosshair{position:absolute;left:50%;top:50%;width:72px;height:72px;margin:-36px 0 0 -36px;z-index:550;pointer-events:none}
+.crosshair svg{width:100%;height:100%;display:block;filter:drop-shadow(0 0 3px rgba(0,0,0,.7))}
+@media (prefers-reduced-motion:no-preference){.crosshair svg{animation:aim 1.6s ease-in-out infinite}}
+@keyframes aim{0%,100%{transform:scale(1)}50%{transform:scale(.88)}}
+.addrwrap{position:relative}
+.suggest{list-style:none;margin:4px 0 0;padding:4px;position:absolute;left:0;right:0;top:100%;z-index:30;background:var(--dusk);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.5);max-height:260px;overflow:auto}
+.suggest button{width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:9px 10px;color:var(--bone);cursor:pointer;display:flex;flex-direction:column;gap:1px}
+.suggest button:hover,.suggest button:focus-visible,.suggest button.act{background:var(--dusk2)}
+.suggest b{font-size:14px}
+.suggest small{color:var(--mist);font-size:12px}
+.suggest .none{padding:9px 10px;color:var(--mist);font-size:13px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;border:1px solid var(--line);background:var(--dusk2);padding:10px 14px;font-weight:800;cursor:pointer;text-decoration:none;color:var(--bone);min-height:44px}
+.btn.primary{background:var(--pumpkin);border-color:var(--pumpkin);color:#2a1300}
+.btn.teal{background:var(--teal);border-color:var(--teal);color:#062b26}
+.btn.ghost{background:transparent}
+.btn.sm{min-height:42px;padding:6px 12px;font-size:13.5px;border-radius:10px}
+.btn svg{width:18px;height:18px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>.btn{flex:1 1 auto}
+
+/* cards / lists */
+.panel{background:var(--dusk);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.stat{display:flex;gap:18px;flex-wrap:wrap}
+.stat div{font-size:12px;color:var(--mist)}
+.stat b{display:block;font-size:22px;color:var(--bone);font-variant-numeric:tabular-nums}
+ol.route{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+ol.route li{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line)}
+ol.route li:last-child{border-bottom:0}
+.num{width:30px;height:30px;border-radius:50%;background:var(--pumpkin);color:#2a1300;font-weight:800;display:grid;place-items:center;font-size:14px;font-variant-numeric:tabular-nums}
+.num.done{background:var(--grave);color:var(--night)}
+.num.teal{background:var(--teal);color:#062b26}
+li .nm{font-weight:800;overflow-wrap:anywhere}
+li .meta{font-size:12.5px;color:var(--mist)}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
+.tag{font-size:11.5px;font-weight:700;border-radius:6px;padding:2px 7px;background:var(--dusk2);color:var(--mist)}
+.tag.teal{background:rgba(60,201,181,.16);color:var(--teal)}
+.tag.warn{background:rgba(255,95,109,.15);color:var(--blood)}
+.tag.gold{background:rgba(255,211,107,.14);color:var(--candle)}
+.ghosts{letter-spacing:1px;color:var(--candle)}
+
+/* form */
+form{display:flex;flex-direction:column;gap:14px}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:14px}
+label.f small{font-weight:400;color:var(--mist)}
+input[type=text],input[type=time],input[type=date],input[type=password],select,textarea{color-scheme:dark;width:100%;background:var(--night);border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-height:44px}
+textarea{min-height:70px;resize:vertical}
+fieldset{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:0;display:flex;flex-direction:column;gap:8px}
+legend{font-weight:800;padding:0 6px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg label{border:1px solid var(--line);border-radius:10px;padding:8px 6px;text-align:center;cursor:pointer;font-size:13px;line-height:1.25}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){background:var(--pumpkin);border-color:var(--pumpkin);color:#2a1300;font-weight:800}
+.seg label:has(input:focus-visible){outline:3px solid var(--candle)}
+.check{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.check input{width:20px;height:20px;accent-color:var(--pumpkin);margin-top:2px;flex:none}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.locbox{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.locbox .val{flex:1 1 160px;font-size:13px;color:var(--mist);font-variant-numeric:tabular-nums}
+.locbox .val.ok{color:var(--teal);font-weight:700}
+.msg{border-radius:10px;padding:10px 12px;font-weight:700}
+.msg.ok{background:rgba(60,201,181,.15);color:var(--teal)}
+.msg.err{background:rgba(255,95,109,.15);color:var(--blood)}
+
+/* info */
+.rules{display:grid;gap:10px}
+.rule{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:start}
+.rule svg{width:40px;height:40px}
+.rule p{margin:2px 0 0;color:var(--mist);font-size:14px}
+.split{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:720px){.split{grid-template-columns:1fr 1fr}}
+
+/* leaflet skin */
+.leaflet-container{font:inherit;background:#15101d}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--dusk);color:var(--bone);border:1px solid var(--line);box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.leaflet-popup-content{margin:12px 14px;min-width:220px;max-width:270px}
+.leaflet-popup-content h3{font-size:16px;margin-bottom:2px}
+.leaflet-container a.leaflet-popup-close-button{color:var(--mist)}
+.leaflet-control-attribution{background:rgba(20,14,29,.8)!important;color:var(--grave)!important;font-size:10px}
+.leaflet-control-attribution a{color:var(--mist)!important}
+.leaflet-control-zoom{display:none}
+.leaflet-top.leaflet-left{top:6px}
+.leaflet-bottom{bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px))}
+.mapy-logo{display:block;line-height:0;margin:0 0 0 10px!important}
+.mapy-logo img{height:30px;width:auto;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))}
+#fabLayer{top:10px;bottom:auto;width:auto;min-width:48px;border-radius:24px;padding:0 12px;gap:6px;display:flex;align-items:center;font-weight:800;font-size:13px}
+.pin{position:relative;width:40px;height:44px}
+.pin svg{width:40px;height:44px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6))}
+.pin i{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;border-radius:10px;background:var(--bone);color:var(--night);font:800 11px/20px var(--body);font-style:normal;text-align:center;padding:0 4px}
+.me-dot{width:18px;height:18px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 0 0 6px rgba(60,201,181,.3)}
+.popup-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.popup-actions .btn{flex:1 1 auto}
+ol.route.rank li{grid-template-columns:36px 56px 1fr;align-items:center}
+.rank .place{font:800 20px/1 var(--body);text-align:center;color:var(--mist);font-variant-numeric:tabular-nums}
+.rank .place.m{font-size:28px}
+.rank .ph{width:56px;height:56px;border-radius:10px;object-fit:cover;background:var(--dusk2);display:grid;place-items:center;font-size:24px}
+.rank .acts{grid-column:2 / -1;display:flex;gap:6px;flex-wrap:wrap}
+.rank .top{border-radius:12px;background:linear-gradient(90deg,rgba(255,211,107,.12),transparent);padding-left:6px;padding-right:6px}
+.seg2{display:flex;gap:6px;flex-wrap:wrap}
+.seg2 button{border:1px solid var(--line);background:var(--night);color:var(--mist);border-radius:999px;padding:6px 12px;font-weight:700;font-size:13px;cursor:pointer}
+.seg2 button[aria-pressed="true"]{background:var(--candle);border-color:var(--candle);color:#2a1a00}
+.fab.q{bottom:calc(var(--nav-h) + var(--dockh,0px) + 76px + env(safe-area-inset-bottom,0px));font:800 20px/1 var(--body);color:var(--candle)}
+.legend{position:absolute;right:70px;bottom:calc(var(--nav-h) + var(--dockh,0px) + 22px + env(safe-area-inset-bottom,0px));z-index:650;background:var(--dusk);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.5);width:min(290px,calc(100% - 90px));display:flex;flex-direction:column;gap:8px;font-size:13.5px}
+.legend .li{display:grid;grid-template-columns:34px 1fr;gap:8px;align-items:center}
+.legend .li svg{width:30px;height:33px}
+.legend .ln{height:0;border-top:3px dotted var(--candle);width:30px}
+.legend .dot{width:16px;height:16px;border-radius:50%;background:var(--teal);border:3px solid #fff;margin-left:6px}
+.legend .bdg{min-width:22px;height:22px;border-radius:11px;background:var(--bone);color:var(--night);font:800 12px/22px var(--body);text-align:center;margin-left:4px;padding:0 4px;display:inline-block}
+.statecard{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);z-index:560;background:var(--dusk);border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:0 12px 30px rgba(0,0,0,.5);width:min(320px,calc(100% - 40px));text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center}
+.statecard b{font-size:16px}
+.statecard p{margin:0;color:var(--mist);font-size:13.5px}
+.spin{width:28px;height:28px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--pumpkin)}
+@media (prefers-reduced-motion:no-preference){.spin{animation:spin .9s linear infinite}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.offline{position:absolute;left:50%;transform:translateX(-50%);top:62px;z-index:560;background:var(--blood);color:#fff;font-weight:800;font-size:12.5px;border-radius:999px;padding:6px 12px;border:0;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.hostcard{position:absolute;right:10px;top:66px;z-index:540;background:var(--dusk);border:1px solid var(--line);border-radius:14px;padding:8px 10px;box-shadow:0 8px 20px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:6px;max-width:min(230px,60%)}
+.hostcard .h{font-size:12px;color:var(--mist);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hostcard .h b{color:var(--bone)}
+.hint{display:flex;gap:10px;align-items:center;background:rgba(255,211,107,.1);border:1px solid rgba(255,211,107,.35);border-radius:var(--r);padding:12px}
+.hint p{margin:0;flex:1;font-size:13.5px}
+.req{color:var(--blood);font-weight:800}
+.seg2 button{min-height:40px}
+details.opt>summary,details.login>summary{min-height:44px}
+.opt{border:1px dashed var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:14px}
+.opt>summary{cursor:pointer;font-weight:800;list-style:none;display:flex;justify-content:space-between;align-items:center;min-height:30px}
+.opt>summary::after{content:"▾";color:var(--mist)}
+.opt[open]>summary::after{content:"▴"}
+.opt>summary small{font-weight:400;color:var(--mist)}
+details.login{border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;background:var(--dusk)}
+details.login>summary{cursor:pointer;font-weight:700;color:var(--candle);min-height:28px;display:flex;align-items:center}
+.onb ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px}
+.onb li{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start}
+.onb .n{width:30px;height:30px;border-radius:50%;background:var(--pumpkin);color:#2a1300;font-weight:800;display:grid;place-items:center}
+.onb li p{margin:2px 0 0;color:var(--mist);font-size:13.5px}
+.share{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.qr{background:#fff;padding:8px;border-radius:10px;line-height:0;width:148px;height:148px}
+.qr img,.qr canvas{width:132px!important;height:132px!important}
+.share .url{font-size:12.5px;color:var(--mist);word-break:break-all}
+.pop-cover{display:block;width:100%;height:140px;object-fit:cover;border-radius:10px;margin:0 0 8px;background:var(--dusk2);cursor:zoom-in}
+.thumbs{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.thumbs button{padding:0;border:0;background:none;position:relative;cursor:zoom-in;border-radius:8px}
+.thumbs img{width:54px;height:54px;object-fit:cover;border-radius:8px;display:block;background:var(--dusk2)}
+.thumbs .x{position:absolute;top:-7px;right:-7px;width:24px;height:24px;border-radius:50%;background:var(--blood);color:#fff;font-weight:800;display:grid;place-items:center;font-size:14px;line-height:1;cursor:pointer}
+.stars{color:var(--candle);letter-spacing:1px}
+.stars .off{color:var(--grave);opacity:.45}
+.overlay{position:fixed;inset:0;z-index:2000;background:rgba(10,6,16,.72);display:flex;align-items:flex-end;justify-content:center;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.sheet{background:var(--dusk);border:1px solid var(--line);border-radius:18px;padding:18px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px}
+.starpick{display:flex;justify-content:center;gap:4px}
+.starpick button{background:none;border:0;font-size:42px;line-height:1;color:var(--grave);cursor:pointer;padding:4px}
+.starpick button.on{color:var(--candle)}
+.starpick button:disabled{color:var(--line);opacity:.55;cursor:not-allowed}
+.starpick button:disabled.on{color:var(--candle);opacity:.55}
+.lightbox{position:fixed;inset:0;z-index:2100;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:16px}
+.lightbox img{max-width:100%;max-height:100%;border-radius:10px}
+.lightbox .close{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + 96px + env(safe-area-inset-bottom,0px));z-index:2200;background:var(--bone);color:var(--night);font-weight:800;padding:10px 16px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:calc(100% - 32px);text-align:center}
+.toast.err{background:var(--blood);color:#fff}
+@media (prefers-reduced-motion:no-preference){.pin svg{transition:transform .15s}.pin:hover svg{transform:translateY(-3px)}}
+
+/* ---- detail domu: vysouvací panel zespodu ---- */
+.bsheet{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;z-index:700;max-height:min(80%,640px);overflow:auto;overscroll-behavior:contain;background:var(--dusk);border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0;padding:8px 16px calc(var(--nav-h) + 16px + env(safe-area-inset-bottom,0px));box-shadow:0 -12px 40px rgba(0,0,0,.55)}
+@media (prefers-reduced-motion:no-preference){.bsheet{animation:sheetUp .22s ease-out}}
+@keyframes sheetUp{from{transform:translateY(60px);opacity:.3}}
+.bsheet .grab{width:46px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 10px}
+.bs-x{position:absolute;top:6px;right:6px;width:44px;height:44px;border-radius:50%;border:0;background:transparent;color:var(--mist);font-size:28px;line-height:1;cursor:pointer}
+.bsheet h3{font-size:20px;margin:0 44px 2px 0;line-height:1.2}
+.bs-cover{width:100%;height:150px;object-fit:cover;border-radius:14px;display:block;margin:4px 0 10px;cursor:zoom-in;background:var(--dusk2)}
+.bs-meta{margin-top:4px;display:flex;gap:4px 10px;flex-wrap:wrap;align-items:center}
+.bs-note{margin:10px 0 0;font-size:14px;background:var(--night);border-radius:10px;padding:8px 10px}
+.bs-main{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.btn.big{min-height:54px;font-size:16px;border-radius:14px}
+.bs-icons{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:8px}
+.ibtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:58px;border-radius:14px;border:1px solid var(--line);background:var(--night);color:var(--bone);font-size:20px;line-height:1.1;cursor:pointer;padding:6px}
+.ibtn span{font-size:12.5px;font-weight:700;color:var(--mist)}
+.bs-admin{margin-top:10px;width:100%}
+/* ---- karta „další dům“ ---- */
+.nextcard button.num{border:0;cursor:pointer;padding:0}
+.nextcard button.t{border:0;background:none;text-align:left;padding:0;color:inherit;min-height:40px;display:flex;flex-direction:column;justify-content:center;cursor:pointer}
+/* ---- záložka Více ---- */
+.subtabs{position:sticky;top:-16px;z-index:5;margin:-16px -16px 14px;padding:10px 16px;background:var(--night);border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.subtabs button{min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--dusk);color:var(--mist);font-weight:800;cursor:pointer}
+.subtabs button[aria-selected="true"]{background:var(--candle);border-color:var(--candle);color:#2a1a00}
+/* ---- navigace „Jdeme koledovat“ ---- */
+body.nav header.top,body.nav .demo-flag,body.nav nav.tabs,body.nav #nextcard,body.nav #hostcard,body.nav #fabLegend,body.nav #legend,body.nav #fabLocate,body.nav #bsheet,body.nav #statecard,body.nav #offline{display:none!important}
+body.nav .leaflet-top{top:var(--navtop,120px)}
+body.nav .leaflet-bottom{bottom:var(--navbot,200px)}
+body.nav #fabLayer{top:var(--navtop,120px)}
+body.nav .toast{bottom:auto;top:calc(var(--navtop,120px) + 4px)}
+.navtop{position:absolute;left:10px;right:10px;top:calc(env(safe-area-inset-top,0px) + 10px);margin:0 auto;max-width:560px;z-index:900;background:rgba(27,20,38,.97);border:1px solid var(--line);border-radius:20px;padding:10px 10px 10px 12px;display:flex;align-items:center;gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.navtop .arrow{flex:none;width:64px;height:64px;border-radius:50%;background:var(--pumpkin);color:#2a1300;display:grid;place-items:center;box-shadow:0 0 0 4px rgba(255,138,42,.25)}
+.navtop .arrow svg{width:38px;height:38px}
+@media (prefers-reduced-motion:no-preference){.navtop .arrow svg{transition:transform .35s ease-out}}
+.navtop.plain .arrow{display:none}
+.navtop .nt{flex:1;min-width:0;display:flex;flex-direction:column}
+.navtop .nt b{font:800 30px/1.05 var(--body);font-variant-numeric:tabular-nums;color:var(--bone)}
+.navtop.plain .nt b{font-size:22px}
+.navtop .nt span{font-size:14px;color:var(--mist);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.navx{flex:none;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--dusk2);color:var(--bone);font-size:26px;line-height:1;cursor:pointer}
+.navbot{position:absolute;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);margin:0 auto;max-width:560px;z-index:900;background:rgba(27,20,38,.97);border:1px solid var(--line);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 -6px 30px rgba(0,0,0,.5)}
+.nb-h{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center}
+.nb-h b{display:block;font-size:18px;line-height:1.2;overflow-wrap:anywhere}
+.nb-h span{font-size:13px;color:var(--mist)}
+.nb-big{font:800 26px/1.1 var(--display);color:var(--candle)}
+.nb-note{margin:0;font-size:14px;background:var(--night);border-radius:10px;padding:8px 10px}
+.nb-acts{display:grid;grid-template-columns:2fr 1fr;gap:8px}
+.nb-acts.one{grid-template-columns:1fr}
+.nb-stars{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.nb-stars button{min-height:66px;border-radius:14px;border:1px solid var(--line);background:var(--night);color:var(--candle);font-size:19px;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;gap:2px}
+.nb-stars button small{color:var(--mist);font-size:12px;font-weight:700}
+.nb-small{margin:0;text-align:center;font-size:12.5px;color:var(--mist)}
+#navRecenter{z-index:901;left:12px;right:auto;bottom:calc(var(--navbot,200px) + 12px);width:auto;border-radius:24px;padding:0 14px;gap:6px;display:flex;align-items:center;font-weight:800;font-size:13.5px;color:var(--teal)}
+.pin.tgt svg{transform:scale(1.3);transform-origin:50% 90%}
+.pin.tgt::after{content:"";position:absolute;left:50%;top:64%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;border:3px solid var(--candle);opacity:.8;pointer-events:none}
+@media (prefers-reduced-motion:no-preference){.pin.tgt::after{animation:ping 1.6s ease-out infinite}}
+@keyframes ping{from{transform:scale(.45);opacity:.95}to{transform:scale(1.35);opacity:0}}
+body.nav .me-dot{width:22px;height:22px}
+.nick-in{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:700;color:var(--mist)}
+.nick-in input{min-height:44px}
+.raters{margin-top:6px;font-size:12.5px;color:var(--mist);line-height:1.5}
+.raters b{color:var(--bone);font-weight:700}
+.lightbox .cap{position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);text-align:center;color:#fff;font-weight:700;text-shadow:0 1px 4px #000}
+/* ---- dýně podle otevírací doby ---- */
+.pin.lit svg{filter:drop-shadow(0 0 7px rgba(255,190,70,.95)) drop-shadow(0 3px 4px rgba(0,0,0,.6))}
+.pin.sleep svg{filter:drop-shadow(0 3px 4px rgba(0,0,0,.6)) saturate(.8)}
+.livetag{display:inline-block;font-size:12px;font-weight:800;border-radius:6px;padding:2px 8px;margin-left:4px}
+.livetag.open{background:rgba(255,190,70,.18);color:var(--candle)}
+.livetag.sleep{background:rgba(154,90,38,.25);color:#e0a874}
+.livetag.out{background:rgba(255,95,109,.15);color:var(--blood)}
+/* ---- interaktivní návod ---- */
+.tour{position:fixed;inset:0;z-index:2500}
+.tour-hole{position:fixed;border-radius:16px;box-shadow:0 0 0 9999px rgba(10,6,16,.8);outline:3px solid var(--candle);outline-offset:2px;pointer-events:none}
+.tour-hole.none{outline:0;width:0!important;height:0!important;left:50%!important;top:50%!important}
+@media (prefers-reduced-motion:no-preference){.tour-hole{transition:left .3s,top .3s,width .3s,height .3s}}
+.tour-card{position:fixed;left:12px;right:12px;margin:0 auto;max-width:420px;background:var(--dusk);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 14px 40px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:10px}
+.tour-card h3{font:800 22px/1.15 var(--display);color:var(--candle);margin:0}
+.tour-card .tt{font-size:14.5px;line-height:1.5}
+.tour-card .tt p{margin:0 0 6px}
+.tour-top{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--mist);font-weight:700}
+.tour-skip{background:none;border:0;color:var(--mist);font-weight:700;text-decoration:underline;cursor:pointer;min-height:40px;padding:0 4px}
+.tour-dots{display:flex;gap:5px;justify-content:center}
+.tour-dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}
+.tour-dots i.on{background:var(--pumpkin);width:18px;border-radius:4px}
+.tour-acts{display:grid;grid-template-columns:1fr 2fr;gap:8px}
+.tour-acts.one{grid-template-columns:1fr}
+.tour-pins{display:flex;gap:14px;align-items:flex-end;margin:6px 0 2px}
+.tour-pins span{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;color:var(--mist);font-weight:700}
+.tour-pins svg{width:34px;height:37px}
+/* ---- přepínač jazyka ---- */
+.brow{display:flex;align-items:center;gap:6px;max-width:100%;min-width:0}
+.brow .locbtn{min-width:0}
+.langbtn{position:relative;flex:none;margin-top:4px;display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);background:var(--dusk2);color:var(--bone);font-size:12.5px;font-weight:800;text-decoration:none;white-space:nowrap}
+.langbtn::before{content:"";position:absolute;inset:-7px -3px}
+.langbtn:hover{border-color:var(--pumpkin)}
+@media(max-width:430px){.langbtn{margin-top:3px;min-height:30px;font-size:12px;padding:4px 8px}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="home" href="./" id="homeLink" aria-label="Home – map"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 14c3-6 8-8 10-7-3 2-5 5-6 8" fill="none" stroke="#6bbf59" stroke-width="3" stroke-linecap="round"/><ellipse cx="22" cy="38" rx="14" ry="18" fill="#d96412"/><ellipse cx="42" cy="38" rx="14" ry="18" fill="#d96412"/><ellipse cx="32" cy="38" rx="13" ry="19" fill="#ff8a2a"/><path d="M22 33l5-5 5 5zM32 33l5-5 5 5z" fill="#ffd36b"/><path d="M20 43c4 5 20 5 24 0l-3 1-2 3-3-3-4 3-3-3-3 3-2-3z" fill="#ffd36b"/></svg></a>
+  <div class="brand">
+    <a class="home-title" href="./" id="homeLink2"><h1 id="evTitle">Neighborhood Halloween</h1></a>
+    <div class="brow">
+      <button class="locbtn" type="button" id="locBtn" aria-haspopup="dialog">📍 <span id="evSub">Choose your area</span> ▾</button>
+      <a class="langbtn" id="langBtn" href="./" hreflang="cs" lang="cs" aria-label="Česká verze">🇨🇿 CZ</a>
+    </div>
+  </div>
+  <div class="count" id="countdown" aria-live="polite"></div>
+</header>
+<div class="demo-flag" id="demoFlag" hidden>Demo mode – the houses are made up and saved only in this browser</div>
+
+<main>
+  <!-- MAPA -->
+  <section class="view" id="v-map" aria-label="Map">
+    <div id="map"></div>
+    <div class="pickbar" id="pickbar" hidden><span>Move the map so the red dot in the crosshair points at your house</span><button class="btn sm" id="pickOk" type="button">Here</button><button class="btn sm ghost" id="pickCancel" type="button">Cancel</button></div>
+    <div class="crosshair" id="crosshair" hidden aria-hidden="true"><svg viewBox="0 0 64 64">
+      <g fill="none" stroke-linecap="round">
+        <g stroke="#140e1d" stroke-width="7"><circle cx="32" cy="32" r="15"/><path d="M32 2v14M32 48v14M2 32h14M48 32h14"/></g>
+        <g stroke="#ffd36b" stroke-width="3.5"><circle cx="32" cy="32" r="15"/><path d="M32 2v14M32 48v14M2 32h14M48 32h14"/></g>
+      </g>
+      <circle cx="32" cy="32" r="4.5" fill="#ff5f6d" stroke="#140e1d" stroke-width="2"/>
+    </svg></div>
+    <div class="nextcard" id="nextcard" hidden></div>
+    <div class="bsheet" id="bsheet" hidden role="dialog" aria-labelledby="bsTitle"><div class="grab" aria-hidden="true"></div><button class="bs-x" id="bsClose" type="button" aria-label="Close details">×</button><div id="bsBody"></div></div>
+    <div class="navtop" id="navTop" hidden><div class="arrow" id="navArrow" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M24 3l15 39-15-9-15 9z" fill="currentColor"/></svg></div><div class="nt"><b id="navDist">–</b><span id="navSub"></span></div><button class="navx" id="navExit" type="button" aria-label="End navigation">×</button></div>
+    <div class="navbot" id="navBot" hidden></div>
+    <button class="fab" id="navRecenter" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Re-center</button>
+    <div class="hostcard" id="hostcard" hidden></div>
+    <button class="offline" id="offline" type="button" hidden>Can't load data – try again</button>
+    <div class="statecard" id="statecard" hidden></div>
+    <div class="legend" id="legend" hidden role="dialog" aria-label="Map legend">
+      <b>What's on the map</b>
+      <div class="li"><svg viewBox="0 0 40 44" style="filter:drop-shadow(0 0 5px rgba(255,190,70,.9))"><ellipse cx="20" cy="27" rx="15" ry="13" fill="#ff8a2a"/><path d="M13 24l3.5-3.5L20 24zM20 24l3.5-3.5L27 24z" fill="#ffd36b"/></svg><span><b>Glowing</b> – open right now</span></div>
+      <div class="li"><svg viewBox="0 0 40 44"><ellipse cx="20" cy="27" rx="15" ry="13" fill="#9a5a26"/><path d="M13 24l3.5-3.5L20 24zM20 24l3.5-3.5L27 24z" fill="#3b2416"/></svg><span><b>Dark</b> – closed right now (outside its hours)</span></div>
+      <div class="li"><svg viewBox="0 0 40 44"><ellipse cx="20" cy="27" rx="15" ry="13" fill="#7d7390"/><path d="M13 24l3.5-3.5L20 24zM20 24l3.5-3.5L27 24z" fill="#3a3148"/></svg><span><b>Gray</b> – out of candy</span></div>
+      <div class="li"><span class="bdg">3</span><span>Order in your route</span></div>
+      <div class="li"><span class="bdg">✓</span><span>You've been there</span></div>
+      <div class="li"><span class="ln"></span><span>Your route</span></div>
+      <div class="li"><span class="dot"></span><span>You (once location is on)</span></div>
+      <button class="btn sm" type="button" data-tour-start="1">▶ Take the app tour</button>
+    </div>
+    <button class="fab q" id="fabLegend" type="button" aria-label="Map legend" aria-expanded="false">?</button>
+    <button class="fab" id="fabLayer" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg><span>Satellite</span></button>
+    <button class="fab" id="fabLocate" type="button" aria-label="Show my location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+  </section>
+
+  <!-- TRASA -->
+  <section class="view" id="v-route" hidden aria-label="Route">
+    <div class="wrap">
+      <h2>Your route</h2>
+      <p class="muted small" id="routeIntro">Your route starts where you are and always leads to the nearest open house. Tap “Trick-or-treat!” and the app guides you house to house.</p>
+      <div class="hint" id="gpsHint" hidden><p id="gpsHintText">Right now the route starts at the center of the area. Turn on location and it will start from you.</p><button class="btn sm primary" type="button" id="btnGpsHint">Turn on location</button></div>
+      <div class="panel stat" id="routeStats"></div>
+      <div class="row">
+        <button class="btn primary big" type="button" id="btnStartNav" data-navstart="1">🎃 Trick-or-treat!</button>
+        <button class="btn" id="btnReplan" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12a8 8 0 0 1 14-5l2 2M20 12a8 8 0 0 1-14 5l-2-2M20 4v5h-5M4 20v-5h5"/></svg>Recalculate</button>
+      </div>
+      <div class="panel"><ol class="route" id="routeList"></ol></div>
+      <div id="doneWrap" hidden>
+        <h3 style="margin:6px 0 8px">Already visited</h3>
+        <div class="panel"><ol class="route" id="doneList"></ol></div>
+        <div class="row" style="margin-top:10px"><button class="btn ghost sm" id="btnResetVisited" type="button">Start over (clear check marks)</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PŘIDAT -->
+  <section class="view" id="v-add" hidden aria-label="Add a house">
+    <div class="wrap">
+      <div id="mineWrap" hidden>
+        <h2>Your house</h2>
+        <div class="panel" style="margin-top:10px"><ol class="route" id="mineList"></ol></div>
+        <p class="muted small">During the evening tap “Out of candy” so kids don't walk over for nothing. Navigation stops sending people to you and your pumpkin turns gray.</p>
+      </div>
+      <button class="btn" type="button" id="btnAddMore" hidden>+ Add another house</button>
+      <div id="formBox" style="display:flex;flex-direction:column;gap:14px">
+      <h2 id="formTitle">Add your house</h2>
+      <p class="muted small">Just a few details. Parents will see your house on the map and kids will reach you by the shortest route. You can edit or delete it from this phone anytime, or switch to “out of candy” during the evening.</p>
+      <form id="form" novalidate>
+        <input type="hidden" id="fId">
+        <p class="muted small" style="margin:0"><span class="req">*</span> required</p>
+        <label class="f"><span>House name <span class="req">*</span></span>
+          <input type="text" id="fName" maxlength="60" required placeholder="e.g. The Smiths' Spooky Graveyard" autocomplete="off">
+        </label>
+        <div class="addrwrap">
+          <label class="f" for="fAddress">Address – street and house number <small>Start typing (e.g. “Lipová 1234”) and pick the address from the list – the house gets pinned on the map automatically.</small></label>
+          <input type="text" id="fAddress" maxlength="80" placeholder="e.g. Lipová 1234" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="addrSuggest" aria-expanded="false" style="margin-top:6px">
+          <ul class="suggest" id="addrSuggest" role="listbox" hidden></ul>
+        </div>
+        <fieldset>
+          <legend>House location <span class="req">*</span></legend>
+          <div class="locbox">
+            <span class="val" id="fLocVal">Not set yet</span>
+            <button class="btn sm" type="button" id="btnGps">I'm at the house – use GPS</button>
+            <button class="btn sm" type="button" id="btnPick">Pick / fine-tune on the map</button>
+          </div>
+          <input type="hidden" id="fLat"><input type="hidden" id="fLng">
+        </fieldset>
+        <label class="f" id="pinWrap"><span>PIN for later edits <span class="req">*</span></span> <small>4 to 16 characters, digits are fine. You'll need it to edit your house from another device.</small>
+          <input type="password" id="fPin" inputmode="numeric" maxlength="16" autocomplete="new-password">
+        </label>
+        <details class="opt" id="optBox" open>
+          <summary>Details <small>scariness, hours, note</small></summary>
+  <fieldset>
+            <legend>How scary?</legend>
+            <div class="seg">
+              <label><input type="radio" name="scare" value="1" checked>Friendly<br><span class="small">even for toddlers</span></label>
+              <label><input type="radio" name="scare" value="2">A little spooky</label>
+              <label><input type="radio" name="scare" value="3">For the brave<br><span class="small">dark, masks, sounds</span></label>
+            </div>
+          </fieldset>
+          <div class="two">
+            <label class="f">Open from<input type="time" id="fFrom" value="17:00"></label>
+            <label class="f">until<input type="time" id="fTo" value="20:00"></label>
+          </div>
+          <label class="f">Note for parents <small>Optional. E.g. “ring at the gate”, “the dog is inside”.</small>
+            <textarea id="fNote" maxlength="200"></textarea>
+          </label>
+        </details>
+        <div id="formMsg" class="msg" hidden></div>
+        <div class="row">
+          <button class="btn primary" type="submit" id="btnSave">Add to the map</button>
+          <button class="btn ghost" type="button" id="btnCancelEdit" hidden>Cancel editing</button>
+        </div>
+      </form>
+      </div>
+
+      <details class="login" id="loginPanel" hidden>
+        <summary>Already on the map? Sign in with your PIN</summary>
+        <p class="muted small" style="margin:10px 0">Sign in with the PIN you chose when adding your house. Then you can edit it from another phone or computer.</p>
+        <div class="two">
+          <label class="f">House<select id="lgStation"></select></label>
+          <label class="f">PIN<input type="password" id="lgPin" inputmode="numeric" maxlength="16" autocomplete="off"></label>
+        </div>
+        <div id="loginMsg" class="msg" hidden></div>
+        <div class="row" style="margin-top:10px"><button class="btn" type="button" id="btnLogin">Sign in</button></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ŽEBŘÍČEK -->
+  <section class="view" id="v-more" hidden aria-label="More">
+    <div class="subtabs" role="tablist" aria-label="More">
+      <button type="button" role="tab" data-sub="rank" aria-selected="true">🏆 Leaderboard</button>
+      <button type="button" role="tab" data-sub="info" aria-selected="false">ℹ️ Info</button>
+    </div>
+    <div class="wrap" id="v-rank">
+      <h2>House leaderboard</h2>
+      <p class="muted small" id="rankIntro" style="margin:0">Visitors rate houses with 3 to 5 stars. With similar averages, the house with more ratings ranks higher.</p>
+      <div class="seg2" role="group" aria-label="Sort">
+        <button type="button" data-rsort="score" aria-pressed="true">Top rated</button>
+        <button type="button" data-rsort="count" aria-pressed="false">Most ratings</button>
+        <button type="button" data-rsort="photos" aria-pressed="false">Most photos</button>
+      </div>
+      <div class="panel stat" id="rankStats"></div>
+      <div class="panel"><ol class="route rank" id="rankList"></ol></div>
+      <div id="unratedWrap" hidden>
+        <h3 style="margin:6px 0 8px">Not rated yet</h3>
+        <div class="panel"><ol class="route rank" id="unratedList"></ol></div>
+      </div>
+    </div>
+    <div class="wrap" id="v-info" hidden>
+      <h2>How it works</h2>
+      <button class="btn primary" type="button" data-tour-start="1">▶ Take the step-by-step tour</button>
+      <div class="panel">
+        <h3>Your nickname</h3>
+        <p class="muted small" style="margin:6px 0 10px">Used to sign your photos and ratings – hosts will see who praised them. Optional, saved on this phone only.</p>
+        <div class="two"><input type="text" id="infoNick" maxlength="30" autocomplete="nickname" placeholder="e.g. The Pumpkin Patch Crew" aria-label="Your nickname"><button class="btn" type="button" id="btnNick">Save</button></div>
+      </div>
+      <div class="panel">
+        <div class="stat" id="infoFacts"></div>
+      </div>
+      <div class="split">
+        <div class="panel rules">
+          <h3>For kids</h3>
+          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><ellipse cx="20" cy="23" rx="15" ry="12" fill="#ff8a2a"/><path d="M13 20l3-3 3 3zM21 20l3-3 3 3z" fill="#ffd36b"/><path d="M20 11c1-4 4-5 5-5" stroke="#6bbf59" stroke-width="2.5" fill="none"/></svg><div><b>Only knock where a pumpkin glows</b><p>The map shows only houses that joined in. Please leave other neighbors in peace.</p></div></div>
+          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 34c0-14 5-26 12-26s12 12 12 26l-4-3-4 3-4-3-4 3-4-3z" fill="#f3ead9"/><circle cx="16" cy="18" r="2" fill="#1b1426"/><circle cx="24" cy="18" r="2" fill="#1b1426"/></svg><div><b>Always with an adult</b><p>Never go inside a house or yard. Trick-or-treat at the door or the gate.</p></div></div>
+          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><rect x="12" y="6" width="16" height="28" rx="8" fill="#ffd36b"/><path d="M12 18h16" stroke="#1b1426" stroke-width="2"/></svg><div><b>Light up and be seen</b><p>A flashlight, glow bracelet or reflective band on the costume. Cars are on the streets.</p></div></div>
+          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="14" fill="none" stroke="#3cc9b5" stroke-width="3"/><path d="M13 20l5 5 9-10" stroke="#3cc9b5" stroke-width="3" fill="none"/></svg><div><b>Say “thank you” and check off the house</b><p>The app then sends you to the next nearest house.</p></div></div>
+        </div>
+        <div class="panel rules">
+          <h3>For parents</h3>
+          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><text x="4" y="28" font-size="20" fill="#ffd36b">👻</text></svg><div><b>Scariness 1 to 3</b><p>1 = friendly even for toddlers, 3 = dark, masks and sounds. Every house shows its number of ghosts on the map and in the route.</p></div></div>
+          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 30h28M10 30V14l10-6 10 6v16" fill="none" stroke="#b9aec9" stroke-width="3"/><path d="M4 22h8" stroke="#ff8a2a" stroke-width="3"/></svg><div><b>Navigation right in the app</b><p>“Trick-or-treat!” guides you house to house: an arrow, the distance and a sidewalk route. The app alerts you at each house and keeps the screen on while navigating.</p></div></div>
+          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="14" fill="#7d7390"/><path d="M13 20h14" stroke="#1b1426" stroke-width="3"/></svg><div><b>Glowing, dark, gray</b><p>Glowing pumpkin = open right now. Dark = closed right now – every house has its own hours, some finish earlier, some later. Gray = out of candy. It changes automatically with the clock.</p></div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Want to join in?</h3>
+        <p class="muted small" style="margin:6px 0 10px">Put a lit pumpkin in front of your house, get a candy bowl ready and add yourself to the map. It takes a minute.</p>
+        <button class="btn primary" type="button" data-go="add">Add your house</button>
+      </div>
+      <div class="panel" id="sharePanel">
+        <h3>Invite your neighbors</h3>
+        <p class="muted small" style="margin:6px 0 10px">The link opens your area directly. Print the QR code on a flyer for mailboxes.</p>
+        <div class="share"><div class="qr" id="qrBox" aria-label="QR code of the link"></div>
+          <div style="flex:1;min-width:160px;display:flex;flex-direction:column;gap:8px">
+            <span class="url" id="shareUrl"></span>
+            <button class="btn primary" type="button" id="btnShare">Share link</button>
+            <button class="btn" type="button" id="btnCopy">Copy link</button>
+          </div></div>
+      </div>
+      <div class="panel" id="installPanel">
+        <h3>Keep it handy as an app</h3>
+        <p class="muted small" id="installText" style="margin:6px 0 10px">On iPhone: Share button → “Add to Home Screen”. On Android: menu ⋮ → “Add to Home screen” / “Install app”.</p>
+        <button class="btn" type="button" id="btnInstall" hidden>Add to Home Screen</button>
+      </div>
+      <div class="panel" id="orgPanel">
+        <h3>Area organizer</h3>
+        <p class="muted small" id="orgInfo" style="margin:6px 0 10px"></p>
+        <div id="orgLogin">
+          <div class="two">
+            <label class="f">Organizer PIN<input type="password" id="orgPin" inputmode="numeric" maxlength="32" autocomplete="off"></label>
+            <div style="display:flex;align-items:flex-end"><button class="btn" type="button" id="btnOrgLogin" style="width:100%">Sign in</button></div>
+          </div>
+        </div>
+        <div class="row" id="orgTools" hidden>
+          <button class="btn" type="button" id="btnOrgEdit">Edit area</button>
+          <button class="btn ghost" type="button" id="btnOrgLogout">Sign out</button>
+        </div>
+        <div id="orgMsg" class="msg" hidden style="margin-top:10px"></div>
+      </div>
+      <div class="panel">
+        <h3>Want an event where you live?</h3>
+        <p class="muted small" style="margin:6px 0 10px">Create an area for your town or neighborhood. It gets its own map, date and houses – separate from other areas.</p>
+        <button class="btn primary" type="button" id="btnNewLoc2">Create a new area</button>
+      </div>
+      <p class="muted small" id="footNote">Anyone with the link can see the house details – don't post phone numbers or children's names.</p>
+    </div>
+  </section>
+</main>
+
+<div class="overlay" id="rateOverlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="rateTitle">
+    <h3 id="rateTitle">Rate this house</h3>
+    <div class="muted small" id="rateName"></div>
+    <label class="nick-in">Sign with a nickname <span style="font-weight:400">optional – e.g. “The Pumpkin Patch Crew”, no children's names</span><input type="text" id="rateNick" maxlength="30" autocomplete="nickname" placeholder="Your nickname"></label>
+    <div class="starpick" id="starPick">
+      <button type="button" data-star="1" disabled aria-label="1 star – not allowed">★</button>
+      <button type="button" data-star="2" disabled aria-label="2 stars – not allowed">★</button>
+      <button type="button" data-star="3" aria-label="3 stars">★</button>
+      <button type="button" data-star="4" aria-label="4 stars">★</button>
+      <button type="button" data-star="5" aria-label="5 stars">★</button>
+    </div>
+    <p class="muted small" style="margin:0;text-align:center">You can give 3 to 5 stars – everyone who joined in deserves praise. You can change your rating later.</p>
+    <div class="row"><button class="btn ghost" type="button" id="rateCancel">Close</button></div>
+  </div>
+</div>
+<div class="overlay" id="locOverlay" hidden>
+  <div class="sheet tall" role="dialog" aria-modal="true" aria-labelledby="locTitle">
+    <h3 id="locTitle">Choose your area</h3>
+    <p class="muted small" style="margin:0">Each town or neighborhood has its own map, date and houses.</p>
+    <input type="text" id="locSearch" placeholder="Search a town or neighborhood…" autocomplete="off">
+    <ul class="loclist" id="locList"></ul>
+    <div class="row">
+      <button class="btn primary" type="button" id="btnNewLoc">+ Create a new area</button>
+      <button class="btn ghost" type="button" id="locClose">Close</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="newLocOverlay" hidden>
+  <div class="sheet tall" role="dialog" aria-modal="true" aria-labelledby="nlTitle">
+    <h3 id="nlTitle">New area</h3>
+    <p class="muted small" style="margin:0" id="nlIntro">Your town or neighborhood gets its own map. Neighbors will find it in the area switcher.</p>
+    <input type="hidden" id="nlId">
+    <label class="f">Town / city<input type="text" id="nlCity" maxlength="40" placeholder="e.g. Říčany" autocomplete="address-level2"></label>
+    <label class="f">Neighborhood or event name<input type="text" id="nlName" maxlength="60" placeholder="e.g. Radošovice – Na Vyhlídce street" autocomplete="off"></label>
+    <div class="two">
+      <label class="f">Date<input type="date" id="nlDate"></label>
+      <label class="f">Meeting point <small>optional</small><input type="text" id="nlMeet" maxlength="120" placeholder="4:45 PM at the playground"></label>
+    </div>
+    <div class="two">
+      <label class="f">From<input type="time" id="nlFrom" value="17:00"></label>
+      <label class="f">Until<input type="time" id="nlTo" value="20:00"></label>
+    </div>
+    <fieldset>
+      <legend>Map center</legend>
+      <div class="locbox">
+        <span class="val" id="nlLocVal">Not set yet</span>
+        <button class="btn sm" type="button" id="nlGps">I'm here – GPS</button>
+        <button class="btn sm" type="button" id="nlPick">Pick on the map</button>
+      </div>
+      <input type="hidden" id="nlLat"><input type="hidden" id="nlLng">
+    </fieldset>
+    <label class="f" id="nlPinWrap">Organizer PIN <small>4 to 32 characters. With it you can edit the area later and delete inappropriate houses.</small>
+      <input type="password" id="nlPin" inputmode="numeric" maxlength="32" autocomplete="new-password">
+    </label>
+    <div id="nlMsg" class="msg" hidden></div>
+    <div class="row">
+      <button class="btn primary" type="button" id="nlSave">Create area</button>
+      <button class="btn ghost" type="button" id="nlCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+<div class="tour" id="tour" hidden role="dialog" aria-modal="true" aria-labelledby="tourTitle">
+  <div class="tour-hole none" id="tourHole"></div>
+  <div class="tour-card" id="tourCard">
+    <div class="tour-top"><span id="tourStep"></span><button class="tour-skip" type="button" id="tourSkip">Skip tour</button></div>
+    <h3 id="tourTitle"></h3>
+    <div class="tt" id="tourText"></div>
+    <div class="tour-dots" id="tourDots" aria-hidden="true"></div>
+    <div class="tour-acts" id="tourActs"><button class="btn ghost" type="button" id="tourBack">Back</button><button class="btn primary" type="button" id="tourNext">Next</button></div>
+  </div>
+</div>
+<div class="lightbox" id="lightbox" hidden><img id="lbImg" alt="House photo"><div class="cap" id="lbCap" hidden></div><button class="btn sm close" type="button" id="lbClose">Close</button></div>
+<div class="toast" id="toast" role="status" hidden></div>
+<input type="file" id="photoInput" accept="image/*" hidden>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" data-tab="map" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>Map</button>
+  <button role="tab" data-tab="route" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5"/></svg>Route</button>
+  <button role="tab" data-tab="add" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9H3z"/><path d="M12 11v6M9 14h6"/></svg>My house</button>
+  <button role="tab" data-tab="more" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg>Leaderboard & info</button>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* ================= NASTAVENÍ – upravte podle sebe ================= */
+const CONFIG = {
+  // URL webové aplikace z Google Apps Script (viz NAVOD.md). Prázdné = ukázkový režim.
+  API_URL: "https://script.google.com/macros/s/AKfycbz6HmhUNU3vwI1jLcRfl9Yfg5HtuYyaPx0BnrzXbjI-bk5Ti6DQ_P0q1I7B0E67UA-Q/exec",
+  // API klíč z developer.mapy.com (Seznam účet → Můj účet → API klíče). Prázdné = náhradní mapa OpenStreetMap.
+  MAPY_API_KEY: "QLKoJzssPK3BWFiwNKVEnf9x7l6md2l7sVfUN6Ef2Xs",
+  TITLE: "Neighborhood Halloween",
+  // Termín, střed mapy a název má každá lokalita vlastní (list „Lokality“ v Google Tabulce).
+  CENTER: [49.8, 15.4],                 // přehled Česka, dokud není vybraná lokalita
+  ZOOM: 7,
+  RADIUS_KM: 6,                          // stanoviště musí být do této vzdálenosti od středu lokality
+  KID_SPEED_KMH: 3,
+  STOP_MIN: 3                            // minut na jedno zastavení
+};
+/* ================================================================== */
+
+const LANG = document.documentElement.lang === "en" ? "en" : "cs";      // en.html = americká verze
+const LOCALE = LANG === "en" ? "en-US" : "cs-CZ";
+const hm = t => {                                  // "17:30" → "5:30 PM" v US verzi
+  if (!t || LANG !== "en") return t || "";
+  const m = /^(\d{1,2}):(\d{2})$/.exec(t); if (!m) return t;
+  const h = +m[1]; return `${h % 12 || 12}:${m[2]} ${h < 12 ? "AM" : "PM"}`;
+};
+const num1 = x => LANG === "en" ? String(x) : String(x).replace(".", ",");
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+const params = new URLSearchParams(location.search);
+const ADMIN = params.get("admin") || "";
+
+/* ---------- state ---------- */
+let stations = [];
+let mine = store.get("hw-mine", {});           // {id: token}
+let visited = new Set(store.get("hw-visited", []));
+let skipped = new Set(store.get("hw-skip", []));
+let filters = {small:false, allergy:false, noncandy:false, access:false, open:true};
+let me = null;           // {lat,lng}
+let route = [];          // ordered station ids
+let picking = false;
+let pickTarget = "station";
+let locations = [];
+let LOC = null;                                   // aktuální lokalita
+let curLoc = params.get("l") || store.get("hw-loc", "");
+let orgTokens = store.get("hw-org", {});           // {lokalita: token organizátora}
+
+/* ---------- data layer ---------- */
+const DEMO = !CONFIG.API_URL;
+const SAMPLE = [
+  {id:"d1",name:"Dýňová brána",address:"Radlická (ukázka)",lat:50.0676,lng:14.7131,scare:1,allergyFree:true,nonCandy:true,accessible:true,from:"17:00",to:"20:00",note:"Zvoňte u branky.",status:"open"},
+  {id:"d2",name:"Hřbitov kostlivců",address:"Primavera (ukázka)",lat:50.0662,lng:14.7172,scare:3,allergyFree:false,nonCandy:false,accessible:false,from:"17:30",to:"20:00",note:"Tma a mlha – doporučeno od 8 let.",status:"open"},
+  {id:"d3",name:"Čarodějnický kotlík",address:"Primavera (ukázka)",lat:50.0655,lng:14.7148,scare:2,allergyFree:false,nonCandy:true,accessible:true,from:"17:00",to:"19:30",note:"",status:"open"},
+  {id:"d4",name:"Netopýří jeskyně",address:"Radlická (ukázka)",lat:50.0684,lng:14.7160,scare:2,allergyFree:true,nonCandy:false,accessible:true,from:"17:00",to:"20:00",note:"Pes je zavřený.",status:"open"},
+  {id:"d5",name:"Duchové u branky",address:"Radlická (ukázka)",lat:50.0671,lng:14.7189,scare:1,allergyFree:false,nonCandy:false,accessible:true,from:"17:00",to:"18:30",note:"",status:"out"}
+];
+const DEMO_LOCS = [{id:"demo", name:"Ukázková čtvrť", city:"Úvaly", lat:50.0668, lng:14.7155, zoom:16, start:"2026-11-07T17:00:00+01:00", end:"2026-11-07T20:00:00+01:00", meeting:"", note:""}];
+const api = {
+  async list(){
+    if (DEMO){
+      const locs = store.get("hw-demo-locs", null) || DEMO_LOCS;
+      return {locations:locs, stations:(store.get("hw-demo", null) || SAMPLE.slice()).map(x => Object.assign({loc:"demo"}, x)).filter(x => !curLoc || x.loc === curLoc)};
+    }
+    const r = await fetch(CONFIG.API_URL + "?t=" + Date.now() + (curLoc ? "&loc=" + encodeURIComponent(curLoc) : ""));
+    const j = await r.json(); if (!j.ok) throw new Error(j.error || "Chyba serveru");
+    return j;
+  },
+  async post(body){
+    if (DEMO){
+      let list = store.get("hw-demo", null) || SAMPLE.slice();
+      if (body.action === "add"){ const id = "u" + Date.now().toString(36); list.push(Object.assign({}, body.station, {id})); store.set("hw-demo", list); return {ok:true,id,token:"demo"}; }
+      if (body.action === "update"){ list = list.map(s => s.id === body.id ? Object.assign({}, s, body.station) : s); store.set("hw-demo", list); return {ok:true}; }
+      if (body.action === "delete"){ list = list.filter(s => s.id !== body.id); store.set("hw-demo", list); return {ok:true}; }
+      if (body.action === "login"){ return {ok:true, token:"demo"}; }
+      if (body.action === "addloc"){ const locs = store.get("hw-demo-locs", null) || DEMO_LOCS.slice(); const id = "demo" + Date.now().toString(36); locs.push(Object.assign({id}, body.location)); store.set("hw-demo-locs", locs); return {ok:true, id, token:"demo"}; }
+      if (body.action === "loginloc" || body.action === "updloc"){ return {ok:true, token:"demo"}; }
+      if (body.action === "rate"){ list = list.map(s => s.id === body.id ? Object.assign({}, s, {rating:{avg:body.stars, count:1}, raters:body.nick ? [{nick:body.nick, stars:body.stars}] : []}) : s); store.set("hw-demo", list); return {ok:true}; }
+      if (body.action === "photo"){ list = list.map(s => s.id === body.id ? Object.assign({}, s, {photos:[{id:"p" + Date.now(), url:body.image, host:!!body.token, nick:body.nick || ""}].concat(s.photos || [])}) : s); store.set("hw-demo", list); return {ok:true}; }
+      if (body.action === "delphoto"){ list = list.map(s => s.id === body.id ? Object.assign({}, s, {photos:(s.photos || []).filter(p => p.id !== body.photoId)}) : s); store.set("hw-demo", list); return {ok:true}; }
+    }
+    const r = await fetch(CONFIG.API_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(body)});
+    const j = await r.json(); if (!j.ok) throw new Error(j.error || "Saving failed");
+    return j;
+  }
+};
+
+/* ---------- geo helpers ---------- */
+function dist(a, b){ // metres
+  const R = 6371000, toR = x => x * Math.PI / 180;
+  const dLat = toR(b.lat - a.lat), dLng = toR(b.lng - a.lng);
+  const h = Math.sin(dLat/2)**2 + Math.cos(toR(a.lat))*Math.cos(toR(b.lat))*Math.sin(dLng/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+const walk = m => m * 1.3; // ulice nejsou vzdušnou čarou
+const fmtM = m => LANG === "en"
+  ? (m < 160 ? Math.max(10, Math.round(m * 3.28084 / 10) * 10) + " ft" : (m / 1609.344).toFixed(1) + " mi")
+  : (m < 1000 ? Math.round(m/10)*10 + " m" : (m/1000).toFixed(1).replace(".", ",") + " km");
+const fmtMin = m => Math.max(1, Math.round(walk(m) / (CONFIG.KID_SPEED_KMH * 1000 / 60))) + " min";
+const byId = id => stations.find(s => s.id === id);
+/* ---------- otevírací doba stanoviště ---------- */
+const locStart = () => new Date(LOC ? LOC.start : "2100-01-01T00:00:00Z");
+const locEnd = () => new Date(LOC ? LOC.end : "2100-01-01T00:00:00Z");
+const dayKey = d => { const p = n => String(n).padStart(2, "0"); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };
+const toMin = t => { const m = /^(\d{1,2}):(\d{2})$/.exec(t || ""); return m ? +m[1] * 60 + +m[2] : null; };
+function isEventDay(){ return !!LOC && dayKey(new Date()) === dayKey(locStart()); }
+function hours(s){ return (s.from || s.to) ? `${hm(s.from) || "?"}–${hm(s.to) || "?"}` : "not set"; }
+function timeState(s){                       // "before" | "open" | "after" | null (mimo den akce)
+  if (!isEventDay()) return null;
+  const d = new Date(), n = d.getHours() * 60 + d.getMinutes(), a = toMin(s.from), b = toMin(s.to);
+  if (a !== null && n < a) return "before";
+  if (b !== null && n > b) return "after";
+  return "open";
+}
+function timeNote(s){
+  const st = timeState(s);
+  if (st === "before") return `opens at ${esc(hm(s.from))}`;
+  if (st === "after") return `closed already (until ${esc(hm(s.to))})`;
+  if (st === null && LOC){
+    if (new Date() > locEnd()) return "the event is over";
+    const day = LANG === "en" ? locStart().toLocaleDateString("en-US", {month:"short", day:"numeric"}) : `${locStart().getDate()}. ${locStart().getMonth() + 1}.`;
+    return LANG === "en" ? `opens ${day}${s.from ? " at " + esc(hm(s.from)) : ""}` : `otevře ${day}${s.from ? " v " + esc(s.from) : ""}`;
+  }
+  return "";
+}
+// svítí = právě otevřeno, spí = mimo otevírací dobu (nebo jiný den), šedá = došly bonbony
+function liveState(s){ if (s.status !== "open") return "out"; return timeState(s) === "open" ? "open" : "sleep"; }
+function liveTag(s){
+  const st = liveState(s);
+  if (st === "out") return `<span class="livetag out">${s.status === "closed" ? "closed" : "out of candy"}</span>`;
+  if (st === "open") return `<span class="livetag open">🎃 open now</span>`;
+  return `<span class="livetag sleep">💤 ${timeNote(s) || "closed now"}</span>`;
+}
+function hoursHtml(s){
+  const n = timeNote(s);
+  return `<div class="small" style="margin-top:6px">🕕 Hours <b>${esc(hours(s))}</b> ${liveTag(s)}</div>`;
+}
+const minsFor = m => Math.max(1, Math.round(m / (CONFIG.KID_SPEED_KMH * 1000 / 60))) + " min";   // m = skutečná délka cesty
+
+/* ---------- filtering & routing ---------- */
+function matches(s){
+  if (filters.small && s.scare > 1) return false;
+  if (filters.allergy && !s.allergyFree) return false;
+  if (filters.noncandy && !s.nonCandy) return false;
+  if (filters.access && !s.accessible) return false;
+  if (filters.open && s.status !== "open") return false;
+  return true;
+}
+function planRoute(){
+  const cand = stations.filter(s => matches(s) && s.status === "open" && timeState(s) !== "after" && !visited.has(s.id) && !skipped.has(s.id));
+  if (!cand.length){ route = []; return; }
+  let start = me;
+  if (!start){ // bez polohy začni u domu nejblíž středu
+    const c = locCenter();
+    start = cand.reduce((a, b) => dist(c, a) < dist(c, b) ? a : b);
+  }
+  // nejbližší soused
+  const left = cand.slice(), path = [];
+  let cur = start;
+  while (left.length){
+    let bi = 0, bd = Infinity;
+    left.forEach((s, i) => { const d = dist(cur, s); if (d < bd){ bd = d; bi = i; } });
+    cur = left.splice(bi, 1)[0]; path.push(cur);
+  }
+  // 2-opt, otevřená trasa s pevným startem
+  const P = [start, ...path], n = P.length - 1;
+  let improved = true, guard = 0;
+  while (improved && guard++ < 50){
+    improved = false;
+    for (let i = 1; i < n; i++) for (let k = i + 1; k <= n; k++){
+      const before = dist(P[i-1], P[i]) + (k < n ? dist(P[k], P[k+1]) : 0);
+      const after  = dist(P[i-1], P[k]) + (k < n ? dist(P[i], P[k+1]) : 0);
+      if (after + 0.5 < before){ P.splice(i, k - i + 1, ...P.slice(i, k + 1).reverse()); improved = true; }
+    }
+  }
+  route = P.slice(1).map(s => s.id);
+}
+
+/* ---------- hodnocení a fotky ---------- */
+let VOTER = store.get("hw-voter", "");
+if (!VOTER){ VOTER = "v" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); store.set("hw-voter", VOTER); }
+let myRatings = store.get("hw-ratings", {});
+function starsHtml(avg){ const n = Math.round(avg || 0); return `<span class="stars" aria-hidden="true">${"★".repeat(n)}<span class="off">${"★".repeat(5 - n)}</span></span>`; }
+function ratingHtml(s){
+  const r = s.rating || {avg:0, count:0};
+  return r.count
+    ? `${starsHtml(r.avg)} <b>${num1(r.avg)}</b> <span class="muted">(${r.count}×)</span>`
+    : `<span class="muted">no ratings yet</span>`;
+}
+function thumbsHtml(s, from, max, canDelete){
+  const list = (s.photos || []).slice(from, from + max);
+  if (!list.length) return "";
+  return `<div class="thumbs">${list.map(p => `<button type="button" data-photo="${esc(p.url)}" data-nick="${esc(p.nick || "")}" aria-label="Enlarge photo${p.nick ? " – by " + esc(p.nick) : ""}"><img src="${esc(p.url)}" alt="" loading="lazy">${canDelete ? `<span class="x" role="button" tabindex="0" data-delphoto="${esc(p.id)}" data-id="${esc(s.id)}" aria-label="Delete photo">×</span>` : ""}</button>`).join("")}</div>`;
+}
+let toastT = null;
+function toast(msg, ok = true, ms = 3500){
+  const t = $("#toast"); t.textContent = msg; t.className = "toast" + (ok ? "" : " err"); t.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, ms);
+}
+function shrink(file, max, q){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      res(c.toDataURL("image/jpeg", q));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("Can't read this photo format. Try JPG or PNG.")); };
+    img.src = url;
+  });
+}
+let photoTarget = null;
+function pickPhoto(id){ photoTarget = id; const inp = $("#photoInput"); inp.value = ""; inp.click(); }
+async function deletePhoto(id, photoId){
+  if (!confirm("Delete this photo?")) return;
+  try{ await api.post({action:"delphoto", id, photoId, voter:VOTER, token:mine[id], admin:ADMIN || undefined, orgToken:orgTok()}); toast("Photo deleted."); await load(); }
+  catch(err){ toast(err.message, false); }
+}
+let rateId = null;
+function paintStars(n){ $$("#starPick button").forEach(b => b.classList.toggle("on", +b.dataset.star <= n)); }
+function openRate(id, after){ const s = byId(id); if (!s) return; rateId = id; $("#rateName").textContent = s.name; $("#rateNick").value = NICK;
+  $("#rateTitle").textContent = after ? "How did you like it?" : "Rate this house"; $("#rateCancel").textContent = after ? "Not now" : "Close"; paintStars(myRatings[id] || 0); $("#rateOverlay").hidden = false; }
+function closeRate(){ $("#rateOverlay").hidden = true; rateId = null; }
+function openLightbox(url, by){ $("#lbImg").src = url; $("#lbCap").textContent = by ? "📷 " + by : ""; $("#lbCap").hidden = !by; $("#lightbox").hidden = false; }
+/* ---------- přezdívka návštěvníka ---------- */
+let NICK = store.get("hw-nick", "");
+function setNick(v){ NICK = String(v || "").replace(/[<>]/g, "").trim().slice(0, 30); store.set("hw-nick", NICK); ["#rateNick", "#infoNick", "#tourNick"].forEach(s => { const i = $(s); if (i && i !== document.activeElement) i.value = NICK; }); }
+function ratersHtml(s){
+  const r = (s.raters || []).filter(x => x.nick);
+  if (!r.length) return "";
+  return `<div class="raters">Praised by: ${r.slice(0, 6).map(x => `<b>${esc(x.nick)}</b> ${x.stars}★`).join(", ")}${r.length > 6 ? ` and others` : ""}</div>`;
+}
+
+/* ---------- map ---------- */
+const cacheKey = () => "hw-cache:" + (curLoc || "_");
+const bootLoc = (() => { try{ const c = store.get(cacheKey(), null); return c && c.j && (c.j.locations || []).find(l => l.id === curLoc); }catch(e){ return null; } })();
+const map = L.map("map", {zoomControl:false, attributionControl:true}).setView(bootLoc ? [+bootLoc.lat, +bootLoc.lng] : CONFIG.CENTER, bootLoc ? (+bootLoc.zoom || 16) : CONFIG.ZOOM);
+const NIGHT = "brightness(.72) saturate(.75) hue-rotate(-10deg) contrast(1.05)"; // noční nádech mapy
+let baseLayers = [], baseIdx = 0;
+if (CONFIG.MAPY_API_KEY){
+  const k = encodeURIComponent(CONFIG.MAPY_API_KEY);
+  const size = (window.devicePixelRatio || 1) > 1 ? "256@2x" : "256";
+  // letecká mapa a popisky existují jen v 256 px (verze @2x vrací 404), základní mapa i v @2x pro ostré displeje
+  const url = (set, sz = size) => `https://api.mapy.com/v1/maptiles/${set}/${sz}/{z}/{x}/{y}?apikey=${k}`;
+  const attr = '<a href="https://api.mapy.com/copyright" target="_blank" rel="noopener">&copy; Seznam.cz a.s. and others</a>';
+  baseLayers = [
+    {name:"Map", filter:NIGHT, layer:L.tileLayer(url("basic"), {maxZoom:19, minZoom:12, attribution:attr})},
+    {name:"Satellite", filter:"none", layer:L.layerGroup([
+      L.tileLayer(url("aerial", "256"), {maxZoom:20, minZoom:12, attribution:attr}),
+      L.tileLayer(url("names-overlay", "256"), {maxZoom:20, minZoom:12})
+    ])}
+  ];
+  // logo Mapy.com je podmínkou použití API
+  const Logo = L.Control.extend({options:{position:"topleft"}, onAdd(){
+    const a = L.DomUtil.create("a", "mapy-logo"); a.href = "https://mapy.com/"; a.target = "_blank"; a.rel = "noopener";
+    a.innerHTML = '<img src="https://api.mapy.com/img/api/logo.svg" alt="Mapy.com" height="30">';
+    L.DomEvent.disableClickPropagation(a); return a; }});
+  new Logo().addTo(map);
+} else {
+  baseLayers = [{name:"Map", filter:NIGHT, layer:L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19, minZoom: 12,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">P\u0159isp\u011bvatel\u00e9 OpenStreetMap</a>'
+  })}];
+}
+function setBase(i){
+  baseLayers.forEach(b => map.removeLayer(b.layer));
+  baseIdx = i; const b = baseLayers[i];
+  b.layer.addTo(map); map.getPane("tilePane").style.filter = b.filter;
+  const btn = $("#fabLayer");
+  if (btn){ btn.hidden = baseLayers.length < 2; btn.setAttribute("aria-label", "Switch to: " + baseLayers[(i + 1) % baseLayers.length].name);
+    btn.querySelector("span").textContent = baseLayers[(i + 1) % baseLayers.length].name; }
+  store.set("hw-base", i);
+}
+setBase(Math.min(store.get("hw-base", 0), baseLayers.length - 1));
+$("#fabLayer").addEventListener("click", () => setBase((baseIdx + 1) % baseLayers.length));
+const markerLayer = L.layerGroup().addTo(map);
+let routeLine = null, meMarker = null, pickTemp = null;
+
+function pumpkinSvg(fill, face){
+  return `<svg viewBox="0 0 40 44" aria-hidden="true"><path d="M20 10c1-5 5-7 7-6" fill="none" stroke="#6bbf59" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="13" cy="27" rx="10" ry="12" fill="${fill}" opacity=".85"/><ellipse cx="27" cy="27" rx="10" ry="12" fill="${fill}" opacity=".85"/><ellipse cx="20" cy="27" rx="9.5" ry="13" fill="${fill}"/><path d="M13 24l3.5-3.5L20 24zM20 24l3.5-3.5L27 24z" fill="${face}"/><path d="M12 30c3 4 13 4 16 0l-2.5 1-1.5 2-2-2-2.5 2-2-2-2 2-1.5-2z" fill="${face}"/></svg>`;
+}
+function icon(s, order, tgt){
+  const st = liveState(s);
+  const fill = st === "out" ? "#7d7390" : st === "sleep" ? "#9a5a26" : "#ff8a2a";
+  const face = st === "out" ? "#3a3148" : st === "sleep" ? "#3b2416" : "#ffd36b";
+  const badge = visited.has(s.id) ? "✓" : order ? order : "";
+  return L.divIcon({className:"", iconSize:[40,44], iconAnchor:[20,42], popupAnchor:[0,-38],
+    html:`<div class="pin${tgt ? " tgt" : ""}${st === "open" ? " lit" : st === "sleep" ? " sleep" : ""}">${pumpkinSvg(fill, face)}${badge ? `<i>${badge}</i>` : ""}</div>`});
+}
+function scareLabel(n){ return ["", "friendly", "a little spooky", "for the brave"][n] || ""; }
+function ghosts(n){ return "👻".repeat(n) + "<span style='opacity:.25'>" + "👻".repeat(3 - n) + "</span>"; }
+function tagsHtml(s){
+  const t = [];
+  if (s.status === "out") t.push(`<span class="tag warn">Out of candy</span>`);
+  if (s.status === "closed") t.push(`<span class="tag warn">Closed</span>`);
+  return `<div class="tags">${t.join("")}</div>`;
+}
+function sheetHtml(s){
+  const v = visited.has(s.id), sk = skipped.has(s.id), out = s.status !== "open";
+  const cover = (s.photos || [])[0];
+  const d = me ? ` · ${fmtM(walk(dist(me, s)))}, ${fmtMin(dist(me, s))} walk` : "";
+  const id = esc(s.id);
+  return `${cover ? `<img class="bs-cover" src="${esc(cover.url)}" alt="House photo" data-photo="${esc(cover.url)}" data-nick="${esc(cover.nick || "")}">` : ""}
+    <h3 id="bsTitle">${esc(s.name)}</h3>
+    <div class="muted small">${esc(s.address)}${d}</div>
+    <div class="small bs-meta"><span>${ratingHtml(s)}${myRatings[s.id] ? ` <span class="muted">· you ${myRatings[s.id]}★</span>` : ""}</span><span><span class="ghosts">${ghosts(s.scare)}</span> ${scareLabel(s.scare)}</span></div>
+    ${ratersHtml(s)}
+    ${hoursHtml(s)}
+    ${s.note ? `<p class="bs-note">${esc(s.note)}</p>` : ""}
+    ${thumbsHtml(s, 1, 8, false)}
+    <div class="bs-main">
+      <button class="btn ${out || v ? "" : "primary"} big" type="button" data-navto="${id}">🚶 Go here</button>
+      <button class="btn ${v ? "" : "teal"} big" type="button" data-visit="${id}">${v ? "Undo ✓" : "Visited ✓"}</button>
+    </div>
+    <div class="bs-icons">
+      <button class="ibtn" type="button" data-addphoto="${id}">📷<span>Add photo</span></button>
+      <button class="ibtn" type="button" data-rate="${id}">★<span>${myRatings[s.id] ? "Your " + myRatings[s.id] + " ★" : "Rate"}</span></button>
+      ${!v ? `<button class="ibtn" type="button" data-skip="${id}">${sk ? "↩" : "⤼"}<span>${sk ? "Add back" : "Skip"}</span></button>` : ""}
+    </div>
+    ${ADMIN || orgTok() ? `<button class="btn sm ghost bs-admin" type="button" data-admindel="${id}">Delete house (${ADMIN ? "admin" : "organizer"})</button>` : ""}`;
+}
+let markers = {};
+function drawMap(){
+  markerLayer.clearLayers(); markers = {};
+  const order = new Map(route.map((id, i) => [id, i + 1]));
+  stations.forEach(s => {
+    if (!matches(s) && !visited.has(s.id)) return;
+    const tgt = NAV.on && NAV.target === s.id;
+    const m = L.marker([s.lat, s.lng], {icon: icon(s, NAV.on ? undefined : order.get(s.id), tgt), title: s.name,
+      zIndexOffset: tgt ? 900 : order.has(s.id) ? 500 - order.get(s.id) : 0});
+    m.on("click", () => markerTap(s.id));
+    markers[s.id] = m;
+    markerLayer.addLayer(m);
+  });
+  if (routeLine){ map.removeLayer(routeLine); routeLine = null; }
+  if (!NAV.on){
+    const pts = route.map(byId).filter(Boolean).map(s => [s.lat, s.lng]);
+    if (me && pts.length) pts.unshift([me.lat, me.lng]);
+    routeLine = pts.length > 1 ? L.polyline(pts, {color:"#ffd36b", weight:3, opacity:.8, dashArray:"2 9", lineCap:"round", interactive:false}).addTo(map) : null;
+  }
+  if (sheetId){
+    const s = byId(sheetId);
+    if (s){ const b = $("#bsheet"), y = b.scrollTop; $("#bsBody").innerHTML = sheetHtml(s); b.scrollTop = y; } else closeSheet();
+  }
+  drawNext();
+}
+function drawNext(){
+  const card = $("#nextcard");
+  const s = byId(route[0]);
+  if (!s || picking || sheetId || NAV.on){ card.hidden = true; dockSize(); return; }
+  const d = me ? ` · ${fmtM(walk(dist(me, s)))}, ${fmtMin(dist(me, s))}` : "";
+  const tn = timeNote(s);
+  card.innerHTML = `<button class="num" type="button" data-open="${esc(s.id)}" aria-label="House details">1</button>
+    <button class="t" type="button" data-open="${esc(s.id)}"><span>Next house${d}${tn ? " · " + tn : ""}</span><b>${esc(s.name)}</b></button>
+    <div class="acts">
+      <button class="btn primary" type="button" data-navstart="1">🎃 Trick-or-treat!</button>
+      <button class="btn teal" type="button" data-visit="${esc(s.id)}">Visited ✓</button>
+    </div>`;
+  card.hidden = false; dockSize();
+}
+function dockSize(){ const c = $("#nextcard"); document.documentElement.style.setProperty("--dockh", c.hidden ? "0px" : (c.offsetHeight + 10) + "px"); }
+if (window.ResizeObserver) new ResizeObserver(dockSize).observe($("#nextcard"));
+
+/* ---------- route view ---------- */
+function drawRoute(){
+  const list = route.map(byId).filter(Boolean);
+  let total = 0, prev = me;
+  const items = list.map((s, i) => {
+    const leg = prev ? dist(prev, s) : 0; total += leg; prev = s;
+    return `<li>
+      <div class="num">${i + 1}</div>
+      <div><div class="nm">${esc(s.name)}</div>
+        <div class="meta">${ratingHtml(s)}</div>
+        <div class="meta">${esc(s.address)}${leg ? ` · ${fmtM(walk(leg))}` : ""} · open ${esc(hours(s))}${timeNote(s) ? ` · ${timeNote(s)}` : ""}</div>
+        ${tagsHtml(s)}</div>
+      <div class="row" style="flex-direction:column;gap:6px">
+        <button class="btn sm primary" type="button" data-navto="${esc(s.id)}">Go here</button>
+        <button class="btn sm teal" type="button" data-visit="${esc(s.id)}">✓ Visited</button>
+      </div></li>`;
+  });
+  $("#routeList").innerHTML = items.join("") || `<li style="grid-template-columns:1fr"><div class="muted">${stations.length ? (visited.size ? "All done – no more open houses left. Thanks for the walk!" : "No house is open right now. Try again during the event.") : "Nobody has joined yet. Be the first – add your house!"}</div></li>`;
+  const mins = list.length ? Math.round(walk(total) / (CONFIG.KID_SPEED_KMH * 1000 / 60) + list.length * CONFIG.STOP_MIN) : 0;
+  $("#routeStats").innerHTML = `<div>Houses left<b>${list.length}</b></div><div>Walking<b>${fmtM(walk(total))}</b></div><div>Estimate incl. stops<b>${mins} min</b></div><div>Visited<b>${visited.size}</b></div>`;
+  $("#routeIntro").hidden = false;
+  $("#gpsHint").hidden = !!me || !stations.length;
+  $("#gpsHintText").textContent = gpsDenied
+    ? "Location is blocked in your browser. Allow it for this site in the browser settings – the route will then start from you."
+    : "Right now the route starts at the center of the area. Turn on location and it will start from you.";
+  $("#btnStartNav").hidden = !list.length;
+  const done = stations.filter(s => visited.has(s.id));
+  $("#doneWrap").hidden = !done.length;
+  $("#doneList").innerHTML = done.map(s => `<li><div class="num done">✓</div><div><div class="nm">${esc(s.name)}</div><div class="meta">${esc(s.address)}</div></div><button class="btn sm ghost" type="button" data-visit="${esc(s.id)}">Restore</button></li>`).join("");
+}
+
+/* ---------- my stations ---------- */
+function drawMine(){
+  const list = stations.filter(s => mine[s.id]);
+  $("#mineWrap").hidden = !list.length;
+  $("#mineList").innerHTML = list.map(s => `<li style="grid-template-columns:1fr">
+    <div><div class="nm">${esc(s.name)}</div><div class="meta">${s.address ? esc(s.address) + " · " : ""}open ${esc(hours(s))}</div>
+      <div class="meta">${ratingHtml(s)}</div>${ratersHtml(s)}${tagsHtml(s)}
+      ${thumbsHtml(s, 0, 30, true)}</div>
+    <div class="row">
+      <button class="btn sm" type="button" data-addphoto="${esc(s.id)}">📷 Add photo</button>
+      ${s.status === "open"
+        ? `<button class="btn sm" type="button" data-status="out" data-id="${esc(s.id)}">Out of candy</button>`
+        : `<button class="btn sm teal" type="button" data-status="open" data-id="${esc(s.id)}">Open again</button>`}
+      <button class="btn sm ghost" type="button" data-edit="${esc(s.id)}">Upravit</button>
+      <button class="btn sm ghost" type="button" data-del="${esc(s.id)}">Smazat</button>
+    </div></li>`).join("");
+  const editing = !!$("#fId").value;
+  $("#formBox").hidden = !!list.length && !editing && !addMore;
+  $("#btnAddMore").hidden = !$("#formBox").hidden;
+}
+let addMore = false;
+$("#btnAddMore").addEventListener("click", () => { addMore = true; drawMine(); $("#fName").focus(); });
+
+function drawLogin(){
+  const free = stations.filter(s => !mine[s.id]);
+  const sel = $("#lgStation");
+  const keep = sel.value;
+  sel.innerHTML = free.map(s => `<option value="${esc(s.id)}">${esc(s.name)}${s.address ? " – " + esc(s.address) : ""}</option>`).join("");
+  if (free.some(s => s.id === keep)) sel.value = keep;
+  $("#loginPanel").hidden = !free.length;
+}
+async function doLogin(){
+  const id = $("#lgStation").value, pin = $("#lgPin").value.trim(), m = $("#loginMsg");
+  const say = (text, ok) => { m.textContent = text; m.className = "msg " + (ok ? "ok" : "err"); m.hidden = false; };
+  if (!id) return say("Choose a house.");
+  if (!pin) return say("Enter the PIN you chose when adding the house.");
+  $("#btnLogin").disabled = true;
+  try{
+    const r = await api.post({action:"login", id, pin});
+    mine[id] = r.token; store.set("hw-mine", mine);
+    $("#lgPin").value = "";
+    say("Signed in. Your house is now at the top and you can edit it.", true);
+    await load();
+  }catch(err){ say(err.message); }
+  $("#btnLogin").disabled = false;
+}
+
+function renderAll(replan = true){ if (replan) planRoute(); drawMap(); drawRoute(); drawMine(); drawLogin(); drawRank(); drawHostCard(); if (NAV.on) navAfterData(); }
+
+/* ---------- 9: rychlá karta hostitele na mapě ---------- */
+function drawHostCard(){
+  const c = $("#hostcard"), s = stations.find(x => mine[x.id]);
+  if (!s || picking){ c.hidden = true; return; }
+  const open = s.status === "open";
+  c.innerHTML = `<div class="h">🏠 My house: <b>${esc(s.name)}</b></div>
+    ${open ? `<button class="btn sm" type="button" data-status="out" data-id="${esc(s.id)}">Out of candy</button>`
+           : `<button class="btn sm teal" type="button" data-status="open" data-id="${esc(s.id)}">Open again</button>`}`;
+  c.hidden = false;
+}
+
+/* ---------- 6: legenda ---------- */
+$("#fabLegend").addEventListener("click", () => {
+  const l = $("#legend"); l.hidden = !l.hidden; $("#fabLegend").setAttribute("aria-expanded", String(!l.hidden));
+});
+map.on("click", () => { $("#legend").hidden = true; $("#fabLegend").setAttribute("aria-expanded", "false"); if (sheetId) closeSheet(); });
+
+$("#btnNick").addEventListener("click", () => { setNick($("#infoNick").value); toast(NICK ? `Nickname saved: ${NICK}` : "Nickname removed."); });
+$("#infoNick").addEventListener("keydown", e => { if (e.key === "Enter") $("#btnNick").click(); });
+setNick(NICK);
+
+/* ---------- interaktivní návod pro nové uživatele ---------- */
+const TOUR = {on:false, i:0, steps:[]};
+let tourAuto = false;
+function pinDemo(fill, face, lit, label){
+  return `<span><span style="display:block${lit ? ";filter:drop-shadow(0 0 6px rgba(255,190,70,.95))" : ""}">${pumpkinSvg(fill, face)}</span>${label}</span>`;
+}
+function tourSteps(){
+  const sid = route[0] && byId(route[0]) ? route[0] : (stations[0] && stations[0].id);
+  const mk = () => sid && markers[sid] && markers[sid]._icon;
+  const S = [];
+  S.push({title:"Welcome to Neighborhood Halloween! 🎃",
+    html:`<p>In one minute I'll show you how to trick-or-treat with the app. You can skip the tour anytime and replay it from the Leaderboard &amp; info tab.</p>
+      <p>Your area: <b>${esc(locLabel(LOC))}</b> <button class="btn sm ghost" type="button" data-tour="loc">Different town?</button></p>`});
+  if (sid){
+    S.push({title:"Pumpkin = a house giving out treats", target:mk, pad:14,
+      before:() => { const s = byId(sid); if (s) map.setView([s.lat, s.lng], Math.max(map.getZoom(), 16), {animate:false}); },
+      html:`<p>The map shows only houses that joined in. The pumpkin's color tells you whether you can ring the bell right now:</p>
+        <div class="tour-pins">${pinDemo("#ff8a2a", "#ffd36b", true, "glowing")}${pinDemo("#9a5a26", "#3b2416", false, "dark")}${pinDemo("#7d7390", "#3a3148", false, "gray")}</div>
+        <p><b>Glowing</b> = open now · <b>dark</b> = closed now (every house has its own hours) · <b>gray</b> = out of candy.</p>`});
+    S.push({title:"Tap a pumpkin", target:() => $("#bsheet"), pad:0, before:() => openSheet(sid), after:() => closeSheet(),
+      html:`<p>You'll see the house details: photos, stars from visitors, opening hours and a note from the host.</p>
+        <p><b>Go here</b> starts navigation, <b>Visited ✓</b> checks the house off. You can add a photo and a rating too.</p>`});
+  }
+  if (route.length){
+    S.push({title:"Trick-or-treat!", target:() => $("#nextcard [data-navstart]"), before:() => { closeSheet(); drawNext(); },
+      html:`<p>The main button of the night. The app guides you to the nearest house – <b>an arrow, the distance and a sidewalk route</b>. Your phone vibrates at the house and the screen stays on.</p>`});
+    S.push({title:"Visited ✓", target:() => $("#nextcard [data-visit]"),
+      html:`<p>Once you get your treat, tap here. Give 3 to 5 stars and the app sends you to the next house.</p>`});
+  }
+  S.push({title:"Where you are", target:() => $("#fabLocate"), before:() => closeSheet(),
+    html:`<p>This button shows your location on the map. Navigation needs location turned on.</p>`});
+  S.push({title:"Route", target:() => $('nav.tabs [data-tab="route"]'),
+    html:`<p>The full order of houses, how many are left, how many minutes it takes and where you've been.</p>`});
+  S.push({title:"My house", target:() => $('nav.tabs [data-tab="add"]'),
+    html:`<p>Want to hand out candy too? Add your house in a minute. Set your own hours – shorter or longer than others is fine – and in the evening switch to <b>Out of candy</b> with one tap.</p>`});
+  S.push({title:"Leaderboard & info", target:() => $('nav.tabs [data-tab="more"]'),
+    html:`<p>Top rated houses, safety tips for kids, a QR code for neighbors and this tour again.</p>`});
+  S.push({title:"All set, off you go! 👻", final:true,
+    html:`<label class="nick-in">Your group's nickname <span style="font-weight:400">optional – used to sign photos and ratings. No children's names.</span><input type="text" id="tourNick" maxlength="30" autocomplete="nickname" placeholder="e.g. The Pumpkin Patch Crew" value="${esc(NICK)}"></label>`});
+  return S;
+}
+function tourPlace(){
+  if (!TOUR.on) return;
+  const st = TOUR.steps[TOUR.i], hole = $("#tourHole"), card = $("#tourCard");
+  const el = st.target ? st.target() : null;
+  const r = el ? el.getBoundingClientRect() : null;
+  const H = window.innerHeight;
+  card.style.transform = "";
+  if (r && r.width > 0 && r.height > 0){
+    const pad = st.pad == null ? 8 : st.pad;
+    hole.classList.remove("none");
+    hole.style.left = (r.left - pad) + "px"; hole.style.top = (r.top - pad) + "px";
+    hole.style.width = (r.width + 2 * pad) + "px"; hole.style.height = (r.height + 2 * pad) + "px";
+    const ch = card.offsetHeight;
+    if (r.top + r.height / 2 > H / 2){
+      const bottom = H - r.top + pad + 12;
+      if (H - bottom - ch < 8){ card.style.bottom = "auto"; card.style.top = "8px"; }
+      else { card.style.top = "auto"; card.style.bottom = bottom + "px"; }
+    } else {
+      const top = r.bottom + pad + 12;
+      card.style.bottom = "auto"; card.style.top = Math.min(top, H - ch - 8) + "px";
+    }
+  } else {
+    hole.classList.add("none");
+    card.style.bottom = "auto"; card.style.top = "50%"; card.style.transform = "translateY(-50%)";
+  }
+}
+function tourGo(n){
+  const cur = TOUR.steps[TOUR.i];
+  if (cur && cur.after && n !== TOUR.i) cur.after();
+  TOUR.i = Math.max(0, Math.min(n, TOUR.steps.length - 1));
+  const st = TOUR.steps[TOUR.i], N = TOUR.steps.length;
+  if (st.before) st.before();
+  $("#tourStep").textContent = `Step ${TOUR.i + 1} of ${N}`;
+  $("#tourTitle").textContent = st.title;
+  $("#tourText").innerHTML = st.html;
+  $("#tourDots").innerHTML = TOUR.steps.map((_, k) => `<i class="${k === TOUR.i ? "on" : ""}"></i>`).join("");
+  const acts = $("#tourActs");
+  if (st.final){
+    acts.className = "tour-acts one";
+    acts.innerHTML = `<button class="btn primary big" type="button" data-tour="go">📍 Turn on location and start</button>
+      <button class="btn ghost" type="button" data-tour="look">Just look around</button>`;
+  } else {
+    acts.className = "tour-acts";
+    acts.innerHTML = `<button class="btn ghost" type="button" data-tour="back"${TOUR.i ? "" : " disabled"}>Back</button>
+      <button class="btn primary" type="button" data-tour="next">${TOUR.i === 0 ? "Show me how it works" : "Next"}</button>`;
+  }
+  $("#tourSkip").hidden = !!st.final;
+  tourPlace();
+  setTimeout(tourPlace, 120); setTimeout(tourPlace, 380);      // po animaci panelu / posunu mapy
+}
+function startTour(){
+  if (TOUR.on || !LOC) return;
+  if (NAV.on) exitNav();
+  closeRate(); $("#legend").hidden = true; $("#lightbox").hidden = true;
+  go("map");
+  TOUR.steps = tourSteps(); TOUR.on = true; TOUR.i = 0;
+  $("#tour").hidden = false;
+  setTimeout(() => { map.invalidateSize(); tourGo(0); }, 60);
+}
+function endTour(withLocation){
+  if (!TOUR.on) return;
+  const ni = $("#tourNick"); if (ni) setNick(ni.value);
+  const cur = TOUR.steps[TOUR.i]; if (cur && cur.after) cur.after();
+  TOUR.on = false; $("#tour").hidden = true; store.set("hw-tour", true);
+  if (withLocation){ go("map"); locate(true); }
+}
+function maybeOnboard(){                       // nový uživatel dostane návod automaticky
+  if (!LOC || TOUR.on || tourAuto || store.get("hw-tour", false) || !$("#locOverlay").hidden || !$("#newLocOverlay").hidden) return;
+  tourAuto = true; setTimeout(startTour, 700);
+}
+$("#tour").addEventListener("click", e => {
+  const b = e.target.closest("[data-tour]"); if (!b) return;
+  const a = b.dataset.tour;
+  if (a === "next") tourGo(TOUR.i + 1);
+  else if (a === "back") tourGo(TOUR.i - 1);
+  else if (a === "go") endTour(true);
+  else if (a === "look") endTour(false);
+  else if (a === "loc"){ endTour(false); openLocPicker(); }
+});
+$("#tourSkip").addEventListener("click", () => endTour(false));
+document.addEventListener("click", e => { if (e.target.closest("[data-tour-start]")){ $("#legend").hidden = true; startTour(); } });
+document.addEventListener("keydown", e => { if (!TOUR.on) return; if (e.key === "Escape") endTour(false); else if (e.key === "ArrowRight" && !TOUR.steps[TOUR.i].final) tourGo(TOUR.i + 1); else if (e.key === "ArrowLeft") tourGo(TOUR.i - 1); });
+window.addEventListener("resize", () => { if (TOUR.on) tourPlace(); });
+
+/* ---------- 13: sdílení lokality ---------- */
+function shareLink(){ const u = new URL(location.href); u.hash = ""; u.search = LOC ? "?l=" + encodeURIComponent(LOC.id) : ""; return u.toString(); }
+let qrFor = "", qrLoading = false;
+function loadQR(){                            // knihovnu QR stáhni až při otevření Info
+  if (qrLoading) return; qrLoading = true;
+  const sc = document.createElement("script"); sc.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
+  sc.onload = () => { qrFor = ""; drawShare(); }; document.head.appendChild(sc);
+}
+function drawShare(){
+  $("#sharePanel").hidden = !LOC; if (!LOC) return;
+  const url = shareLink(); $("#shareUrl").textContent = url;
+  if (typeof QRCode === "undefined"){ loadQR(); }
+  if (qrFor !== url && typeof QRCode !== "undefined"){
+    $("#qrBox").innerHTML = ""; qrFor = url;
+    try{ new QRCode($("#qrBox"), {text:url, width:132, height:132, colorDark:"#1b1426", colorLight:"#ffffff", correctLevel:QRCode.CorrectLevel.M}); }catch(e){}
+  }
+  $("#qrBox").hidden = typeof QRCode === "undefined";
+}
+$("#btnShare").addEventListener("click", async () => {
+  const url = shareLink(), text = LOC ? `Neighborhood Halloween – ${LOC.city}: a map of houses giving out treats` : "Neighborhood Halloween";
+  if (navigator.share){ try{ await navigator.share({title:"Neighborhood Halloween", text, url}); }catch(e){} }
+  else { try{ await navigator.clipboard.writeText(url); toast("Link copied."); }catch(e){ toast(url, true, 8000); } }
+});
+$("#btnCopy").addEventListener("click", async () => {
+  try{ await navigator.clipboard.writeText(shareLink()); toast("Link copied."); }catch(e){ toast(shareLink(), true, 8000); }
+});
+
+/* ---------- 14: instalace na plochu ---------- */
+let installEvt = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; $("#btnInstall").hidden = false; });
+$("#btnInstall").addEventListener("click", async () => { if (!installEvt) return; installEvt.prompt(); try{ await installEvt.userChoice; }catch(e){} installEvt = null; $("#btnInstall").hidden = true; });
+if (window.matchMedia && matchMedia("(display-mode: standalone)").matches) $("#installPanel").hidden = true;
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+
+/* ---------- žebříček ---------- */
+let rankSort = "score";
+function fairScore(r){ const n = r ? r.count : 0; return n ? (r.avg * n + 4 * 2) / (n + 2) : 0; }   // 2 „virtuální“ čtyřky – jeden hlas nepřeskočí dům s dvaceti
+function drawRank(){
+  const rated = stations.filter(s => s.rating && s.rating.count);
+  const key = {score: s => fairScore(s.rating), count: s => s.rating.count + fairScore(s.rating) / 10, photos: s => (s.photos || []).length * 100 + fairScore(s.rating)}[rankSort];
+  rated.sort((a, b) => key(b) - key(a));
+  const votes = rated.reduce((n, s) => n + s.rating.count, 0);
+  const avg = votes ? rated.reduce((n, s) => n + s.rating.avg * s.rating.count, 0) / votes : 0;
+  const photos = stations.reduce((n, s) => n + (s.photos || []).length, 0);
+  $("#rankStats").innerHTML = `<div>Rated houses<b>${rated.length}/${stations.length}</b></div><div>Total ratings<b>${votes}</b></div><div>Area average<b>${votes ? num1(Math.round(avg * 10) / 10) + " ★" : "–"}</b></div><div>Photos<b>${photos}</b></div>`;
+  const medal = ["🥇", "🥈", "🥉"];
+  const row = (s, i) => {
+    const cover = (s.photos || [])[0];
+    return `<li class="${i < 3 && i >= 0 ? "top" : ""}">
+      <div class="place ${i >= 0 && i < 3 ? "m" : ""}">${i < 0 ? "–" : medal[i] || (i + 1) + "."}</div>
+      ${cover ? `<img class="ph" src="${esc(cover.url)}" alt="" loading="lazy" data-photo="${esc(cover.url)}">` : `<div class="ph" aria-hidden="true">🎃</div>`}
+      <div><div class="nm">${esc(s.name)}</div>
+        <div class="meta">${ratingHtml(s)}${(s.photos || []).length ? ` · 📷 ${(s.photos || []).length}` : ""}</div>
+        <div class="meta">${esc(s.address)}</div></div>
+      <div class="acts">
+        <button class="btn sm" type="button" data-showonmap="${esc(s.id)}">Show on map</button>
+        <button class="btn sm ${myRatings[s.id] ? "ghost" : "teal"}" type="button" data-rate="${esc(s.id)}">${myRatings[s.id] ? "Your " + myRatings[s.id] + " ★ – change" : "★ Rate"}</button>
+      </div></li>`;
+  };
+  $("#rankList").innerHTML = rated.map(row).join("")
+    || `<li style="grid-template-columns:1fr"><div class="muted">${stations.length ? "No ratings yet. Be the first – open a house on the map or below and give it stars." : LOC ? "No houses in this area yet." : "First choose an area at the top."}</div></li>`;
+  const un = stations.filter(s => !(s.rating && s.rating.count));
+  $("#unratedWrap").hidden = !un.length || !rated.length && !stations.length;
+  $("#unratedList").innerHTML = un.map(s => row(s, -1)).join("");
+}
+$$("[data-rsort]").forEach(b => b.addEventListener("click", () => {
+  rankSort = b.dataset.rsort; $$("[data-rsort]").forEach(x => x.setAttribute("aria-pressed", x === b)); drawRank();
+}));
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-showonmap]"); if (!b) return;
+  const s = byId(b.dataset.showonmap); if (!s) return;
+  go("map");
+  setTimeout(() => { map.invalidateSize(); map.setView([s.lat, s.lng], 18, {animate:false}); openSheet(s.id); }, 80);
+});
+
+/* ---------- loading ---------- */
+let loadedOnce = false, lastOk = 0;
+function showState(kind){
+  const c = $("#statecard");
+  if (kind === "loading") c.innerHTML = `<div class="spin" aria-hidden="true"></div><b>Loading map…</b>`;
+  else if (kind === "error") c.innerHTML = `<b>Couldn't load data</b><p>Check your internet connection.</p><button class="btn primary" type="button" id="btnRetry">Try again</button>`;
+  else if (kind === "empty") c.innerHTML = `<b>Nobody here yet 🎃</b><p>Nobody in ${esc(LOC ? LOC.city : "")} has added a house yet. Be the first!</p><button class="btn primary" type="button" data-go="add">Add the first house</button>`;
+  c.hidden = !kind;
+}
+document.addEventListener("click", e => { if (e.target.closest("#btnRetry, #offline")){ $("#offline").hidden = true; showState(loadedOnce ? "" : "loading"); load(!loadedOnce); } });
+async function load(fit){
+  if (fit && !DEMO){                          // okamžitě ukaž naposledy stažená data, čerstvá dorazí za chvíli
+    const c = store.get(cacheKey(), null);
+    if (c && c.j && Date.now() - c.t < 14 * 864e5){
+      try{ applyData(c.j, true, true); lastOk = c.t; fit = false; }catch(e){ console.warn(e); }
+    }
+  }
+  if (!loadedOnce) showState("loading");
+  try{
+    const key = cacheKey();
+    const res = await api.list();
+    if (!DEMO && res && res.ok !== false) store.set(key, {t:Date.now(), j:res});
+    applyData(res, fit, false);
+  }catch(e){
+    console.warn(e);
+    if (!loadedOnce) showState("error");
+    else { const t = new Date(lastOk); $("#offline").textContent = `Offline – data from ${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}. Try again`; $("#offline").hidden = false; }
+  }
+}
+function applyData(res, fit, cached){
+  {
+    locations = (res.locations || []).map(l => Object.assign({}, l, {lat:+l.lat, lng:+l.lng, zoom:+l.zoom || 16}));
+    const prevLoc = LOC && LOC.id;
+    LOC = locations.find(l => l.id === curLoc) || null;
+    if (!LOC && locations.length === 1){ return switchLoc(locations[0].id); }
+    if (!LOC){ curLoc = ""; stations = []; loadedOnce = true; showState(""); drawHeader(); renderAll(); drawLocList(); if (!$("#newLocOverlay").hidden) return; $("#locOverlay").hidden = false; return; }
+    const list = (res.stations || []).filter(x => (x.loc || "uvaly") === LOC.id);
+    if (prevLoc !== LOC.id) fit = true;
+    drawHeader();
+    stations = list.filter(s => isFinite(s.lat) && isFinite(s.lng)).map(s => Object.assign({}, s, {lat:+s.lat, lng:+s.lng, scare:+s.scare || 1}));
+    // odstraň tokeny ke smazaným stanovištím (jen podle čerstvých dat, ne podle starší kopie v telefonu)
+    if (!cached){ Object.keys(mine).forEach(id => { if (!byId(id)) delete mine[id]; }); store.set("hw-mine", mine); }
+    const before = route.join();
+    planRoute();
+    if (prevLoc !== LOC.id) formDefaults();
+    renderAll(false);
+    if (fit) fitLoc();
+    loadedOnce = true; if (!cached){ lastOk = Date.now(); $("#offline").hidden = true; }
+    showState(stations.length ? "" : "empty");
+    maybeOnboard();
+  }
+}
+
+/* ---------- tabs ---------- */
+let moreSub = "rank";
+function go(tab, sub){
+  if (tab === "rank" || tab === "info"){ sub = tab; tab = "more"; }
+  if (tab !== "map"){ if (NAV.on) exitNav(); if (sheetId) closeSheet(); }
+  $$("nav.tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tab));
+  $$(".view").forEach(v => v.hidden = v.id !== "v-" + tab);
+  if (tab === "more"){
+    if (sub) moreSub = sub;
+    $$(".subtabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.sub === moreSub));
+    $("#v-rank").hidden = moreSub !== "rank"; $("#v-info").hidden = moreSub !== "info";
+    if (sub) $("#v-more").scrollTop = 0;
+  }
+  if (tab === "map") setTimeout(() => map.invalidateSize(), 50);
+  try{ history.replaceState(history.state, "", "#" + (tab === "more" ? moreSub : tab)); }catch(e){}
+}
+$$(".subtabs button").forEach(b => b.addEventListener("click", () => go("more", b.dataset.sub)));
+$$("nav.tabs button").forEach(b => b.addEventListener("click", () => go(b.dataset.tab)));
+document.addEventListener("click", e => { const g = e.target.closest("[data-go]"); if (g) go(g.dataset.go); });
+
+/* ---------- filters ---------- */
+
+/* ---------- location ---------- */
+let watchId = null, firstFix = true, gpsDenied = false;
+function locate(center){
+  if (!navigator.geolocation){ alertMsg("This browser can't get your location."); return; }
+  if (watchId === null){
+    watchId = navigator.geolocation.watchPosition(p => {
+      const moved = !me || dist(me, {lat:p.coords.latitude, lng:p.coords.longitude}) > 25;
+      me = {lat:p.coords.latitude, lng:p.coords.longitude};
+      if (!meMarker) meMarker = L.marker([me.lat, me.lng], {icon:L.divIcon({className:"", html:'<div class="me-dot"></div>', iconSize:[18,18]}), interactive:false, zIndexOffset:1000}).addTo(map);
+      else meMarker.setLatLng([me.lat, me.lng]);
+      $("#fabLocate").classList.add("on");
+      gpsDenied = false;
+      if (firstFix){ firstFix = false; if (center && !NAV.on) map.setView([me.lat, me.lng], 17); renderAll(); }
+      else if (moved){ drawMap(); drawRoute(); }
+      navOnFix(p);
+    }, err => {
+      $("#fabLocate").classList.remove("on");
+      if (err && err.code === 1){ gpsDenied = true; watchId !== null && navigator.geolocation.clearWatch(watchId); watchId = null; toast("Location is blocked – allow it in your browser settings.", false, 5000); }
+      drawRoute(); if (NAV.on) navRender();
+    }, {enableHighAccuracy:true, maximumAge:5000});
+  } else if (me) map.setView([me.lat, me.lng], 17);
+}
+$("#fabLocate").addEventListener("click", () => locate(true));
+$("#btnReplan").addEventListener("click", () => { locate(false); renderAll(); });
+$("#btnGpsHint").addEventListener("click", () => { if (gpsDenied) toast("Location is blocked – allow it in your browser settings (the lock icon next to the address).", false, 6000); locate(false); });
+
+/* ---------- visited / skip / status actions ---------- */
+function toggleVisit(id){
+  const add = !visited.has(id);
+  add ? visited.add(id) : visited.delete(id);
+  store.set("hw-visited", [...visited]); closeSheet(); renderAll();
+  if (add && !myRatings[id] && byId(id)) setTimeout(() => openRate(id, true), 250);
+}
+document.addEventListener("click", async e => {
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.dataset.visit){ toggleVisit(t.dataset.visit); }
+  else if (t.dataset.skip){ const id = t.dataset.skip; skipped.has(id) ? skipped.delete(id) : skipped.add(id); store.set("hw-skip", [...skipped]); closeSheet(); renderAll(); }
+  else if (t.dataset.status){
+    t.disabled = true;
+    try{ await api.post({action:"update", id:t.dataset.id, token:mine[t.dataset.id], station:{status:t.dataset.status}}); toast(t.dataset.status === "out" ? "Marked: out of candy. The route won't send kids to you anymore." : "Your house is open again."); await load(); }
+    catch(err){ alert(err.message); } t.disabled = false;
+  }
+  else if (t.dataset.edit){ fillForm(byId(t.dataset.edit)); }
+  else if (t.dataset.del){
+    if (!confirm("Really delete the house from the map?")) return;
+    try{ await api.post({action:"delete", id:t.dataset.del, token:mine[t.dataset.del]}); delete mine[t.dataset.del]; store.set("hw-mine", mine); await load(); }
+    catch(err){ alert(err.message); }
+  }
+  else if (t.dataset.admindel){
+    if (!confirm("Delete this house as admin?")) return;
+    try{ await api.post({action:"delete", id:t.dataset.admindel, admin:ADMIN || undefined, orgToken:orgTok()}); closeSheet(); await load(); }
+    catch(err){ alert(err.message); }
+  }
+});
+$("#btnLogin").addEventListener("click", doLogin);
+function goHome(e){
+  e.preventDefault();
+  if (picking) setPicking(false);
+  if (NAV.on) exitNav();
+  closeSheet(); $("#lightbox").hidden = true; closeRate();
+  go("map");
+  setTimeout(fitLoc, 80);
+  window.scrollTo(0, 0);
+}
+$("#homeLink").addEventListener("click", goHome);
+$("#homeLink2").addEventListener("click", goHome);
+document.addEventListener("click", e => {
+  const del = e.target.closest("[data-delphoto]");
+  if (del){ e.preventDefault(); e.stopPropagation(); deletePhoto(del.dataset.id, del.dataset.delphoto); return; }
+  const ph = e.target.closest("[data-photo]");
+  if (ph){ e.preventDefault(); openLightbox(ph.dataset.photo, ph.dataset.nick); return; }
+  const ap = e.target.closest("[data-addphoto]");
+  if (ap){ pickPhoto(ap.dataset.addphoto); return; }
+  const rt = e.target.closest("[data-rate]");
+  if (rt){ openRate(rt.dataset.rate); }
+}, true);
+$("#photoInput").addEventListener("change", async () => {
+  const f = $("#photoInput").files[0], id = photoTarget;
+  if (!f || !id) return;
+  toast("Uploading photo…", true, 60000);
+  try{
+    const image = await shrink(f, 1280, 0.8);
+    await api.post({action:"photo", id, image, voter:VOTER, token:mine[id], nick:NICK});
+    toast("Photo uploaded. Thanks!");
+    await load();
+  }catch(err){ toast(err.message || "Photo upload failed.", false); }
+});
+$$("#starPick button:not([disabled])").forEach(b => {
+  b.addEventListener("mouseenter", () => paintStars(+b.dataset.star));
+  b.addEventListener("mouseleave", () => paintStars(myRatings[rateId] || 0));
+  b.addEventListener("click", async () => {
+    const n = +b.dataset.star, id = rateId; if (!id) return;
+    paintStars(n); setNick($("#rateNick").value);
+    try{
+      await api.post({action:"rate", id, stars:n, voter:VOTER, nick:NICK});
+      myRatings[id] = n; store.set("hw-ratings", myRatings);
+      closeRate(); toast(`Thanks for rating ${n} ★`); await load();
+    }catch(err){ toast(err.message, false); }
+  });
+});
+$("#rateCancel").addEventListener("click", closeRate);
+$("#rateOverlay").addEventListener("click", e => { if (e.target.id === "rateOverlay") closeRate(); });
+$("#lbClose").addEventListener("click", () => { $("#lightbox").hidden = true; });
+$("#lightbox").addEventListener("click", e => { if (e.target.id === "lightbox") $("#lightbox").hidden = true; });
+document.addEventListener("keydown", e => { if (e.key === "Escape"){ $("#lightbox").hidden = true; closeRate(); if (sheetId) closeSheet(); } });
+$("#btnResetVisited").addEventListener("click", () => { visited.clear(); skipped.clear(); store.set("hw-visited", []); store.set("hw-skip", []); renderAll(); });
+
+/* ---------- form ---------- */
+function alertMsg(text, ok){ const m = $("#formMsg"); m.textContent = text; m.className = "msg " + (ok ? "ok" : "err"); m.hidden = false; }
+function setLoc(lat, lng){
+  $("#fLat").value = lat.toFixed(6); $("#fLng").value = lng.toFixed(6);
+  const v = $("#fLocVal"); v.textContent = "Saved: " + lat.toFixed(5) + ", " + lng.toFixed(5); v.classList.add("ok");
+  if (pickTemp) map.removeLayer(pickTemp);
+  pickTemp = L.circleMarker([lat, lng], {radius:9, color:"#ffd36b", weight:3, fillOpacity:.3}).addTo(map);
+}
+/* ---------- vyhledání adresy (Mapy.com, záložně OpenStreetMap) ---------- */
+let sugT = null, sugSeq = 0, sugItems = [], sugAct = -1;
+async function geocodeAddr(q){
+  const city = LOC ? LOC.city : "";
+  const query = city && !q.toLowerCase().includes(city.toLowerCase()) ? `${q}, ${city}` : q;
+  let items = [];
+  if (CONFIG.MAPY_API_KEY){
+    const near = LOC ? `&preferNear=${LOC.lng},${LOC.lat}&preferNearPrecision=5000` : "";
+    const u = `https://api.mapy.com/v1/suggest?query=${encodeURIComponent(query)}&lang=${LANG}&limit=8${near}&apikey=${encodeURIComponent(CONFIG.MAPY_API_KEY)}`;
+    const j = await fetch(u).then(r => r.json());
+    items = (j.items || []).filter(i => i.position && /^regional\.(address|street)$/.test(i.type))
+      .map(i => ({name:i.name, sub:i.location || "", lat:i.position.lat, lng:i.position.lon, exact:i.type === "regional.address"}));
+  } else {
+    const u = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=8&countrycodes=cz,sk&q=${encodeURIComponent(query)}`;
+    const j = await fetch(u, {headers:{"Accept-Language":LANG}}).then(r => r.json());
+    items = j.map(i => { const a = i.address || {};
+      const name = [a.road || a.pedestrian || a.hamlet, a.house_number].filter(Boolean).join(" ") || i.display_name.split(",")[0];
+      return {name, sub:a.city || a.town || a.village || "", lat:+i.lat, lng:+i.lon, exact:!!a.house_number}; });
+  }
+  const c = locCenter();
+  const R = CONFIG.RADIUS_KM * 1000;
+  items.forEach(i => { i.d = dist(i, c); i.near = !LOC || i.d <= R; });
+  if (LOC) items = items.filter(i => i.d <= R * 3);                  // adresy z jiných koutů republiky pryč
+  items.sort((a, b) => (b.near - a.near) || (b.exact - a.exact) || (a.d - b.d));
+  return items.slice(0, 6);
+}
+function closeSuggest(){ $("#addrSuggest").hidden = true; $("#fAddress").setAttribute("aria-expanded", "false"); sugAct = -1; }
+function drawSuggest(msg){
+  const ul = $("#addrSuggest");
+  ul.innerHTML = msg ? `<li class="none">${esc(msg)}</li>` : sugItems.map((i, n) => i.hint ? `<li class="none">Type the full house number – the exact address will appear in the list.</li>` : `<li><button type="button" role="option" data-sug="${n}" class="${n === sugAct ? "act" : ""}">
+      <b>${esc(i.name)}</b><small>${esc(i.sub)}${LOC ? " · " + fmtM(i.d) + " from the area center" : ""}${i.exact ? "" : " · no house number"}</small></button></li>`).join("");
+  ul.hidden = false; $("#fAddress").setAttribute("aria-expanded", "true");
+}
+async function runSuggest(){
+  const q = $("#fAddress").value.trim();
+  if (q.length < 3) return closeSuggest();
+  const seq = ++sugSeq;
+  try{
+    const items = await geocodeAddr(q);
+    if (seq !== sugSeq) return;
+    sugItems = items; sugAct = -1;
+    if (!items.length) return drawSuggest("Address not found. Try street and house number, or pick the location on the map.");
+    if (!items.some(i => i.exact) && /\d/.test(q)) items.push({hint:true});
+    drawSuggest();
+  }catch(e){ if (seq === sugSeq) drawSuggest("Address search isn't working right now – pick the location on the map."); }
+}
+function pickSuggest(n){
+  const i = sugItems[n]; if (!i || i.hint) return;
+  $("#fAddress").value = i.name; closeSuggest();
+  setLoc(i.lat, i.lng);
+  if (LOC && i.d > CONFIG.RADIUS_KM * 1000) return alertMsg(`This address is ${fmtM(i.d)} from ${LOC.city}. Are you in a different area?`);
+  alertMsg(i.exact ? "The house is pinned by its address. If the pin is off, fine-tune it with “Pick / fine-tune on the map”."
+                   : "Only found the street – add the house number or fine-tune the house on the map.", i.exact);
+}
+$("#fAddress").addEventListener("input", () => { clearTimeout(sugT); sugT = setTimeout(runSuggest, 300); });
+$("#fAddress").addEventListener("keydown", e => {
+  if ($("#addrSuggest").hidden || !sugItems.length) return;
+  if (e.key === "ArrowDown" || e.key === "ArrowUp"){ e.preventDefault(); sugAct = (sugAct + (e.key === "ArrowDown" ? 1 : -1) + sugItems.length) % sugItems.length; drawSuggest(); }
+  else if (e.key === "Enter"){ e.preventDefault(); pickSuggest(sugAct < 0 ? 0 : sugAct); }
+  else if (e.key === "Escape") closeSuggest();
+});
+$("#fAddress").addEventListener("blur", () => setTimeout(closeSuggest, 200));
+$("#fAddress").addEventListener("focus", () => { if (window.innerHeight < 900) setTimeout(() => $("#fAddress").scrollIntoView({block:"start", behavior:"smooth"}), 250); });
+$("#addrSuggest").addEventListener("mousedown", e => { const b = e.target.closest("[data-sug]"); if (b){ e.preventDefault(); pickSuggest(+b.dataset.sug); } });
+
+$("#btnGps").addEventListener("click", () => {
+  if (!navigator.geolocation) return alertMsg("Your browser can't get location – use “Pick on the map”.");
+  $("#btnGps").textContent = "Locating…";
+  navigator.geolocation.getCurrentPosition(p => {
+    setLoc(p.coords.latitude, p.coords.longitude); $("#btnGps").textContent = "I'm at the house – use GPS";
+    if (p.coords.accuracy > 40) alertMsg(`GPS accuracy is only ±${Math.round(p.coords.accuracy)} m. To be sure, fine-tune it with “Pick on the map”.`);
+  }, () => { $("#btnGps").textContent = "I'm at the house – use GPS"; alertMsg("Couldn't get your location. Allow it in the browser or use “Pick on the map”."); },
+  {enableHighAccuracy:true, timeout:15000});
+});
+function setPicking(on){
+  picking = on;
+  $("#pickbar").hidden = !on; $("#crosshair").hidden = !on;
+  $("#legend").hidden = true; $("#statecard").hidden = on || $("#statecard").hidden; drawHostCard();
+  $("#pickbar span").textContent = pickTarget === "loc"
+    ? "Move the map so the red dot points at the center of your neighborhood"
+    : "Move the map so the red dot in the crosshair points at your house";
+  drawNext();
+}
+$("#btnPick").addEventListener("click", () => {
+  pickTarget = "station"; go("map"); setPicking(true);
+  const lat = parseFloat($("#fLat").value), lng = parseFloat($("#fLng").value);
+  setTimeout(() => {                                   // mapa byla skrytá – nejdřív přepočítat velikost, pak vycentrovat
+    map.invalidateSize();
+    if (isFinite(lat)) map.setView([lat, lng], 19, {animate:false}); else map.setView(locCenter(), Math.max(LOC ? LOC.zoom : 16, 17), {animate:false});
+  }, 60);
+});
+$("#pickOk").addEventListener("click", () => {
+  const c = map.getCenter(); setPicking(false);
+  if (pickTarget === "loc"){ setNlLoc(c.lat, c.lng); $("#newLocOverlay").hidden = false; }
+  else { setLoc(c.lat, c.lng); go("add"); }
+});
+$("#pickCancel").addEventListener("click", () => {
+  setPicking(false);
+  if (pickTarget === "loc") $("#newLocOverlay").hidden = false; else go("add");
+});
+
+function readForm(){
+  return {
+    name: $("#fName").value.trim(), address: $("#fAddress").value.trim(),
+    lat: parseFloat($("#fLat").value), lng: parseFloat($("#fLng").value),
+    scare: +(document.querySelector("input[name=scare]:checked")?.value || 1),
+    from: $("#fFrom").value, to: $("#fTo").value, note: $("#fNote").value.trim()
+  };
+}
+function fillForm(s){
+  go("add");
+  $("#fId").value = s.id; $("#fName").value = s.name; $("#fAddress").value = s.address || "";
+  setLoc(s.lat, s.lng);
+  const r = document.querySelector(`input[name=scare][value="${s.scare}"]`); if (r) r.checked = true;
+  $("#fFrom").value = s.from || ""; $("#fTo").value = s.to || ""; $("#fNote").value = s.note || "";
+  $("#pinWrap").hidden = true; $("#fPin").value = "";
+  $("#formTitle").textContent = "Edit house"; $("#btnSave").textContent = "Save changes"; $("#btnCancelEdit").hidden = false;
+  $("#formMsg").hidden = true; $("#formBox").hidden = false; $("#btnAddMore").hidden = true; $("#v-add").scrollTop = 0;
+}
+function formDefaults(){
+  if (!LOC || $("#fId").value) return;
+  const pad = n => String(n).padStart(2, "0"), hm = d => pad(d.getHours()) + ":" + pad(d.getMinutes());
+  $("#fFrom").value = hm(locStart()); $("#fTo").value = hm(locEnd());
+}
+function resetForm(){
+  $("#form").reset(); $("#fId").value = ""; $("#fLat").value = ""; $("#fLng").value = "";
+  $("#fLocVal").textContent = "Not set yet"; $("#fLocVal").classList.remove("ok");
+  if (pickTemp){ map.removeLayer(pickTemp); pickTemp = null; }
+  $("#pinWrap").hidden = false;
+  formDefaults();
+  $("#formTitle").textContent = "Add your house"; $("#btnSave").textContent = "Add to the map"; $("#btnCancelEdit").hidden = true;
+  addMore = false; drawMine();
+}
+$("#btnCancelEdit").addEventListener("click", () => { resetForm(); $("#formMsg").hidden = true; });
+$("#form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const s = readForm(), id = $("#fId").value;
+  if (!s.name) return alertMsg("Fill in the house name."), $("#fName").focus();
+  if (!isFinite(s.lat)) return alertMsg("House location is missing – tap “Use GPS” or “Pick on the map”.");
+  if (!LOC) return alertMsg("First choose an area at the top.");
+  if (dist(s, locCenter()) > CONFIG.RADIUS_KM * 1000) return alertMsg(`The location is more than ${CONFIG.RADIUS_KM} km from ${LOC.city}. Check it with “Pick on the map”, or choose another area.`);
+  const pin = $("#fPin").value.trim();
+  if (!id && pin.length < 4) return alertMsg("Choose a PIN of at least 4 characters – without it you couldn't edit the house from another phone."), $("#fPin").focus();
+  $("#btnSave").disabled = true;
+  try{
+    if (id){
+      await api.post({action:"update", id, token:mine[id], admin:ADMIN || undefined, station:s});
+      alertMsg("Saved. Everyone can see the changes now.", true); toast("Saved – everyone can see the changes now.");
+    } else {
+      const r = await api.post({action:"add", pin, loc:LOC.id, station:Object.assign({status:"open"}, s)});
+      mine[r.id] = r.token; store.set("hw-mine", mine);
+      alertMsg("Done! Your house is on the map. Edit it at the top under Your house – on another device, sign in with your PIN.", true); toast("Done! Your house is on the map 🎃", true, 5000); $("#v-add").scrollTop = 0;
+    }
+    resetForm(); await load();
+  }catch(err){ alertMsg(err.message + " Please try again."); }
+  $("#btnSave").disabled = false;
+});
+
+/* ---------- header / info ---------- */
+const dFmt = new Intl.DateTimeFormat(LOCALE, {weekday:"long", day:"numeric", month:"long", timeZone:"Europe/Prague"});
+const tFmt = new Intl.DateTimeFormat(LOCALE, LANG === "en" ? {hour:"numeric", minute:"2-digit", timeZone:"Europe/Prague"} : {hour:"2-digit", minute:"2-digit", timeZone:"Europe/Prague"});   // čas akce vždy podle místa konání
+$("#evTitle").textContent = CONFIG.TITLE;
+document.title = CONFIG.TITLE;
+function locLabel(l){ return l ? `${l.city} · ${l.name}` : "Choose your area"; }
+function drawHeader(){
+  $("#evSub").textContent = locLabel(LOC);
+  document.title = LOC ? `${CONFIG.TITLE} – ${LOC.city}` : CONFIG.TITLE;
+  tick(); drawInfo();
+}
+function tick(){
+  const now = new Date(), el = $("#countdown");
+  if (!LOC){ el.innerHTML = ""; return; }
+  const start = locStart(), end = locEnd();
+  if (now < start){
+    const ms = start - now, d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5), m = Math.floor(ms % 36e5 / 6e4);
+    el.innerHTML = `starts in<b>${d ? d + " d " + h + " h" : h + " h " + m + " min"}</b>`;
+  } else if (now < end){ el.innerHTML = `happening now<b>until ${tFmt.format(end)}</b>`; }
+  else el.innerHTML = `thanks for<b>coming!</b>`;
+}
+tick(); setInterval(tick, 30000);
+// dýně se samy rozsvítí / ztmavnou podle otevírací doby jednotlivých domů
+let liveSig = "";
+setInterval(() => { const sig = stations.map(liveState).join(); if (sig !== liveSig){ const first = !liveSig; liveSig = sig; if (!first && !picking && !TOUR.on) renderAll(); } }, 30000);
+function drawInfo(){
+  drawShare();
+  if (!LOC){ $("#infoFacts").innerHTML = `<div>Area<b style="font-size:17px">not chosen yet</b></div>`; $("#orgPanel").hidden = true; return; }
+  const start = locStart(), end = locEnd();
+  $("#infoFacts").innerHTML = `<div>When<b style="font-size:17px">${dFmt.format(start)}</b></div>
+    <div>Time<b style="font-size:17px">${tFmt.format(start)}–${tFmt.format(end)}</b></div>
+    <div>Where<b style="font-size:17px">${esc(locLabel(LOC))}</b></div>
+    ${LOC.meeting ? `<div>Meeting point<b style="font-size:17px">${esc(LOC.meeting)}</b></div>` : ""}`;
+  $("#orgPanel").hidden = false;
+  const on = !!orgTok() || !!ADMIN;
+  $("#orgInfo").textContent = on
+    ? `${ADMIN && !orgTok() ? "You're the site admin" : "You're signed in as the organizer of " + LOC.city}. You can change the date and delete inappropriate houses and photos.`
+    : `Did you create ${LOC.city}? Sign in with the organizer PIN.`;
+  $("#orgLogin").hidden = on; $("#orgTools").hidden = !on;
+}
+
+/* ---------- lokality ---------- */
+function orgTok(){ return LOC ? orgTokens[LOC.id] : undefined; }
+function locCenter(){ return LOC ? {lat:LOC.lat, lng:LOC.lng} : {lat:CONFIG.CENTER[0], lng:CONFIG.CENTER[1]}; }
+function fitLoc(){
+  if (!LOC){ map.setView(CONFIG.CENTER, CONFIG.ZOOM); return; }
+  if (stations.length) map.fitBounds(L.latLngBounds(stations.map(s => [s.lat, s.lng]).concat([[LOC.lat, LOC.lng]])).pad(0.25), {maxZoom:17});
+  else map.setView([LOC.lat, LOC.lng], LOC.zoom || 16);
+}
+function switchLoc(id){
+  curLoc = id; store.set("hw-loc", id);
+  try{ const u = new URL(location.href); u.searchParams.set("l", id); history.replaceState(null, "", u.pathname + u.search + location.hash); }catch(e){}
+  if (NAV.on) exitNav();
+  route = []; stations = [];
+  $("#locOverlay").hidden = true;
+  closeSheet();
+  return load(true);
+}
+function drawLocList(){
+  const q = $("#locSearch").value.trim().toLowerCase();
+  const norm = t => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  let list = locations.filter(l => !q || norm(l.city + " " + l.name).includes(norm(q)));
+  if (me) list.sort((a, b) => dist(me, a) - dist(me, b));
+  else list.sort((a, b) => (a.city + a.name).localeCompare(b.city + b.name, "cs"));
+  $("#locList").innerHTML = list.map(l => `<li><button type="button" data-loc="${esc(l.id)}" aria-current="${LOC && LOC.id === l.id}">
+      <b>${esc(l.city)}</b><small>${esc(l.name)} · ${dFmt.format(new Date(l.start))}</small>
+      ${me ? `<span class="km">${fmtM(dist(me, l))}</span>` : ""}</button></li>`).join("")
+    || `<li class="muted small">Nothing found. Create a new area for your town.</li>`;
+}
+function openLocPicker(){ $("#locSearch").value = ""; drawLocList(); $("#locOverlay").hidden = false; }
+$("#locBtn").addEventListener("click", openLocPicker);
+$("#locClose").addEventListener("click", () => { if (LOC) $("#locOverlay").hidden = true; });
+$("#locSearch").addEventListener("input", drawLocList);
+$("#locList").addEventListener("click", e => { const b = e.target.closest("[data-loc]"); if (b) switchLoc(b.dataset.loc); });
+
+// --- nová / upravená lokalita ---
+function nlMsg(t, ok){ const m = $("#nlMsg"); m.textContent = t; m.className = "msg " + (ok ? "ok" : "err"); m.hidden = false; }
+function setNlLoc(lat, lng){ $("#nlLat").value = lat.toFixed(6); $("#nlLng").value = lng.toFixed(6); const v = $("#nlLocVal"); v.textContent = "Saved: " + lat.toFixed(5) + ", " + lng.toFixed(5); v.classList.add("ok"); }
+function openNewLoc(edit){
+  $("#locOverlay").hidden = true; $("#nlMsg").hidden = true;
+  $("#nlId").value = edit ? LOC.id : "";
+  $("#nlTitle").textContent = edit ? "Edit area" : "New area";
+  $("#nlSave").textContent = edit ? "Save changes" : "Create area";
+  $("#nlPinWrap").hidden = !!edit; $("#nlIntro").hidden = !!edit;
+  const pad = n => String(n).padStart(2, "0"), hm = d => pad(d.getHours()) + ":" + pad(d.getMinutes());
+  if (edit){
+    const a = locStart(), b = locEnd();
+    $("#nlCity").value = LOC.city; $("#nlName").value = LOC.name; $("#nlMeet").value = LOC.meeting || "";
+    $("#nlDate").value = dayKey(a); $("#nlFrom").value = hm(a); $("#nlTo").value = hm(b);
+    setNlLoc(LOC.lat, LOC.lng);
+  } else {
+    ["nlCity","nlName","nlMeet","nlPin","nlLat","nlLng"].forEach(i => $("#" + i).value = "");
+    $("#nlDate").value = "2026-10-31"; $("#nlFrom").value = "17:00"; $("#nlTo").value = "20:00";
+    $("#nlLocVal").textContent = "Not set yet"; $("#nlLocVal").classList.remove("ok");
+  }
+  $("#newLocOverlay").hidden = false;
+}
+$("#btnNewLoc").addEventListener("click", () => openNewLoc(false));
+$("#btnNewLoc2").addEventListener("click", () => openNewLoc(false));
+$("#btnOrgEdit").addEventListener("click", () => openNewLoc(true));
+$("#nlCancel").addEventListener("click", () => { $("#newLocOverlay").hidden = true; if (!LOC) $("#locOverlay").hidden = false; });
+$("#nlGps").addEventListener("click", () => {
+  if (!navigator.geolocation) return nlMsg("Your browser can't get location – use “Pick on the map”.");
+  navigator.geolocation.getCurrentPosition(p => setNlLoc(p.coords.latitude, p.coords.longitude),
+    () => nlMsg("Couldn't get your location. Use “Pick on the map”."), {enableHighAccuracy:true, timeout:15000});
+});
+$("#nlPick").addEventListener("click", () => {
+  $("#newLocOverlay").hidden = true; pickTarget = "loc"; go("map"); setPicking(true);
+  const lat = parseFloat($("#nlLat").value), lng = parseFloat($("#nlLng").value);
+  setTimeout(() => {
+    map.invalidateSize();
+    if (isFinite(lat)) map.setView([lat, lng], 16, {animate:false}); else if (me) map.setView([me.lat, me.lng], 15, {animate:false});
+  }, 60);
+});
+$("#nlSave").addEventListener("click", async () => {
+  const id = $("#nlId").value, d = $("#nlDate").value, f = $("#nlFrom").value, t = $("#nlTo").value;
+  const iso = hm => { const x = new Date(`${d}T${hm}:00`); return isNaN(x) ? "" : x.toISOString().replace(/\.\d{3}Z$/, "Z"); };
+  const loc = {city:$("#nlCity").value.trim(), name:$("#nlName").value.trim(), meeting:$("#nlMeet").value.trim(),
+    lat:parseFloat($("#nlLat").value), lng:parseFloat($("#nlLng").value), start:iso(f), end:iso(t), zoom:16};
+  if (!loc.city) return nlMsg("Fill in the town or city.");
+  if (!loc.name) return nlMsg("Fill in the neighborhood or event name.");
+  if (!d || !loc.start || !loc.end) return nlMsg("Fill in the date and time.");
+  if (loc.end <= loc.start) return nlMsg("The end must be after the start.");
+  if (!isFinite(loc.lat)) return nlMsg("Choose the map center – GPS or “Pick on the map”.");
+  const pin = $("#nlPin").value.trim();
+  if (!id && pin.length < 4) return nlMsg("Choose an organizer PIN of at least 4 characters.");
+  $("#nlSave").disabled = true;
+  try{
+    if (id){
+      await api.post({action:"updloc", loc:id, token:orgTokens[id], admin:ADMIN || undefined, location:loc});
+      $("#newLocOverlay").hidden = true; toast("Area updated."); await load(true);
+    } else {
+      const r = await api.post({action:"addloc", pin, location:loc});
+      orgTokens[r.id] = r.token; store.set("hw-org", orgTokens);
+      $("#newLocOverlay").hidden = true; toast("Area created. Now add the first house!");
+      await switchLoc(r.id); go("add");
+    }
+  }catch(err){ nlMsg(err.message); }
+  $("#nlSave").disabled = false;
+});
+
+// --- organizátor ---
+function orgSay(t, ok){ const m = $("#orgMsg"); m.textContent = t; m.className = "msg " + (ok ? "ok" : "err"); m.hidden = false; }
+$("#btnOrgLogin").addEventListener("click", async () => {
+  const pin = $("#orgPin").value.trim(); if (!LOC) return;
+  if (!pin) return orgSay("Enter the organizer PIN.");
+  try{
+    const r = await api.post({action:"loginloc", loc:LOC.id, pin});
+    orgTokens[LOC.id] = r.token; store.set("hw-org", orgTokens); $("#orgPin").value = "";
+    orgSay("Signed in.", true); drawInfo(); drawMap();
+  }catch(err){ orgSay(err.message); }
+});
+$("#btnOrgLogout").addEventListener("click", () => { if (!LOC) return; delete orgTokens[LOC.id]; store.set("hw-org", orgTokens); $("#orgMsg").hidden = true; drawInfo(); drawMap(); });
+
+/* ---------- tlačítko Zpět v telefonu zavírá panel / navigaci ---------- */
+let uiPushed = 0, ignorePop = false;
+function pushUi(){ try{ history.pushState({hwui:1}, ""); uiPushed++; }catch(e){} }
+function popUi(){ if (uiPushed > 0 && history.state && history.state.hwui){ uiPushed--; ignorePop = true; history.back(); } }
+window.addEventListener("popstate", () => {
+  if (ignorePop){ ignorePop = false; return; }
+  if (uiPushed > 0) uiPushed--;
+  if (NAV.on) exitNav(true); else if (sheetId) closeSheet(true);
+});
+
+/* ---------- detail domu: vysouvací panel zespodu ---------- */
+let sheetId = null;
+function openSheet(id){
+  const s = byId(id); if (!s) return;
+  if (!sheetId) pushUi();
+  sheetId = id;
+  const b = $("#bsheet");
+  $("#bsBody").innerHTML = sheetHtml(s);
+  b.style.transform = ""; b.hidden = false; b.scrollTop = 0;
+  $("#legend").hidden = true; drawNext();
+  // dýni posuň nad panel, ať je vidět
+  setTimeout(() => {
+    const H = map.getSize().y, free = H - b.offsetHeight;
+    const pt = map.latLngToContainerPoint([s.lat, s.lng]);
+    if (pt.y > free - 40 || pt.y < 70) map.panBy([0, pt.y - Math.max(90, free / 2)], {animate:true});
+  }, 40);
+}
+function closeSheet(fromPop){
+  if (!sheetId) return;
+  sheetId = null; $("#bsheet").hidden = true; $("#bsheet").style.transform = "";
+  if (!fromPop) popUi();
+  drawNext();
+}
+$("#bsClose").addEventListener("click", () => closeSheet());
+(() => {                                     // stáhnout panel prstem dolů = zavřít
+  const b = $("#bsheet"); let y0 = null, dy = 0;
+  b.addEventListener("touchstart", e => { if (b.scrollTop > 0) return; y0 = e.touches[0].clientY; dy = 0; }, {passive:true});
+  b.addEventListener("touchmove", e => { if (y0 === null) return; dy = e.touches[0].clientY - y0; if (dy > 0) b.style.transform = `translateY(${dy}px)`; }, {passive:true});
+  b.addEventListener("touchend", () => { if (y0 === null) return; if (dy > 90) closeSheet(); else b.style.transform = ""; y0 = null; });
+})();
+function markerTap(id){
+  if (picking) return;
+  if (NAV.on){                               // během navigace klepnutí na jinou dýni = jdeme tam
+    const s = byId(id); if (!s || id === NAV.target) return;
+    if (visited.has(id)) return toast(`${s.name} – you've been here already.`);
+    NAV.fixed = id; navPick(); toast(`Heading to: ${s.name}`);
+    return;
+  }
+  openSheet(id);
+}
+document.addEventListener("click", e => {
+  const n = e.target.closest("[data-navto],[data-navstart],[data-open]"); if (!n) return;
+  if (n.dataset.open) openSheet(n.dataset.open);
+  else startNav(n.dataset.navto || null);
+});
+
+/* ================= NAVIGACE V APLIKACI – režim „Jdeme koledovat“ ================= */
+const NAV = {on:false, fixed:null, target:null, state:"go", path:null, pathFor:null, prog:null, fetchedAt:0, seq:0,
+  follow:true, lastView:null, heading:null, gpsHeading:null, lock:null, arrivedFor:null, rateFor:null};
+let navLine = null;
+const toRad = x => x * Math.PI / 180;
+function bearing(a, b){
+  const y = Math.sin(toRad(b.lng - a.lng)) * Math.cos(toRad(b.lat));
+  const x = Math.cos(toRad(a.lat)) * Math.sin(toRad(b.lat)) - Math.sin(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.cos(toRad(b.lng - a.lng));
+  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+}
+// kde na trase jsem: odchylka od trasy, zbývající metry a bod ~20 m před námi (kam míří šipka)
+function pathProgress(path, p){
+  const kx = Math.cos(toRad(p.lat)) * 111320, ky = 110540;
+  const pts = path.map(q => [(q[1] - p.lng) * kx, (q[0] - p.lat) * ky]);
+  if (pts.length < 2) return null;
+  const seg = i => Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]);
+  let best = {d:Infinity, i:0, t:0, px:0, py:0};
+  for (let i = 0; i < pts.length - 1; i++){
+    const [ax, ay] = pts[i], [bx, by] = pts[i + 1], dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+    const t = l2 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / l2)) : 0;
+    const px = ax + t * dx, py = ay + t * dy, d = Math.hypot(px, py);
+    if (d < best.d) best = {d, i, t, px, py};
+  }
+  let remain = (1 - best.t) * seg(best.i);
+  for (let i = best.i + 1; i < pts.length - 1; i++) remain += seg(i);
+  let need = 20, i = best.i, cx = best.px, cy = best.py, ahead = null;
+  while (i < pts.length - 1){
+    const [bx, by] = pts[i + 1], l = Math.hypot(bx - cx, by - cy);
+    if (l >= need){ const k = need / l; ahead = [cx + (bx - cx) * k, cy + (by - cy) * k]; break; }
+    need -= l; cx = bx; cy = by; i++;
+  }
+  if (!ahead) ahead = pts[pts.length - 1];
+  return {off:best.d, remain, ahead:{lat:p.lat + ahead[1] / ky, lng:p.lng + ahead[0] / kx}};
+}
+// kompas telefonu (když ho má), jinak směr pohybu z GPS, jinak sever nahoře jako na mapě
+function onOrient(e){
+  let h = null;
+  if (typeof e.webkitCompassHeading === "number") h = e.webkitCompassHeading;
+  else if (e.absolute && typeof e.alpha === "number") h = 360 - e.alpha;
+  if (h === null) return;
+  const so = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+  NAV.heading = (h + so + 360) % 360; navArrow();
+}
+function compass(on){
+  if (on){
+    try{ if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") DeviceOrientationEvent.requestPermission().catch(() => {}); }catch(e){}
+    window.addEventListener("deviceorientationabsolute", onOrient); window.addEventListener("deviceorientation", onOrient);
+  } else {
+    window.removeEventListener("deviceorientationabsolute", onOrient); window.removeEventListener("deviceorientation", onOrient);
+    NAV.heading = null; NAV.gpsHeading = null;
+  }
+}
+async function wake(on){                      // displej během navigace nezhasne
+  try{
+    if (on && "wakeLock" in navigator && !NAV.lock){ NAV.lock = await navigator.wakeLock.request("screen"); NAV.lock.addEventListener("release", () => { NAV.lock = null; }); }
+    else if (!on && NAV.lock){ const l = NAV.lock; NAV.lock = null; await l.release(); }
+  }catch(e){}
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && NAV.on) wake(true); });
+
+function startNav(id){
+  compass(true);                              // iOS chce povolení kompasu přímo po klepnutí
+  if (!LOC) return openLocPicker();
+  const had = !!sheetId; closeSheet(true); if (!had && !NAV.on) pushUi();
+  $("#legend").hidden = true; closeRate();
+  go("map");
+  Object.assign(NAV, {on:true, fixed:id || null, follow:true, lastView:null, prog:null, arrivedFor:null});
+  document.body.classList.add("nav");
+  $("#navRecenter").hidden = true;
+  wake(true);
+  if (!me) locate(false);
+  navPick();
+  setTimeout(() => { map.invalidateSize(); navResize(); navView(true); }, 80);
+}
+function exitNav(fromPop){
+  if (!NAV.on) return;
+  NAV.on = false; document.body.classList.remove("nav"); compass(false); wake(false);
+  if (navLine){ map.removeLayer(navLine); navLine = null; }
+  $("#navTop").hidden = true; $("#navBot").hidden = true; $("#navRecenter").hidden = true;
+  if (!fromPop) popUi();
+  renderAll();
+  setTimeout(() => map.invalidateSize(), 80);
+}
+function navPick(){                            // vyber cíl: zvolený dům, jinak nejbližší další z trasy
+  if (NAV.fixed && byId(NAV.fixed) && !visited.has(NAV.fixed)) NAV.target = NAV.fixed;
+  else { NAV.fixed = null; planRoute(); NAV.target = route[0] || null; }
+  NAV.path = null; NAV.pathFor = null; NAV.prog = null; NAV.lastView = null; NAV.rateFor = null;
+  NAV.state = NAV.target ? "go" : "done";
+  drawMap(); drawNavLine(); navRender();
+  const s = byId(NAV.target);
+  if (me) { fetchPath(true); navView(true); }
+  else if (s) map.setView([s.lat, s.lng], 17);
+}
+async function fetchPath(force){              // pěší trasa po chodnících z Mapy.com
+  const s = byId(NAV.target); if (!s || !me) return;
+  if (!force && Date.now() - NAV.fetchedAt < 12000) return;
+  NAV.fetchedAt = Date.now(); NAV.pathFor = s.id;
+  if (!CONFIG.MAPY_API_KEY){ NAV.path = null; return; }
+  const seq = ++NAV.seq, from = {lat:me.lat, lng:me.lng};
+  try{
+    const u = `https://api.mapy.com/v1/routing/route?start=${from.lng},${from.lat}&end=${s.lng},${s.lat}&routeType=foot_fast&format=geojson&lang=${LANG}&apikey=${encodeURIComponent(CONFIG.MAPY_API_KEY)}`;
+    const r = await fetch(u); if (!r.ok) throw new Error("routing " + r.status);
+    const j = await r.json();
+    if (seq !== NAV.seq || NAV.target !== s.id) return;
+    const c = j.geometry && j.geometry.geometry && j.geometry.geometry.coordinates;
+    if (!c || c.length < 2) throw new Error("bez trasy");
+    const path = c.map(q => [q[1], q[0]]);
+    if (dist({lat:path[0][0], lng:path[0][1]}, from) > 4) path.unshift([from.lat, from.lng]);
+    const last = path[path.length - 1]; if (dist({lat:last[0], lng:last[1]}, s) > 4) path.push([s.lat, s.lng]);
+    NAV.path = path;
+  }catch(e){ console.warn(e); if (seq === NAV.seq) NAV.path = null; }
+  if (NAV.on && me){ NAV.prog = NAV.path ? pathProgress(NAV.path, me) : null; drawNavLine(); navRender(); }
+}
+function drawNavLine(){
+  if (navLine){ map.removeLayer(navLine); navLine = null; }
+  const s = byId(NAV.target); if (!NAV.on || !s || !me || NAV.state === "done" || NAV.state === "rate") return;
+  const pts = NAV.path || [[me.lat, me.lng], [s.lat, s.lng]];
+  navLine = L.layerGroup([
+    L.polyline(pts, {color:"#140e1d", weight:11, opacity:.55, lineCap:"round", lineJoin:"round", interactive:false}),
+    L.polyline(pts, NAV.path
+      ? {color:"#ffd36b", weight:6, opacity:.95, lineCap:"round", lineJoin:"round", interactive:false}
+      : {color:"#ffd36b", weight:4, opacity:.9, dashArray:"2 10", lineCap:"round", interactive:false})
+  ]).addTo(map);
+}
+function navView(force){                      // mapa drží v záběru vás i cílový dům
+  if (!NAV.on || !NAV.follow || !me) return;
+  if (!force && NAV.lastView && dist(NAV.lastView, me) < 8) return;
+  NAV.lastView = {lat:me.lat, lng:me.lng};
+  const s = byId(NAV.target);
+  const top = $("#navTop").offsetTop + $("#navTop").offsetHeight + 24, bot = $("#navBot").offsetHeight + 34;
+  if (s && NAV.state !== "done") map.fitBounds([[me.lat, me.lng], [s.lat, s.lng]], {paddingTopLeft:[50, top], paddingBottomRight:[50, bot], maxZoom:18, animate:true});
+  else map.setView([me.lat, me.lng], 18);
+}
+map.on("dragstart", () => { if (NAV.on){ NAV.follow = false; $("#navRecenter").hidden = false; } });
+$("#navRecenter").addEventListener("click", () => { NAV.follow = true; $("#navRecenter").hidden = true; navView(true); });
+$("#navExit").addEventListener("click", () => exitNav());
+function navResize(){
+  const r = document.documentElement.style;
+  r.setProperty("--navtop", ($("#navTop").offsetTop + $("#navTop").offsetHeight + 8) + "px");
+  r.setProperty("--navbot", ($("#navBot").offsetHeight + 20) + "px");
+}
+if (window.ResizeObserver){ const ro = new ResizeObserver(navResize); ro.observe($("#navTop")); ro.observe($("#navBot")); }
+
+function navOnFix(p){                          // každá nová poloha z GPS
+  if (!NAV.on) return;
+  if (p && p.coords && p.coords.heading != null && !isNaN(p.coords.heading) && p.coords.speed > 0.6) NAV.gpsHeading = p.coords.heading;
+  const s = byId(NAV.target);
+  if (s && NAV.state !== "done"){
+    if (NAV.path){ NAV.prog = pathProgress(NAV.path, me); if (NAV.prog && NAV.prog.off > 40) fetchPath(); }
+    else if (NAV.pathFor !== s.id || Date.now() - NAV.fetchedAt > 20000) fetchPath(NAV.pathFor !== s.id);
+    const acc = p && p.coords ? p.coords.accuracy : 20;
+    if (NAV.state === "go" && NAV.arrivedFor !== s.id && dist(me, s) <= Math.max(25, Math.min(acc, 45))){
+      NAV.arrivedFor = s.id; NAV.state = "here";
+      try{ navigator.vibrate && navigator.vibrate([180, 80, 180]); }catch(e){}
+    }
+  }
+  drawNavLine(); navRender(); navView();
+}
+function navAfterData(){                       // po obnovení dat (každou minutu)
+  if (NAV.state === "done"){ planRoute(); if (route.length) navPick(); else navRender(); return; }
+  if (NAV.state === "rate"){ navRender(); return; }
+  const s = byId(NAV.target);
+  if (!s || ((s.status !== "open" || timeState(s) === "after") && NAV.fixed !== s.id)){
+    if (s) toast(`${s.name}: ${s.status !== "open" ? "out of candy" : "is closed now"} – taking you elsewhere.`, true, 5000);
+    NAV.fixed = null; navPick(); return;
+  }
+  drawMap(); drawNavLine(); navRender();
+}
+function navArrow(){
+  const a = $("#navArrow"); if (!NAV.on) return;
+  const s = byId(NAV.target);
+  if (!s || !me){ a.style.visibility = "hidden"; return; }
+  const goal = NAV.prog ? NAV.prog.ahead : s;
+  const h = NAV.heading != null ? NAV.heading : NAV.gpsHeading;
+  a.style.visibility = "";
+  a.querySelector("svg").style.transform = `rotate(${Math.round(bearing(me, goal) - (h || 0))}deg)`;
+}
+const domu = n => LANG === "en" ? (n === 1 ? "house" : "houses") : n === 1 ? "dům" : n > 1 && n < 5 ? "domy" : "domů";
+function navRender(){
+  if (!NAV.on) return;
+  const top = $("#navTop"), bot = $("#navBot"); top.hidden = false; bot.hidden = false;
+  const s = byId(NAV.target), D = $("#navDist"), S = $("#navSub");
+  const left = route.filter(id => id !== NAV.target).length;
+  const nth = visited.size + 1;
+  let plain = true;
+  if (NAV.state === "done"){ D.textContent = "All done! 🎉"; S.textContent = "You've visited every open house"; }
+  else if (NAV.state === "here" || NAV.state === "rate"){ D.textContent = "You're here! 🎃"; S.textContent = s ? s.name : ""; }
+  else if (!me){ D.textContent = gpsDenied ? "Location is off" : "Finding your location…"; S.textContent = gpsDenied ? "Allow it for this site in your browser" : "Hang on, getting a GPS fix"; }
+  else if (s){
+    plain = false;
+    const m = NAV.prog ? NAV.prog.remain + (NAV.prog.off > 15 ? NAV.prog.off : 0) : walk(dist(me, s));
+    D.textContent = fmtM(m); S.textContent = `${minsFor(m)} · ${s.name}`;
+  }
+  top.classList.toggle("plain", plain);
+  navArrow();
+  const note = s && s.note ? `<p class="nb-note">💬 ${esc(s.note)}</p>` : "";
+  const head = s ? `<div class="nb-h"><div class="num">${nth}</div><div><b>${esc(s.name)}</b><span>${[s.address ? esc(s.address) : "", timeNote(s), s.status !== "open" ? "out of candy" : "", left ? `then ${left} more ${domu(left)}` : "last house"].filter(Boolean).join(" · ")}</span></div></div>` : "";
+  let html = "";
+  if (NAV.state === "done"){
+    html = `<b class="nb-big">You did it! 🍬</b><p class="nb-small" style="text-align:left">No more open houses left. Thanks for walking and happy Halloween!</p>
+      <div class="nb-acts one"><button class="btn primary big" type="button" data-nav="exit">End navigation</button>
+      <button class="btn" type="button" data-nav="rank">Rate houses & leaderboard</button></div>`;
+  } else if (NAV.state === "rate"){
+    const r = byId(NAV.rateFor);
+    html = `<b style="font-size:18px">How was it${r ? " – " + esc(r.name) : ""}?</b>
+      <label class="nick-in">Sign as <input type="text" id="navNick" maxlength="30" autocomplete="nickname" placeholder="Nickname (optional)" value="${esc(NICK)}"></label>
+      <div class="nb-stars">
+        <button type="button" data-nav="r3">★★★<small>nice</small></button>
+        <button type="button" data-nav="r4">★★★★<small>great</small></button>
+        <button type="button" data-nav="r5">★★★★★<small>the best!</small></button>
+      </div>
+      <button class="btn ghost" type="button" data-nav="rskip">Skip and move on</button>`;
+  } else if (NAV.state === "here"){
+    html = `${head}${note}<div class="nb-acts"><button class="btn teal big" type="button" data-nav="visit">Visited ✓ – next house</button>
+      <button class="btn ghost" type="button" data-nav="notyet">Not yet</button></div>`;
+  } else {
+    html = `${head}${note}${!me && gpsDenied ? `<button class="btn primary" type="button" data-nav="gps">Try location again</button>` : ""}
+      <div class="nb-acts"><button class="btn teal big" type="button" data-nav="visit">Visited ✓</button>
+      <button class="btn ghost" type="button" data-nav="skip">Skip</button></div>`;
+  }
+  const ni = $("#navNick"), keep = ni ? {v:ni.value, f:document.activeElement === ni} : null;
+  if (keep && keep.f && NAV.state === "rate"){ navResize(); return; }   // nepřepisuj, když uživatel právě píše
+  bot.innerHTML = html;
+  const ni2 = $("#navNick"); if (ni2 && keep) ni2.value = keep.v;
+  navResize();
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-nav]"); if (!b || !NAV.on) return;
+  const a = b.dataset.nav, s = byId(NAV.target);
+  if (a === "exit") exitNav();
+  else if (a === "visit" && s){
+    visited.add(s.id); store.set("hw-visited", [...visited]); NAV.fixed = null;
+    if (!myRatings[s.id]){ NAV.state = "rate"; NAV.rateFor = s.id; planRoute(); drawMap(); drawNavLine(); navRender(); }
+    else navPick();
+  }
+  else if (a === "skip" && s){ skipped.add(s.id); store.set("hw-skip", [...skipped]); NAV.fixed = null; toast(`${s.name} – skipped.`); navPick(); }
+  else if (a === "notyet"){ NAV.state = "go"; navRender(); }
+  else if (/^r[345]$/.test(a)){
+    const n = +a[1], id = NAV.rateFor;
+    if (id){ myRatings[id] = n; store.set("hw-ratings", myRatings);
+      if ($("#navNick")) setNick($("#navNick").value);
+      api.post({action:"rate", id, stars:n, voter:VOTER, nick:NICK}).then(() => load()).catch(err => { delete myRatings[id]; store.set("hw-ratings", myRatings); toast(err.message, false); });
+      toast(`Thanks for the ${n} ★`); }
+    navPick();
+  }
+  else if (a === "rskip") navPick();
+  else if (a === "gps") locate(false);
+  else if (a === "rank"){ exitNav(); go("more", "rank"); }
+});
+
+/* ---------- přepínač CZ / US ---------- */
+$("#langBtn").addEventListener("click", e => {
+  e.preventDefault();
+  try{ store.set("hw-lang", LANG === "en" ? "cs" : "en"); }catch(err){}
+  location.href = (LANG === "en" ? "./" : "en.html") + location.search + location.hash;
+});
+
+/* ---------- boot ---------- */
+$("#demoFlag").hidden = !DEMO;
+const initTab = (location.hash || "#map").slice(1);
+go(["map","route","add","more","rank","info"].includes(initTab) ? initTab : "map");
+drawHeader();
+load(true);
+setInterval(() => { if (!document.hidden && LOC) load(); }, 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+// zkus polohu tiše, pokud už ji uživatel dříve povolil
+if (navigator.permissions) navigator.permissions.query({name:"geolocation"}).then(p => { if (p.state === "granted") locate(false); }).catch(() => {});
+</script>
+</body>
+</html>
