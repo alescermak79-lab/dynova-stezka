@@ -38,7 +38,7 @@ a{color:var(--candle)}
 header.top{padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;display:flex;align-items:center;gap:12px;background:linear-gradient(180deg,#140e1d, var(--night));border-bottom:1px solid var(--line)}
 .logo{width:58px;height:58px;flex:none}
 .brand{min-width:0;flex:1;display:flex;flex-direction:column;align-items:flex-start}
-.home-title{color:inherit;text-decoration:none}
+.home-title{color:inherit;text-decoration:none;display:inline-block;min-height:24px}
 .locbtn{position:relative;margin-top:4px;display:inline-flex;align-items:center;gap:5px;max-width:100%;min-height:32px;background:var(--dusk2);border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 10px;font-size:12.5px;font-weight:700;color:var(--bone);cursor:pointer}
 .locbtn::before{content:"";position:absolute;inset:-7px -4px}
 .locbtn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -77,7 +77,7 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:1000;display:grid;grid-t
 nav.tabs button{background:none;border:0;height:var(--nav-h);line-height:1.15;text-align:center;padding:0 2px;white-space:nowrap;letter-spacing:-.1px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:700;color:var(--mist);cursor:pointer}
 nav.tabs button svg{width:24px;height:24px}
 @media(max-width:375px){nav.tabs button{font-size:11px}}
-nav.tabs button[aria-selected="true"]{color:var(--pumpkin)}
+nav.tabs button[aria-current="page"]{color:var(--pumpkin)}
 
 /* map overlays */
 .chips{position:absolute;top:10px;left:10px;right:10px;z-index:500;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
@@ -264,7 +264,7 @@ details.login>summary{cursor:pointer;font-weight:700;color:var(--candle);min-hei
 @keyframes sheetUp{from{transform:translateY(60px);opacity:.3}}
 .bsheet .grab{width:46px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 10px}
 .bs-x{position:absolute;top:6px;right:6px;width:44px;height:44px;border-radius:50%;border:0;background:transparent;color:var(--mist);font-size:28px;line-height:1;cursor:pointer}
-.bsheet h3{font-size:20px;margin:0 44px 2px 0;line-height:1.2}
+.bsheet h2{font-size:20px;font-weight:800;margin:0 44px 2px 0;line-height:1.2}
 .bs-cover{width:100%;height:150px;object-fit:cover;border-radius:14px;display:block;margin:4px 0 10px;cursor:zoom-in;background:var(--dusk2)}
 .bs-meta{margin-top:4px;display:flex;gap:4px 10px;flex-wrap:wrap;align-items:center}
 .bs-note{margin:10px 0 0;font-size:14px;background:var(--night);border-radius:10px;padding:8px 10px}
@@ -333,7 +333,7 @@ body.nav .me-dot{width:22px;height:22px}
 .tour-hole.none{outline:0;width:0!important;height:0!important;left:50%!important;top:50%!important}
 @media (prefers-reduced-motion:no-preference){.tour-hole{transition:left .3s,top .3s,width .3s,height .3s}}
 .tour-card{position:fixed;left:12px;right:12px;margin:0 auto;max-width:420px;background:var(--dusk);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 14px 40px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:10px}
-.tour-card h3{font:800 22px/1.15 var(--display);color:var(--candle);margin:0}
+.tour-card h2{font:800 22px/1.15 var(--display);color:var(--candle);margin:0}
 .tour-card .tt{font-size:14.5px;line-height:1.5}
 .tour-card .tt p{margin:0 0 6px}
 .tour-top{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--mist);font-weight:700}
@@ -353,6 +353,20 @@ body.nav .me-dot{width:22px;height:22px}
 .langbtn::before{content:"";position:absolute;inset:-7px -3px}
 .langbtn:hover{border-color:var(--pumpkin)}
 @media(max-width:430px){.langbtn{margin-top:3px;min-height:30px;font-size:12px;padding:4px 8px}}
+@media (max-width:340px){                 /* úzké telefony (Galaxy Fold složený, malé Androidy) */
+  .count{display:none}
+  .brand h1{font-size:18px}
+  .nextcard .acts .btn{white-space:normal;font-size:14px;line-height:1.15;padding-left:6px;padding-right:6px}
+  .navtop .arrow{width:52px;height:52px}
+  .navtop .nt b{font-size:24px;white-space:nowrap}
+  nav.tabs button{font-size:10.5px}
+}
+@media (max-height:500px) and (min-width:600px){
+  .nextcard{right:auto;width:min(420px,55%)}
+  #fabLocate{bottom:calc(var(--nav-h) + 20px + env(safe-area-inset-bottom,0px))}
+  .fab.q{bottom:calc(var(--nav-h) + 76px + env(safe-area-inset-bottom,0px))}
+  .legend{bottom:calc(var(--nav-h) + 22px + env(safe-area-inset-bottom,0px))}
+}
 </style>
 </head>
 <body>
@@ -363,7 +377,7 @@ body.nav .me-dot{width:22px;height:22px}
     <a class="home-title" href="./" id="homeLink2"><h1 id="evTitle">Neighborhood Halloween</h1></a>
     <div class="brow">
       <button class="locbtn" type="button" id="locBtn" aria-haspopup="dialog">📍 <span id="evSub">Choose your area</span> ▾</button>
-      <a class="langbtn" id="langBtn" href="./" hreflang="cs" lang="cs" aria-label="Česká verze">🇨🇿 CZ</a>
+      <a class="langbtn" id="langBtn" href="./" hreflang="cs" lang="cs" aria-label="CZ – Česká verze">🇨🇿 CZ</a>
     </div>
   </div>
   <div class="count" id="countdown" aria-live="polite"></div>
@@ -555,7 +569,7 @@ body.nav .me-dot{width:22px;height:22px}
       <div class="panel" id="sharePanel">
         <h3>Invite your neighbors</h3>
         <p class="muted small" style="margin:6px 0 10px">The link opens your area directly. Print the QR code on a flyer for mailboxes.</p>
-        <div class="share"><div class="qr" id="qrBox" aria-label="QR code of the link"></div>
+        <div class="share"><div class="qr" id="qrBox" role="img" aria-label="QR code of the link"></div>
           <div style="flex:1;min-width:160px;display:flex;flex-direction:column;gap:8px">
             <span class="url" id="shareUrl"></span>
             <button class="btn primary" type="button" id="btnShare">Share link</button>
@@ -658,7 +672,7 @@ body.nav .me-dot{width:22px;height:22px}
   <div class="tour-hole none" id="tourHole"></div>
   <div class="tour-card" id="tourCard">
     <div class="tour-top"><span id="tourStep"></span><button class="tour-skip" type="button" id="tourSkip">Skip tour</button></div>
-    <h3 id="tourTitle"></h3>
+    <h2 id="tourTitle"></h2>
     <div class="tt" id="tourText"></div>
     <div class="tour-dots" id="tourDots" aria-hidden="true"></div>
     <div class="tour-acts" id="tourActs"><button class="btn ghost" type="button" id="tourBack">Back</button><button class="btn primary" type="button" id="tourNext">Next</button></div>
@@ -668,11 +682,11 @@ body.nav .me-dot{width:22px;height:22px}
 <div class="toast" id="toast" role="status" hidden></div>
 <input type="file" id="photoInput" accept="image/*" hidden>
 
-<nav class="tabs" role="tablist">
-  <button role="tab" data-tab="map" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>Map</button>
-  <button role="tab" data-tab="route" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5"/></svg>Route</button>
-  <button role="tab" data-tab="add" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9H3z"/><path d="M12 11v6M9 14h6"/></svg>My house</button>
-  <button role="tab" data-tab="more" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg>Leaderboard & info</button>
+<nav class="tabs" aria-label="Main menu">
+  <button type="button" data-tab="map" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>Map</button>
+  <button type="button" data-tab="route"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5"/></svg>Route</button>
+  <button type="button" data-tab="add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9H3z"/><path d="M12 11v6M9 14h6"/></svg>My house</button>
+  <button type="button" data-tab="more"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg>Leaderboard & info</button>
 </nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -982,7 +996,7 @@ function sheetHtml(s){
   const d = me ? ` · ${fmtM(walk(dist(me, s)))}, ${fmtMin(dist(me, s))} walk` : "";
   const id = esc(s.id);
   return `${cover ? `<img class="bs-cover" src="${esc(cover.url)}" alt="House photo" data-photo="${esc(cover.url)}" data-nick="${esc(cover.nick || "")}">` : ""}
-    <h3 id="bsTitle">${esc(s.name)}</h3>
+    <h2 id="bsTitle">${esc(s.name)}</h2>
     <div class="muted small">${esc(s.address)}${d}</div>
     <div class="small bs-meta"><span>${ratingHtml(s)}${myRatings[s.id] ? ` <span class="muted">· you ${myRatings[s.id]}★</span>` : ""}</span><span><span class="ghosts">${ghosts(s.scare)}</span> ${scareLabel(s.scare)}</span></div>
     ${ratersHtml(s)}
@@ -1031,7 +1045,7 @@ function drawNext(){
   if (!s || picking || sheetId || NAV.on){ card.hidden = true; dockSize(); return; }
   const d = me ? ` · ${fmtM(walk(dist(me, s)))}, ${fmtMin(dist(me, s))}` : "";
   const tn = timeNote(s);
-  card.innerHTML = `<button class="num" type="button" data-open="${esc(s.id)}" aria-label="House details">1</button>
+  card.innerHTML = `<button class="num" type="button" data-open="${esc(s.id)}" tabindex="-1" aria-hidden="true">1</button>
     <button class="t" type="button" data-open="${esc(s.id)}"><span>Next house${d}${tn ? " · " + tn : ""}</span><b>${esc(s.name)}</b></button>
     <div class="acts">
       <button class="btn primary" type="button" data-navstart="1">🎃 Trick-or-treat!</button>
@@ -1240,8 +1254,7 @@ function startTour(){
   closeRate(); $("#legend").hidden = true; $("#lightbox").hidden = true;
   go("map");
   TOUR.steps = tourSteps(); TOUR.on = true; TOUR.i = 0;
-  $("#tour").hidden = false;
-  setTimeout(() => { map.invalidateSize(); tourGo(0); }, 60);
+  setTimeout(() => { map.invalidateSize(); $("#tour").hidden = false; tourGo(0); }, 60);
 }
 function endTour(withLocation){
   if (!TOUR.on) return;
@@ -1282,7 +1295,7 @@ function drawShare(){
   if (typeof QRCode === "undefined"){ loadQR(); }
   if (qrFor !== url && typeof QRCode !== "undefined"){
     $("#qrBox").innerHTML = ""; qrFor = url;
-    try{ new QRCode($("#qrBox"), {text:url, width:132, height:132, colorDark:"#1b1426", colorLight:"#ffffff", correctLevel:QRCode.CorrectLevel.M}); }catch(e){}
+    try{ new QRCode($("#qrBox"), {text:url, width:132, height:132, colorDark:"#1b1426", colorLight:"#ffffff", correctLevel:QRCode.CorrectLevel.M}); $("#qrBox").removeAttribute("title"); $$("#qrBox img").forEach(i => i.alt = ""); }catch(e){}
   }
   $("#qrBox").hidden = typeof QRCode === "undefined";
 }
@@ -1401,7 +1414,7 @@ let moreSub = "rank";
 function go(tab, sub){
   if (tab === "rank" || tab === "info"){ sub = tab; tab = "more"; }
   if (tab !== "map"){ if (NAV.on) exitNav(); if (sheetId) closeSheet(); }
-  $$("nav.tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tab));
+  $$("nav.tabs button").forEach(b => { if (b.dataset.tab === tab) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
   $$(".view").forEach(v => v.hidden = v.id !== "v-" + tab);
   if (tab === "more"){
     if (sub) moreSub = sub;
@@ -1426,7 +1439,7 @@ function locate(center){
     watchId = navigator.geolocation.watchPosition(p => {
       const moved = !me || dist(me, {lat:p.coords.latitude, lng:p.coords.longitude}) > 25;
       me = {lat:p.coords.latitude, lng:p.coords.longitude};
-      if (!meMarker) meMarker = L.marker([me.lat, me.lng], {icon:L.divIcon({className:"", html:'<div class="me-dot"></div>', iconSize:[18,18]}), interactive:false, zIndexOffset:1000}).addTo(map);
+      if (!meMarker) meMarker = L.marker([me.lat, me.lng], {icon:L.divIcon({className:"", html:'<div class="me-dot"></div>', iconSize:[18,18]}), interactive:false, keyboard:false, zIndexOffset:1000}).addTo(map);
       else meMarker.setLatLng([me.lat, me.lng]);
       $("#fabLocate").classList.add("on");
       gpsDenied = false;
