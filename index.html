@@ -320,6 +320,32 @@ body.nav .me-dot{width:22px;height:22px}
 .raters{margin-top:6px;font-size:12.5px;color:var(--mist);line-height:1.5}
 .raters b{color:var(--bone);font-weight:700}
 .lightbox .cap{position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);text-align:center;color:#fff;font-weight:700;text-shadow:0 1px 4px #000}
+/* ---- dýně podle otevírací doby ---- */
+.pin.lit svg{filter:drop-shadow(0 0 7px rgba(255,190,70,.95)) drop-shadow(0 3px 4px rgba(0,0,0,.6))}
+.pin.sleep svg{filter:drop-shadow(0 3px 4px rgba(0,0,0,.6)) saturate(.8)}
+.livetag{display:inline-block;font-size:12px;font-weight:800;border-radius:6px;padding:2px 8px;margin-left:4px}
+.livetag.open{background:rgba(255,190,70,.18);color:var(--candle)}
+.livetag.sleep{background:rgba(154,90,38,.25);color:#e0a874}
+.livetag.out{background:rgba(255,95,109,.15);color:var(--blood)}
+/* ---- interaktivní návod ---- */
+.tour{position:fixed;inset:0;z-index:2500}
+.tour-hole{position:fixed;border-radius:16px;box-shadow:0 0 0 9999px rgba(10,6,16,.8);outline:3px solid var(--candle);outline-offset:2px;pointer-events:none}
+.tour-hole.none{outline:0;width:0!important;height:0!important;left:50%!important;top:50%!important}
+@media (prefers-reduced-motion:no-preference){.tour-hole{transition:left .3s,top .3s,width .3s,height .3s}}
+.tour-card{position:fixed;left:12px;right:12px;margin:0 auto;max-width:420px;background:var(--dusk);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 14px 40px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:10px}
+.tour-card h3{font:800 22px/1.15 var(--display);color:var(--candle);margin:0}
+.tour-card .tt{font-size:14.5px;line-height:1.5}
+.tour-card .tt p{margin:0 0 6px}
+.tour-top{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--mist);font-weight:700}
+.tour-skip{background:none;border:0;color:var(--mist);font-weight:700;text-decoration:underline;cursor:pointer;min-height:40px;padding:0 4px}
+.tour-dots{display:flex;gap:5px;justify-content:center}
+.tour-dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}
+.tour-dots i.on{background:var(--pumpkin);width:18px;border-radius:4px}
+.tour-acts{display:grid;grid-template-columns:1fr 2fr;gap:8px}
+.tour-acts.one{grid-template-columns:1fr}
+.tour-pins{display:flex;gap:14px;align-items:flex-end;margin:6px 0 2px}
+.tour-pins span{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;color:var(--mist);font-weight:700}
+.tour-pins svg{width:34px;height:37px}
 </style>
 </head>
 <body>
@@ -356,12 +382,14 @@ body.nav .me-dot{width:22px;height:22px}
     <div class="statecard" id="statecard" hidden></div>
     <div class="legend" id="legend" hidden role="dialog" aria-label="Vysvětlivky mapy">
       <b>Co je na mapě</b>
-      <div class="li"><svg viewBox="0 0 40 44"><ellipse cx="20" cy="27" rx="15" ry="13" fill="#ff8a2a"/><path d="M13 24l3.5-3.5L20 24zM20 24l3.5-3.5L27 24z" fill="#ffd36b"/></svg><span>Dům, kde se koleduje</span></div>
-      <div class="li"><svg viewBox="0 0 40 44"><ellipse cx="20" cy="27" rx="15" ry="13" fill="#7d7390"/><path d="M13 24l3.5-3.5L20 24zM20 24l3.5-3.5L27 24z" fill="#3a3148"/></svg><span>Došly bonbony nebo zavřeno</span></div>
+      <div class="li"><svg viewBox="0 0 40 44" style="filter:drop-shadow(0 0 5px rgba(255,190,70,.9))"><ellipse cx="20" cy="27" rx="15" ry="13" fill="#ff8a2a"/><path d="M13 24l3.5-3.5L20 24zM20 24l3.5-3.5L27 24z" fill="#ffd36b"/></svg><span><b>Svítí</b> – právě otevřeno</span></div>
+      <div class="li"><svg viewBox="0 0 40 44"><ellipse cx="20" cy="27" rx="15" ry="13" fill="#9a5a26"/><path d="M13 24l3.5-3.5L20 24zM20 24l3.5-3.5L27 24z" fill="#3b2416"/></svg><span><b>Tmavá</b> – teď zavřeno (mimo otevírací dobu)</span></div>
+      <div class="li"><svg viewBox="0 0 40 44"><ellipse cx="20" cy="27" rx="15" ry="13" fill="#7d7390"/><path d="M13 24l3.5-3.5L20 24zM20 24l3.5-3.5L27 24z" fill="#3a3148"/></svg><span><b>Šedá</b> – došly bonbony</span></div>
       <div class="li"><span class="bdg">3</span><span>Pořadí ve vaší trase</span></div>
       <div class="li"><span class="bdg">✓</span><span>Už jste tam byli</span></div>
       <div class="li"><span class="ln"></span><span>Vaše trasa</span></div>
       <div class="li"><span class="dot"></span><span>Vy (když povolíte polohu)</span></div>
+      <button class="btn sm" type="button" data-tour-start="1">▶ Projít návod aplikace</button>
     </div>
     <button class="fab q" id="fabLegend" type="button" aria-label="Vysvětlivky mapy" aria-expanded="false">?</button>
     <button class="fab" id="fabLayer" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg><span>Letecká</span></button>
@@ -485,6 +513,7 @@ body.nav .me-dot{width:22px;height:22px}
     </div>
     <div class="wrap" id="v-info" hidden>
       <h2>Jak to funguje</h2>
+      <button class="btn primary" type="button" data-tour-start="1">▶ Projít návod krok za krokem</button>
       <div class="panel">
         <h3>Vaše přezdívka</h3>
         <p class="muted small" style="margin:6px 0 10px">Podepíšete se jí u fotek a hodnocení – hostitelé uvidí, kdo je pochválil. Nepovinné, platí jen v tomto telefonu.</p>
@@ -505,7 +534,7 @@ body.nav .me-dot{width:22px;height:22px}
           <h3>Pro rodiče</h3>
           <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><text x="4" y="28" font-size="20" fill="#ffd36b">👻</text></svg><div><b>Strašidelnost 1 až 3</b><p>1 = vlídné i pro batolata, 3 = tma, masky a zvuky. Počet duchů najdete u každého domu na mapě i v trase.</p></div></div>
           <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 30h28M10 30V14l10-6 10 6v16" fill="none" stroke="#b9aec9" stroke-width="3"/><path d="M4 22h8" stroke="#ff8a2a" stroke-width="3"/></svg><div><b>Navigace přímo v aplikaci</b><p>„Jdeme koledovat“ vás vede dům od domu: šipka, vzdálenost a cesta po chodníku. U domu se aplikace sama ozve a displej během navigace nezhasne.</p></div></div>
-          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="14" fill="#7d7390"/><path d="M13 20h14" stroke="#1b1426" stroke-width="3"/></svg><div><b>Šedá dýně = došly bonbony</b><p>Hostitelé to přepínají živě, stránka se sama obnovuje každou minutu.</p></div></div>
+          <div class="rule"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="14" fill="#7d7390"/><path d="M13 20h14" stroke="#1b1426" stroke-width="3"/></svg><div><b>Svítí, tmavá, šedá</b><p>Svítící dýně = právě otevřeno. Tmavá = teď zavřeno – každý dům má svou otevírací dobu, někdo končí dřív, někdo později. Šedá = došly bonbony. Mění se samo podle hodin.</p></div></div>
         </div>
       </div>
       <div class="panel">
@@ -615,19 +644,14 @@ body.nav .me-dot{width:22px;height:22px}
     </div>
   </div>
 </div>
-<div class="overlay" id="onbOverlay" hidden>
-  <div class="sheet tall onb" role="dialog" aria-modal="true" aria-labelledby="onbTitle">
-    <h3 id="onbTitle" style="font:800 26px/1.1 var(--display);color:var(--candle)">Vítejte na Sousedském Halloweenu!</h3>
-    <ol>
-      <li><span class="n">1</span><div><b>Vaše lokalita: <span id="onbLoc"></span></b><p>Jiná obec? <button class="btn sm ghost" type="button" id="onbChange" style="min-height:34px;margin-top:4px">Změnit lokalitu</button></p></div></li>
-      <li><span class="n">2</span><div><b>Povolte polohu</b><p>Trasa pak povede od vás vždy k nejbližšímu dalšímu domu.</p></div></li>
-      <li><span class="n">3</span><div><b>Klepněte na „Jdeme koledovat“</b><p>Aplikace vás povede k nejbližšímu domu. U domu potvrdíte „Byli jsme ✓“ a pošle vás dál. Šedá dýně = došly bonbony.</p></div></li>
-    </ol>
-    <label class="nick-in">Vaše přezdívka <span style="font-weight:400">nepovinné – podepíšete se jí u fotek a hodnocení. Třeba „Dýňáci od rybníka“, ne jména dětí.</span><input type="text" id="onbNick" maxlength="30" autocomplete="nickname" placeholder="Přezdívka vaší party"></label>
-    <div class="row">
-      <button class="btn primary" type="button" id="onbGo">Povolit polohu a začít</button>
-      <button class="btn ghost" type="button" id="onbSkip">Jen se podívat</button>
-    </div>
+<div class="tour" id="tour" hidden role="dialog" aria-modal="true" aria-labelledby="tourTitle">
+  <div class="tour-hole none" id="tourHole"></div>
+  <div class="tour-card" id="tourCard">
+    <div class="tour-top"><span id="tourStep"></span><button class="tour-skip" type="button" id="tourSkip">Přeskočit návod</button></div>
+    <h3 id="tourTitle"></h3>
+    <div class="tt" id="tourText"></div>
+    <div class="tour-dots" id="tourDots" aria-hidden="true"></div>
+    <div class="tour-acts" id="tourActs"><button class="btn ghost" type="button" id="tourBack">Zpět</button><button class="btn primary" type="button" id="tourNext">Další</button></div>
   </div>
 </div>
 <div class="lightbox" id="lightbox" hidden><img id="lbImg" alt="Fotka stanoviště"><div class="cap" id="lbCap" hidden></div><button class="btn sm close" type="button" id="lbClose">Zavřít</button></div>
@@ -752,11 +776,23 @@ function timeNote(s){
   const st = timeState(s);
   if (st === "before") return `otevírá v ${esc(s.from)}`;
   if (st === "after") return `už zavřeno (do ${esc(s.to)})`;
+  if (st === null && LOC){
+    if (new Date() > locEnd()) return "akce už skončila";
+    return `otevře ${locStart().getDate()}. ${locStart().getMonth() + 1}.${s.from ? " v " + esc(s.from) : ""}`;
+  }
   return "";
+}
+// svítí = právě otevřeno, spí = mimo otevírací dobu (nebo jiný den), šedá = došly bonbony
+function liveState(s){ if (s.status !== "open") return "out"; return timeState(s) === "open" ? "open" : "sleep"; }
+function liveTag(s){
+  const st = liveState(s);
+  if (st === "out") return `<span class="livetag out">${s.status === "closed" ? "zavřeno" : "došly bonbony"}</span>`;
+  if (st === "open") return `<span class="livetag open">🎃 právě otevřeno</span>`;
+  return `<span class="livetag sleep">💤 ${timeNote(s) || "teď zavřeno"}</span>`;
 }
 function hoursHtml(s){
   const n = timeNote(s);
-  return `<div class="small" style="margin-top:6px">🕕 Otevřeno <b>${esc(hours(s))}</b>${n ? ` · <span class="tag warn">${n}</span>` : ""}</div>`;
+  return `<div class="small" style="margin-top:6px">🕕 Otevírací doba <b>${esc(hours(s))}</b> ${liveTag(s)}</div>`;
 }
 const minsFor = m => Math.max(1, Math.round(m / (CONFIG.KID_SPEED_KMH * 1000 / 60))) + " min";   // m = skutečná délka cesty
 
@@ -848,7 +884,7 @@ function closeRate(){ $("#rateOverlay").hidden = true; rateId = null; }
 function openLightbox(url, by){ $("#lbImg").src = url; $("#lbCap").textContent = by ? "📷 " + by : ""; $("#lbCap").hidden = !by; $("#lightbox").hidden = false; }
 /* ---------- přezdívka návštěvníka ---------- */
 let NICK = store.get("hw-nick", "");
-function setNick(v){ NICK = String(v || "").replace(/[<>]/g, "").trim().slice(0, 30); store.set("hw-nick", NICK); ["#rateNick", "#onbNick", "#infoNick"].forEach(s => { const i = $(s); if (i && i !== document.activeElement) i.value = NICK; }); }
+function setNick(v){ NICK = String(v || "").replace(/[<>]/g, "").trim().slice(0, 30); store.set("hw-nick", NICK); ["#rateNick", "#infoNick", "#tourNick"].forEach(s => { const i = $(s); if (i && i !== document.activeElement) i.value = NICK; }); }
 function ratersHtml(s){
   const r = (s.raters || []).filter(x => x.nick);
   if (!r.length) return "";
@@ -904,12 +940,12 @@ function pumpkinSvg(fill, face){
   return `<svg viewBox="0 0 40 44" aria-hidden="true"><path d="M20 10c1-5 5-7 7-6" fill="none" stroke="#6bbf59" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="13" cy="27" rx="10" ry="12" fill="${fill}" opacity=".85"/><ellipse cx="27" cy="27" rx="10" ry="12" fill="${fill}" opacity=".85"/><ellipse cx="20" cy="27" rx="9.5" ry="13" fill="${fill}"/><path d="M13 24l3.5-3.5L20 24zM20 24l3.5-3.5L27 24z" fill="${face}"/><path d="M12 30c3 4 13 4 16 0l-2.5 1-1.5 2-2-2-2.5 2-2-2-2 2-1.5-2z" fill="${face}"/></svg>`;
 }
 function icon(s, order, tgt){
-  const out = s.status !== "open";
-  const fill = out ? "#7d7390" : "#ff8a2a";
-  const face = out ? "#3a3148" : "#ffd36b";
+  const st = liveState(s);
+  const fill = st === "out" ? "#7d7390" : st === "sleep" ? "#9a5a26" : "#ff8a2a";
+  const face = st === "out" ? "#3a3148" : st === "sleep" ? "#3b2416" : "#ffd36b";
   const badge = visited.has(s.id) ? "✓" : order ? order : "";
   return L.divIcon({className:"", iconSize:[40,44], iconAnchor:[20,42], popupAnchor:[0,-38],
-    html:`<div class="pin${tgt ? " tgt" : ""}">${pumpkinSvg(fill, face)}${badge ? `<i>${badge}</i>` : ""}</div>`});
+    html:`<div class="pin${tgt ? " tgt" : ""}${st === "open" ? " lit" : st === "sleep" ? " sleep" : ""}">${pumpkinSvg(fill, face)}${badge ? `<i>${badge}</i>` : ""}</div>`});
 }
 function scareLabel(n){ return ["", "vlídné", "trochu strašidelné", "pro odvážné"][n] || ""; }
 function ghosts(n){ return "👻".repeat(n) + "<span style='opacity:.25'>" + "👻".repeat(3 - n) + "</span>"; }
@@ -929,7 +965,7 @@ function sheetHtml(s){
     <div class="muted small">${esc(s.address)}${d}</div>
     <div class="small bs-meta"><span>${ratingHtml(s)}${myRatings[s.id] ? ` <span class="muted">· vy ${myRatings[s.id]}★</span>` : ""}</span><span><span class="ghosts">${ghosts(s.scare)}</span> ${scareLabel(s.scare)}</span></div>
     ${ratersHtml(s)}
-    ${hoursHtml(s)}${tagsHtml(s)}
+    ${hoursHtml(s)}
     ${s.note ? `<p class="bs-note">${esc(s.note)}</p>` : ""}
     ${thumbsHtml(s, 1, 8, false)}
     <div class="bs-main">
@@ -1082,20 +1118,134 @@ $("#fabLegend").addEventListener("click", () => {
 });
 map.on("click", () => { $("#legend").hidden = true; $("#fabLegend").setAttribute("aria-expanded", "false"); if (sheetId) closeSheet(); });
 
-/* ---------- 7: uvítání při první návštěvě ---------- */
-function maybeOnboard(){
-  if (!LOC || store.get("hw-onb", false) || !$("#locOverlay").hidden || !$("#newLocOverlay").hidden) return;
-  $("#onbLoc").textContent = locLabel(LOC);
-  $("#onbOverlay").hidden = false;
-}
-function closeOnb(){ store.set("hw-onb", true); $("#onbOverlay").hidden = true; }
-$("#onbGo").addEventListener("click", () => { setNick($("#onbNick").value); closeOnb(); go("map"); locate(true); });
-$("#onbSkip").addEventListener("click", () => setNick($("#onbNick").value));
 $("#btnNick").addEventListener("click", () => { setNick($("#infoNick").value); toast(NICK ? `Přezdívka uložena: ${NICK}` : "Přezdívka smazána."); });
 $("#infoNick").addEventListener("keydown", e => { if (e.key === "Enter") $("#btnNick").click(); });
 setNick(NICK);
-$("#onbSkip").addEventListener("click", closeOnb);
-$("#onbChange").addEventListener("click", () => { $("#onbOverlay").hidden = true; openLocPicker(); });
+
+/* ---------- interaktivní návod pro nové uživatele ---------- */
+const TOUR = {on:false, i:0, steps:[]};
+let tourAuto = false;
+function pinDemo(fill, face, lit, label){
+  return `<span><span style="display:block${lit ? ";filter:drop-shadow(0 0 6px rgba(255,190,70,.95))" : ""}">${pumpkinSvg(fill, face)}</span>${label}</span>`;
+}
+function tourSteps(){
+  const sid = route[0] && byId(route[0]) ? route[0] : (stations[0] && stations[0].id);
+  const mk = () => sid && markers[sid] && markers[sid]._icon;
+  const S = [];
+  S.push({title:"Vítejte na Sousedském Halloweenu! 🎃",
+    html:`<p>Za minutu vám ukážu, jak se s aplikací koleduje. Návod můžete kdykoli přeskočit a pustit si ho znovu v záložce Žebříček a info.</p>
+      <p>Vaše lokalita: <b>${esc(locLabel(LOC))}</b> <button class="btn sm ghost" type="button" data-tour="loc">Jiná obec?</button></p>`});
+  if (sid){
+    S.push({title:"Dýně = dům, kde se koleduje", target:mk, pad:14,
+      before:() => { const s = byId(sid); if (s) map.setView([s.lat, s.lng], Math.max(map.getZoom(), 16), {animate:false}); },
+      html:`<p>Na mapě jsou jen domy, které se zapojily. Barva dýně říká, jestli se tam teď dá zazvonit:</p>
+        <div class="tour-pins">${pinDemo("#ff8a2a", "#ffd36b", true, "svítí")}${pinDemo("#9a5a26", "#3b2416", false, "tmavá")}${pinDemo("#7d7390", "#3a3148", false, "šedá")}</div>
+        <p><b>Svítí</b> = právě otevřeno · <b>tmavá</b> = teď zavřeno (každý dům má svou otevírací dobu) · <b>šedá</b> = došly bonbony.</p>`});
+    S.push({title:"Klepněte na dýni", target:() => $("#bsheet"), pad:0, before:() => openSheet(sid), after:() => closeSheet(),
+      html:`<p>Otevře se detail domu: fotky, hvězdičky od návštěvníků, otevírací doba a vzkaz od hostitele.</p>
+        <p><b>Jít sem</b> spustí navigaci, <b>Byli jsme ✓</b> dům odškrtne. Přidat můžete i fotku a hodnocení.</p>`});
+  }
+  if (route.length){
+    S.push({title:"Jdeme koledovat!", target:() => $("#nextcard [data-navstart]"), before:() => { closeSheet(); drawNext(); },
+      html:`<p>Hlavní tlačítko večera. Aplikace vás povede k nejbližšímu domu – <b>šipka, metry a cesta po chodníku</b>. U domu telefon zavibruje a displej mezitím nezhasne.</p>`});
+    S.push({title:"Byli jsme ✓", target:() => $("#nextcard [data-visit]"),
+      html:`<p>Až dostanete koledu, klepněte sem. Dáte 3 až 5 hvězdiček a aplikace vás pošle k dalšímu domu.</p>`});
+  }
+  S.push({title:"Kde jste", target:() => $("#fabLocate"), before:() => closeSheet(),
+    html:`<p>Tímhle tlačítkem ukážete svou polohu na mapě. Bez povolené polohy navigace nefunguje.</p>`});
+  S.push({title:"Trasa", target:() => $('nav.tabs [data-tab="route"]'),
+    html:`<p>Celé pořadí domů, kolik vám jich zbývá, kolik to bude minut a kde už jste byli.</p>`});
+  S.push({title:"Můj dům", target:() => $('nav.tabs [data-tab="add"]'),
+    html:`<p>Chcete taky rozdávat? Přidejte svůj dům za minutu. Nastavíte otevírací dobu – klidně kratší nebo delší než ostatní – a večer jedním klepnutím přepnete <b>Došly bonbony</b>.</p>`});
+  S.push({title:"Žebříček a info", target:() => $('nav.tabs [data-tab="more"]'),
+    html:`<p>Nejlépe hodnocené domy, pravidla pro děti, QR kód pro sousedy a tenhle návod znovu.</p>`});
+  S.push({title:"Hotovo, můžete vyrazit! 👻", final:true,
+    html:`<label class="nick-in">Přezdívka vaší party <span style="font-weight:400">nepovinné – podepíšete se jí u fotek a hodnocení. Ne jména dětí.</span><input type="text" id="tourNick" maxlength="30" autocomplete="nickname" placeholder="např. Dýňáci od rybníka" value="${esc(NICK)}"></label>`});
+  return S;
+}
+function tourPlace(){
+  if (!TOUR.on) return;
+  const st = TOUR.steps[TOUR.i], hole = $("#tourHole"), card = $("#tourCard");
+  const el = st.target ? st.target() : null;
+  const r = el ? el.getBoundingClientRect() : null;
+  const H = window.innerHeight;
+  card.style.transform = "";
+  if (r && r.width > 0 && r.height > 0){
+    const pad = st.pad == null ? 8 : st.pad;
+    hole.classList.remove("none");
+    hole.style.left = (r.left - pad) + "px"; hole.style.top = (r.top - pad) + "px";
+    hole.style.width = (r.width + 2 * pad) + "px"; hole.style.height = (r.height + 2 * pad) + "px";
+    const ch = card.offsetHeight;
+    if (r.top + r.height / 2 > H / 2){
+      const bottom = H - r.top + pad + 12;
+      if (H - bottom - ch < 8){ card.style.bottom = "auto"; card.style.top = "8px"; }
+      else { card.style.top = "auto"; card.style.bottom = bottom + "px"; }
+    } else {
+      const top = r.bottom + pad + 12;
+      card.style.bottom = "auto"; card.style.top = Math.min(top, H - ch - 8) + "px";
+    }
+  } else {
+    hole.classList.add("none");
+    card.style.bottom = "auto"; card.style.top = "50%"; card.style.transform = "translateY(-50%)";
+  }
+}
+function tourGo(n){
+  const cur = TOUR.steps[TOUR.i];
+  if (cur && cur.after && n !== TOUR.i) cur.after();
+  TOUR.i = Math.max(0, Math.min(n, TOUR.steps.length - 1));
+  const st = TOUR.steps[TOUR.i], N = TOUR.steps.length;
+  if (st.before) st.before();
+  $("#tourStep").textContent = `Krok ${TOUR.i + 1} z ${N}`;
+  $("#tourTitle").textContent = st.title;
+  $("#tourText").innerHTML = st.html;
+  $("#tourDots").innerHTML = TOUR.steps.map((_, k) => `<i class="${k === TOUR.i ? "on" : ""}"></i>`).join("");
+  const acts = $("#tourActs");
+  if (st.final){
+    acts.className = "tour-acts one";
+    acts.innerHTML = `<button class="btn primary big" type="button" data-tour="go">📍 Povolit polohu a začít</button>
+      <button class="btn ghost" type="button" data-tour="look">Jen se podívat</button>`;
+  } else {
+    acts.className = "tour-acts";
+    acts.innerHTML = `<button class="btn ghost" type="button" data-tour="back"${TOUR.i ? "" : " disabled"}>Zpět</button>
+      <button class="btn primary" type="button" data-tour="next">${TOUR.i === 0 ? "Ukázat, jak to funguje" : "Další"}</button>`;
+  }
+  $("#tourSkip").hidden = !!st.final;
+  tourPlace();
+  setTimeout(tourPlace, 120); setTimeout(tourPlace, 380);      // po animaci panelu / posunu mapy
+}
+function startTour(){
+  if (TOUR.on || !LOC) return;
+  if (NAV.on) exitNav();
+  closeRate(); $("#legend").hidden = true; $("#lightbox").hidden = true;
+  go("map");
+  TOUR.steps = tourSteps(); TOUR.on = true; TOUR.i = 0;
+  $("#tour").hidden = false;
+  setTimeout(() => { map.invalidateSize(); tourGo(0); }, 60);
+}
+function endTour(withLocation){
+  if (!TOUR.on) return;
+  const ni = $("#tourNick"); if (ni) setNick(ni.value);
+  const cur = TOUR.steps[TOUR.i]; if (cur && cur.after) cur.after();
+  TOUR.on = false; $("#tour").hidden = true; store.set("hw-tour", true);
+  if (withLocation){ go("map"); locate(true); }
+}
+function maybeOnboard(){                       // nový uživatel dostane návod automaticky
+  if (!LOC || TOUR.on || tourAuto || store.get("hw-tour", false) || !$("#locOverlay").hidden || !$("#newLocOverlay").hidden) return;
+  tourAuto = true; setTimeout(startTour, 700);
+}
+$("#tour").addEventListener("click", e => {
+  const b = e.target.closest("[data-tour]"); if (!b) return;
+  const a = b.dataset.tour;
+  if (a === "next") tourGo(TOUR.i + 1);
+  else if (a === "back") tourGo(TOUR.i - 1);
+  else if (a === "go") endTour(true);
+  else if (a === "look") endTour(false);
+  else if (a === "loc"){ endTour(false); openLocPicker(); }
+});
+$("#tourSkip").addEventListener("click", () => endTour(false));
+document.addEventListener("click", e => { if (e.target.closest("[data-tour-start]")){ $("#legend").hidden = true; startTour(); } });
+document.addEventListener("keydown", e => { if (!TOUR.on) return; if (e.key === "Escape") endTour(false); else if (e.key === "ArrowRight" && !TOUR.steps[TOUR.i].final) tourGo(TOUR.i + 1); else if (e.key === "ArrowLeft") tourGo(TOUR.i - 1); });
+window.addEventListener("resize", () => { if (TOUR.on) tourPlace(); });
 
 /* ---------- 13: sdílení lokality ---------- */
 function shareLink(){ const u = new URL(location.href); u.hash = ""; u.search = LOC ? "?l=" + encodeURIComponent(LOC.id) : ""; return u.toString(); }
@@ -1542,6 +1692,9 @@ function tick(){
   else el.innerHTML = `díky, že jste<b>přišli!</b>`;
 }
 tick(); setInterval(tick, 30000);
+// dýně se samy rozsvítí / ztmavnou podle otevírací doby jednotlivých domů
+let liveSig = "";
+setInterval(() => { const sig = stations.map(liveState).join(); if (sig !== liveSig){ const first = !liveSig; liveSig = sig; if (!first && !picking && !TOUR.on) renderAll(); } }, 30000);
 function drawInfo(){
   drawShare();
   if (!LOC){ $("#infoFacts").innerHTML = `<div>Lokalita<b style="font-size:17px">zatím nevybraná</b></div>`; $("#orgPanel").hidden = true; return; }
@@ -1889,8 +2042,8 @@ function navAfterData(){                       // po obnovení dat (každou minu
   if (NAV.state === "done"){ planRoute(); if (route.length) navPick(); else navRender(); return; }
   if (NAV.state === "rate"){ navRender(); return; }
   const s = byId(NAV.target);
-  if (!s || (s.status !== "open" && NAV.fixed !== s.id)){
-    if (s) toast(`${s.name}: došly bonbony – vedu vás jinam.`, true, 5000);
+  if (!s || ((s.status !== "open" || timeState(s) === "after") && NAV.fixed !== s.id)){
+    if (s) toast(`${s.name}: ${s.status !== "open" ? "došly bonbony" : "už má zavřeno"} – vedu vás jinam.`, true, 5000);
     NAV.fixed = null; navPick(); return;
   }
   drawMap(); drawNavLine(); navRender();

@@ -160,6 +160,11 @@ function folder_() {
   return f;
 }
 
+function dropRatings_(stationId) {            // hodnocení smazaného domu pryč
+  const sh = aux_(SHEET_RATE, RATE_COLS);
+  table_(sh).filter(function (r) { return String(r.stationId) === String(stationId); })
+    .sort(function (a, b) { return b._row - a._row; }).forEach(function (r) { sh.deleteRow(r._row); });
+}
 function trashPhotos_(stationId) {
   const sh = aux_(SHEET_PHOTO, PHOTO_COLS);
   const list = table_(sh).filter(function (p) { return String(p.stationId) === String(stationId); });
@@ -276,6 +281,20 @@ function doPost_(e) {
       return json_({ ok: true });
     }
 
+    // --- úklid (jen správce): hodnocení a fotky domů, které už neexistují ---
+    if (body.action === 'cleanup') {
+      if (!isAdmin) throw new Error('Jen pro správce.');
+      const ids = {}; all.forEach(function (r) { ids[String(r.id)] = 1; });
+      let nr = 0, np = 0;
+      const rs = aux_(SHEET_RATE, RATE_COLS);
+      table_(rs).filter(function (r) { return !ids[String(r.stationId)]; }).sort(function (a, b) { return b._row - a._row; })
+        .forEach(function (r) { rs.deleteRow(r._row); nr++; });
+      const ps = aux_(SHEET_PHOTO, PHOTO_COLS);
+      table_(ps).filter(function (p) { return !ids[String(p.stationId)]; }).sort(function (a, b) { return b._row - a._row; })
+        .forEach(function (p) { try { DriveApp.getFileById(String(p.fileId)).setTrashed(true); } catch (err) {} ps.deleteRow(p._row); np++; });
+      return json_({ ok: true, ratings: nr, photos: np });
+    }
+
     if (body.action === 'add') {
       const loc = findLoc(body.loc || DEFAULT_LOC);
       if (!loc) throw new Error('Lokalita nebyla nalezena.');
@@ -343,6 +362,7 @@ function doPost_(e) {
 
     // --- přihlášení hostitele PINem ---
     if (body.action === 'login') {
+      if (isAdmin) return json_({ ok: true, id: String(row.id), token: String(row.token) });   // správce se přihlásí i bez PINu
       const pin = String(body.pin || '');
       if (!row.pinHash) throw new Error('U tohoto stanoviště není PIN nastavený, ozvěte se organizátorovi.');
       if (hash_(pin, row.id) !== String(row.pinHash)) {
@@ -363,6 +383,7 @@ function doPost_(e) {
     }
     if (body.action === 'delete') {
       trashPhotos_(row.id);
+      dropRatings_(row.id);
       sh.deleteRow(row._row);
       return json_({ ok: true });
     }
