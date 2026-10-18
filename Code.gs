@@ -8,7 +8,6 @@ const SHEET = 'Stanoviste';
 const SHEET_RATE = 'Hodnoceni';
 const SHEET_PHOTO = 'Fotky';
 const SHEET_LOC = 'Lokality';
-const ADMIN_KEY = 'dyne-2e41849e';            // heslo správce (?admin=HESLO)
 const MAX_STATIONS = 300;                      // pojistka proti spamu (na jednu lokalitu)
 const MAX_LOCS = 500;
 const RADIUS_KM = 6;                           // stanoviště musí být do této vzdálenosti od středu lokality
@@ -148,6 +147,29 @@ function writeRow_(sh, rowIndex, o) {
   sh.getRange(rowIndex, 1, 1, COLS.length).setValues([row]);
 }
 
+/* ---------- heslo správce: jen ve Vlastnostech skriptu, nikdy v kódu (kód je veřejný na GitHubu) ---------- */
+function adminKey_() {
+  const props = PropertiesService.getScriptProperties();
+  let k = props.getProperty('adminKey');
+  if (!k) { k = 'adm-' + Utilities.getUuid().replace(/-/g, '') ; props.setProperty('adminKey', k); }
+  return k;
+}
+// Spusťte ručně v editoru (Spustit → showAdminKey) a v Protokolu provádění uvidíte odkaz správce.
+function showAdminKey() {
+  const url = 'https://alescermak79-lab.github.io/dynova-stezka/?l=' + DEFAULT_LOC + '&admin=' + adminKey_();
+  Logger.log('Odkaz správce (nikomu neposílejte): ' + url);
+  return url;
+}
+// Kdyby heslo uniklo: spusťte newAdminKey – staré přestane platit.
+function newAdminKey() { PropertiesService.getScriptProperties().deleteProperty('adminKey'); return showAdminKey(); }
+
+/* ---------- brzda proti hádání PINu: po 8 chybách 15 minut pauza pro daný dům / lokalitu ---------- */
+const PIN_TRIES = 8, PIN_LOCK_SEC = 900;
+function pinLocked_(key) { const n = Number(CacheService.getScriptCache().get('pin:' + key) || 0); return n >= PIN_TRIES; }
+function pinFail_(key) { const c = CacheService.getScriptCache(); const n = Number(c.get('pin:' + key) || 0) + 1; c.put('pin:' + key, String(n), PIN_LOCK_SEC); }
+function pinOk_(key) { CacheService.getScriptCache().remove('pin:' + key); }
+const PIN_LOCK_MSG = 'Moc špatných pokusů o PIN. Zkuste to znovu za 15 minut.';
+
 /* ---------- fotky v Google Disku ---------- */
 function photoUrl_(fileId) { return 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w1200'; }
 
@@ -244,7 +266,7 @@ function doPost_(e) {
     const sh = sheet_();
     const all = rows_();
     const now = new Date().toISOString();
-    const isAdmin = body.admin && body.admin === ADMIN_KEY;
+    const isAdmin = !!body.admin && String(body.admin) === adminKey_();
     const locSh = aux_(SHEET_LOC, LOC_COLS);
     const locList = locs_();
     const findLoc = function (id) { return locList.filter(function (l) { return String(l.id) === String(id); })[0]; };
@@ -266,7 +288,9 @@ function doPost_(e) {
       if (!loc) throw new Error('Lokalita nebyla nalezena.');
       if (body.action === 'loginloc') {
         if (!loc.pinHash) throw new Error('Tato lokalita nemá PIN organizátora, ozvěte se správci.');
-        if (hash_(String(body.pin || ''), 'loc:' + loc.id) !== String(loc.pinHash)) { Utilities.sleep(1000); throw new Error('Nesprávný PIN organizátora.'); }
+        if (pinLocked_('loc:' + loc.id)) throw new Error(PIN_LOCK_MSG);
+        if (hash_(String(body.pin || ''), 'loc:' + loc.id) !== String(loc.pinHash)) { pinFail_('loc:' + loc.id); Utilities.sleep(1000); throw new Error('Nesprávný PIN organizátora.'); }
+        pinOk_('loc:' + loc.id);
         return json_({ ok: true, loc: String(loc.id), token: String(loc.token) });
       }
       if (!isAdmin && String(body.token || '') !== String(loc.token)) throw new Error('Lokalitu může upravit jen její organizátor.');
@@ -365,10 +389,13 @@ function doPost_(e) {
       if (isAdmin) return json_({ ok: true, id: String(row.id), token: String(row.token) });   // správce se přihlásí i bez PINu
       const pin = String(body.pin || '');
       if (!row.pinHash) throw new Error('U tohoto stanoviště není PIN nastavený, ozvěte se organizátorovi.');
+      if (pinLocked_(row.id)) throw new Error(PIN_LOCK_MSG);
       if (hash_(pin, row.id) !== String(row.pinHash)) {
+        pinFail_(row.id);
         Utilities.sleep(1000);                       // brzda proti hádání PINu
         throw new Error('Nesprávný PIN.');
       }
+      pinOk_(row.id);
       return json_({ ok: true, id: String(row.id), token: String(row.token) });
     }
 
@@ -397,6 +424,6 @@ function doPost_(e) {
 
 // Spusťte jednou ručně: založí listy a vyžádá oprávnění k Google Disku (fotky).
 function setup() {
-  sheet_(); locs_(); aux_(SHEET_RATE, RATE_COLS); aux_(SHEET_PHOTO, PHOTO_COLS);
+  sheet_(); locs_(); aux_(SHEET_RATE, RATE_COLS); aux_(SHEET_PHOTO, PHOTO_COLS); adminKey_();
   return folder_().getName();
 }

@@ -367,6 +367,13 @@ body.nav .me-dot{width:22px;height:22px}
   .fab.q{bottom:calc(var(--nav-h) + 76px + env(safe-area-inset-bottom,0px))}
   .legend{bottom:calc(var(--nav-h) + 22px + env(safe-area-inset-bottom,0px))}
 }
+/* ---- přístupnost ---- */
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.thumbs .tw{position:relative;display:inline-block}
+.thumbs button.x{position:absolute;top:-7px;right:-7px;width:24px;height:24px;padding:0;border:0;border-radius:50%;background:var(--blood);color:#fff;font-weight:800;display:grid;place-items:center;font-size:14px;line-height:1;cursor:pointer}
+.thumbs button.x::before{content:"";position:absolute;inset:-8px}
+img[data-photo][role=button]{cursor:zoom-in}
+[tabindex="-1"]:focus:not(:focus-visible){outline:none}
 </style>
 </head>
 <body>
@@ -678,8 +685,9 @@ body.nav .me-dot{width:22px;height:22px}
     <div class="tour-acts" id="tourActs"><button class="btn ghost" type="button" id="tourBack">Zpět</button><button class="btn primary" type="button" id="tourNext">Další</button></div>
   </div>
 </div>
-<div class="lightbox" id="lightbox" hidden><img id="lbImg" alt="Fotka stanoviště"><div class="cap" id="lbCap" hidden></div><button class="btn sm close" type="button" id="lbClose">Zavřít</button></div>
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Fotka"><img id="lbImg" alt="Fotka stanoviště"><div class="cap" id="lbCap" hidden></div><button class="btn sm close" type="button" id="lbClose">Zavřít</button></div>
 <div class="toast" id="toast" role="status" hidden></div>
+<div id="srLive" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 <input type="file" id="photoInput" accept="image/*" hidden>
 
 <nav class="tabs" aria-label="Hlavní menu">
@@ -723,7 +731,15 @@ const store = {
   set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 };
 const params = new URLSearchParams(location.search);
-const ADMIN = params.get("admin") || "";
+const ADMIN = (() => {
+  let k = params.get("admin") || "";
+  try{
+    if (k){ sessionStorage.setItem("hw-admin", k); params.delete("admin");
+      const q = params.toString(); history.replaceState(history.state, "", location.pathname + (q ? "?" + q : "") + location.hash); }
+    else k = sessionStorage.getItem("hw-admin") || "";
+  }catch(e){}
+  return k;
+})();
 
 /* ---------- state ---------- */
 let stations = [];
@@ -884,11 +900,16 @@ function ratingHtml(s){
 function thumbsHtml(s, from, max, canDelete){
   const list = (s.photos || []).slice(from, from + max);
   if (!list.length) return "";
-  return `<div class="thumbs">${list.map(p => `<button type="button" data-photo="${esc(p.url)}" data-nick="${esc(p.nick || "")}" aria-label="Zvětšit fotku${p.nick ? " – od " + esc(p.nick) : ""}"><img src="${esc(p.url)}" alt="" loading="lazy">${canDelete ? `<span class="x" role="button" tabindex="0" data-delphoto="${esc(p.id)}" data-id="${esc(s.id)}" aria-label="Smazat fotku">×</span>` : ""}</button>`).join("")}</div>`;
+  return `<div class="thumbs">${list.map(p => `<span class="tw"><button type="button" data-photo="${esc(p.url)}" data-nick="${esc(p.nick || "")}" aria-label="Zvětšit fotku${p.nick ? " – od " + esc(p.nick) : ""}"><img src="${esc(p.url)}" alt="" loading="lazy"></button>${canDelete ? `<button type="button" class="x" data-delphoto="${esc(p.id)}" data-id="${esc(s.id)}" aria-label="Smazat fotku">×</button>` : ""}</span>`).join("")}</div>`;
 }
 let toastT = null;
+function say(t){                               // oznámení pro čtečky obrazovky (aria-live)
+  const el = document.getElementById("srLive"); if (!el || !t) return;
+  el.textContent = ""; setTimeout(() => { el.textContent = t; }, 60);
+}
 function toast(msg, ok = true, ms = 3500){
-  const t = $("#toast"); t.textContent = msg; t.className = "toast" + (ok ? "" : " err"); t.hidden = false;
+  const t = $("#toast"); t.className = "toast" + (ok ? "" : " err"); t.textContent = msg; t.hidden = false;
+  if (msg === $("#srLive").textContent) $("#srLive").textContent = "";        // čtečka: toast je sám živá oblast (role=status)
   clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, ms);
 }
 function shrink(file, max, q){
@@ -995,7 +1016,7 @@ function sheetHtml(s){
   const cover = (s.photos || [])[0];
   const d = me ? ` · ${fmtM(walk(dist(me, s)))}, ${fmtMin(dist(me, s))} pěšky` : "";
   const id = esc(s.id);
-  return `${cover ? `<img class="bs-cover" src="${esc(cover.url)}" alt="Fotka stanoviště" data-photo="${esc(cover.url)}" data-nick="${esc(cover.nick || "")}">` : ""}
+  return `${cover ? `<img class="bs-cover" src="${esc(cover.url)}" alt="Fotka domu ${esc(s.name)} – zvětšit" role="button" tabindex="0" data-photo="${esc(cover.url)}" data-nick="${esc(cover.nick || "")}">` : ""}
     <h2 id="bsTitle">${esc(s.name)}</h2>
     <div class="muted small">${esc(s.address)}${d}</div>
     <div class="small bs-meta"><span>${ratingHtml(s)}${myRatings[s.id] ? ` <span class="muted">· vy ${myRatings[s.id]}★</span>` : ""}</span><span><span class="ghosts">${ghosts(s.scare)}</span> ${scareLabel(s.scare)}</span></div>
@@ -1024,6 +1045,9 @@ function drawMap(){
     const m = L.marker([s.lat, s.lng], {icon: icon(s, NAV.on ? undefined : order.get(s.id), tgt), title: s.name,
       zIndexOffset: tgt ? 900 : order.has(s.id) ? 500 - order.get(s.id) : 0});
     m.on("click", () => markerTap(s.id));
+    m.on("keydown", e => { const k = e.originalEvent && e.originalEvent.key; if (k === "Enter" || k === " "){ e.originalEvent.preventDefault(); markerTap(s.id); } });
+    const lab = `${s.name}${order.has(s.id) && !NAV.on ? `, ${order.get(s.id)}. na trase` : ""}, ${({open:"právě otevřeno", sleep:"teď zavřeno", out:s.status === "closed" ? "zavřeno" : "došly bonbony"})[liveState(s)]}${visited.has(s.id) ? ", navštíveno" : ""}`;
+    m.on("add", () => { const el = m.getElement(); if (el){ el.setAttribute("aria-label", lab); el.setAttribute("role", "button"); } });
     markers[s.id] = m;
     markerLayer.addLayer(m);
   });
@@ -1102,6 +1126,7 @@ function drawMine(){
         : `<button class="btn sm teal" type="button" data-status="open" data-id="${esc(s.id)}">Znovu otevřeno</button>`}
       <button class="btn sm ghost" type="button" data-edit="${esc(s.id)}">Upravit</button>
       <button class="btn sm ghost" type="button" data-del="${esc(s.id)}">Smazat</button>
+      <button class="btn sm ghost" type="button" data-hostout="${esc(s.id)}">Odhlásit tento telefon</button>
     </div></li>`).join("");
   const editing = !!$("#fId").value;
   $("#formBox").hidden = !!list.length && !editing && !addMore;
@@ -1225,6 +1250,7 @@ function tourPlace(){
   }
 }
 function tourGo(n){
+  TOUR.focusIn = $("#tourActs").contains(document.activeElement);   // klávesnice: fokus zůstane na tlačítku i po přepnutí kroku
   const cur = TOUR.steps[TOUR.i];
   if (cur && cur.after && n !== TOUR.i) cur.after();
   TOUR.i = Math.max(0, Math.min(n, TOUR.steps.length - 1));
@@ -1245,6 +1271,7 @@ function tourGo(n){
       <button class="btn primary" type="button" data-tour="next">${TOUR.i === 0 ? "Ukázat, jak to funguje" : "Další"}</button>`;
   }
   $("#tourSkip").hidden = !!st.final;
+  if (TOUR.focusIn){ const nf = acts.querySelector('[data-tour="next"]') || acts.querySelector('[data-tour="go"]'); if (nf) nf.focus({preventScroll:true}); }
   tourPlace();
   setTimeout(tourPlace, 120); setTimeout(tourPlace, 380);      // po animaci panelu / posunu mapy
 }
@@ -1331,7 +1358,7 @@ function drawRank(){
     const cover = (s.photos || [])[0];
     return `<li class="${i < 3 && i >= 0 ? "top" : ""}">
       <div class="place ${i >= 0 && i < 3 ? "m" : ""}">${i < 0 ? "–" : medal[i] || (i + 1) + "."}</div>
-      ${cover ? `<img class="ph" src="${esc(cover.url)}" alt="" loading="lazy" data-photo="${esc(cover.url)}">` : `<div class="ph" aria-hidden="true">🎃</div>`}
+      ${cover ? `<img class="ph" src="${esc(cover.url)}" alt="Fotka domu ${esc(s.name)} – zvětšit" role="button" tabindex="0" loading="lazy" data-photo="${esc(cover.url)}">` : `<div class="ph" aria-hidden="true">🎃</div>`}
       <div><div class="nm">${esc(s.name)}</div>
         <div class="meta">${ratingHtml(s)}${(s.photos || []).length ? ` · 📷 ${(s.photos || []).length}` : ""}</div>
         <div class="meta">${esc(s.address)}</div></div>
@@ -1471,19 +1498,36 @@ document.addEventListener("click", async e => {
   else if (t.dataset.status){
     t.disabled = true;
     try{ await api.post({action:"update", id:t.dataset.id, token:mine[t.dataset.id], station:{status:t.dataset.status}}); toast(t.dataset.status === "out" ? "Označeno: došly bonbony. Děti k vám už trasa nepošle." : "Dům je zase otevřený."); await load(); }
-    catch(err){ alert(err.message); } t.disabled = false;
+    catch(err){ authFail(t.dataset.id, err); } t.disabled = false;
   }
   else if (t.dataset.edit){ fillForm(byId(t.dataset.edit)); }
   else if (t.dataset.del){
     if (!confirm("Opravdu smazat stanoviště z mapy?")) return;
     try{ await api.post({action:"delete", id:t.dataset.del, token:mine[t.dataset.del]}); delete mine[t.dataset.del]; store.set("hw-mine", mine); await load(); }
-    catch(err){ alert(err.message); }
+    catch(err){ authFail(t.dataset.del, err); }
   }
   else if (t.dataset.admindel){
     if (!confirm("Smazat toto stanoviště jako správce?")) return;
     try{ await api.post({action:"delete", id:t.dataset.admindel, admin:ADMIN || undefined, orgToken:orgTok()}); closeSheet(); await load(); }
-    catch(err){ alert(err.message); }
+    catch(err){ toast(err.message, false, 6000); }
   }
+  else if (t.dataset.hostout){
+    if (!confirm("Odhlásit tento telefon od domu? Znovu se přihlásíte PINem.")) return;
+    delete mine[t.dataset.hostout]; store.set("hw-mine", mine); renderAll(false);
+    toast("Telefon je odhlášený. Dům zůstal na mapě.");
+  }
+});
+function authFail(id, err){                    // propadlé přihlášení: token zahodit, ať se dá přihlásit znovu
+  const m = String(err && err.message || err);
+  if (/jen jeho hostitel|přihlaste se PINem/.test(m) && mine[id]){
+    delete mine[id]; store.set("hw-mine", mine); renderAll(false);
+    toast("Přihlášení k domu vypršelo – přihlaste se znovu PINem v Můj dům.", false, 7000);
+  } else toast(m, false, 6000);
+}
+// přihlášení / odhlášení v jiné kartě se projeví hned i tady
+window.addEventListener("storage", e => {
+  if (e.key === "hw-org"){ orgTokens = store.get("hw-org", {}); drawInfo(); drawMap(); if (sheetId) $("#bsBody").innerHTML = sheetHtml(byId(sheetId)); }
+  else if (e.key === "hw-mine"){ mine = store.get("hw-mine", {}); renderAll(false); if (sheetId && byId(sheetId)) $("#bsBody").innerHTML = sheetHtml(byId(sheetId)); }
 });
 $("#btnLogin").addEventListener("click", doLogin);
 function goHome(e){
@@ -1507,6 +1551,9 @@ document.addEventListener("click", e => {
   const rt = e.target.closest("[data-rate]");
   if (rt){ openRate(rt.dataset.rate); }
 }, true);
+document.addEventListener("keydown", e => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches('img[data-photo][role="button"]')){ e.preventDefault(); e.target.click(); }
+});
 $("#photoInput").addEventListener("change", async () => {
   const f = $("#photoInput").files[0], id = photoTarget;
   if (!f || !id) return;
@@ -2099,6 +2146,7 @@ function navRender(){
   const left = route.filter(id => id !== NAV.target).length;
   const nth = visited.size + 1;
   let plain = true;
+  if (NAV.state !== NAV.said){ NAV.said = NAV.state; if (NAV.state === "here" || NAV.state === "rate") say(`Jste u domu ${s ? s.name : ""}.`); else if (NAV.state === "done") say("Hotovo, všechny otevřené domy jsou obejité."); }
   if (NAV.state === "done"){ D.textContent = "Hotovo! 🎉"; S.textContent = "Všechny otevřené domy jsou obejité"; }
   else if (NAV.state === "here" || NAV.state === "rate"){ D.textContent = "Jste tady! 🎃"; S.textContent = s ? s.name : ""; }
   else if (!me){ D.textContent = gpsDenied ? "Poloha je vypnutá" : "Hledám polohu…"; S.textContent = gpsDenied ? "Povolte ji v prohlížeči u této stránky" : "Chvilku vydržte, GPS se chytá"; }
@@ -2170,6 +2218,56 @@ $("#langBtn").addEventListener("click", e => {
   try{ store.set("hw-lang", LANG === "en" ? "cs" : "en"); }catch(err){}
   location.href = (LANG === "en" ? "./" : "en.html") + location.search + location.hash;
 });
+
+/* ---------- přístupnost dialogů: fokus dovnitř, uvěznit (modální), vrátit ---------- */
+(() => {
+  const FOC = 'a[href],button:not([disabled]),input:not([disabled]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+  const vis = el => !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+  const list = root => [...root.querySelectorAll(FOC)].filter(vis);
+  const D = [                                  // [prvek, modální?, kam fokus po otevření]
+    ["#rateOverlay", true, () => $("#rateTitle")],
+    ["#tour", true, () => $("#tourTitle")],
+    ["#lightbox", true, () => $("#lbClose")],
+    ["#bsheet", false, () => $("#bsTitle") || $("#bsClose")],
+    ["#legend", false, () => $("#legend")],
+    ["#locOverlay", true, null],
+    ["#newLocOverlay", true, null],
+  ];
+  const stack = [];
+  const focusEl = el => { if (!el) return; if (!el.matches(FOC) && !el.hasAttribute("tabindex")) el.setAttribute("tabindex", "-1"); try{ el.focus({preventScroll:true}); }catch(e){} };
+  D.forEach(([sel, modal, first]) => {
+    const el = $(sel); if (!el) return;
+    new MutationObserver(() => {
+      const open = !el.hidden, i = stack.findIndex(x => x.el === el);
+      if (open && i < 0){
+        const ret = document.activeElement, mk = sel === "#bsheet" ? sheetId : null;
+        stack.push({el, modal, ret, mk});
+        setTimeout(() => { if (!el.hidden) focusEl((first && first()) || list(el)[0] || el); }, 80);
+      } else if (!open && i >= 0){
+        const [x] = stack.splice(i, 1);
+        let r = x.ret;
+        if ((!r || !r.isConnected || r === document.body) && x.mk && markers[x.mk]) r = markers[x.mk].getElement();
+        if (el.contains(document.activeElement) || document.activeElement === document.body || !document.activeElement)
+          setTimeout(() => { if (r && r.isConnected && vis(r)) focusEl(r); }, 40);
+      }
+    }).observe(el, {attributes:true, attributeFilter:["hidden"]});
+  });
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Tab") return;
+    const top = [...stack].reverse().find(x => x.modal && !x.el.hidden); if (!top) return;
+    const f = list(top.el); if (!f.length){ e.preventDefault(); return; }
+    const a = f[0], z = f[f.length - 1], cur = document.activeElement;
+    if (!top.el.contains(cur)){ e.preventDefault(); (e.shiftKey ? z : a).focus(); }
+    else if (e.shiftKey && cur === a){ e.preventDefault(); z.focus(); }
+    else if (!e.shiftKey && cur === z){ e.preventDefault(); a.focus(); }
+  });
+  // stavové zprávy formulářů čtečka přečte, jakmile se objeví
+  ["#formMsg", "#loginMsg", "#orgMsg", "#nlMsg"].forEach(sel => {
+    const el = $(sel); if (!el) return;
+    new MutationObserver(() => { if (!el.hidden && el.textContent.trim()) say(el.textContent.trim()); })
+      .observe(el, {attributes:true, attributeFilter:["hidden"], childList:true, characterData:true, subtree:true});
+  });
+})();
 
 /* ---------- boot ---------- */
 $("#demoFlag").hidden = !DEMO;
