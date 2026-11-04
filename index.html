@@ -1052,6 +1052,12 @@ function sheetHtml(s){
       <button class="ibtn" type="button" data-rate="${id}">★<span>${myRatings[s.id] ? "Vaše " + myRatings[s.id] + " ★" : "Ohodnotit"}</span></button>
       ${!v ? `<button class="ibtn" type="button" data-skip="${id}">${sk ? "↩" : "⤼"}<span>${sk ? "Zařadit zpět" : "Vynechat"}</span></button>` : ""}
     </div>
+    ${(ADMIN || orgTok()) && !mine[s.id] ? `<div class="row bs-admin">
+      <button class="btn sm" type="button" data-orgedit="${id}">✏️ Upravit (${ADMIN ? "správce" : "organizátor"})</button>
+      ${s.status === "open"
+        ? `<button class="btn sm" type="button" data-orgstatus="out" data-id="${id}">Došly bonbony</button>`
+        : `<button class="btn sm teal" type="button" data-orgstatus="open" data-id="${id}">Znovu otevřeno</button>`}
+    </div>` : ""}
     ${ADMIN || orgTok() ? `<button class="btn sm ghost bs-admin" type="button" data-admindel="${id}">Smazat stanoviště (${ADMIN ? "správce" : "organizátor"})</button>` : ""}`;
 }
 let markers = {};
@@ -1530,6 +1536,12 @@ document.addEventListener("click", async e => {
     try{ await api.post({action:"delete", id:t.dataset.admindel, admin:ADMIN || undefined, orgToken:orgTok()}); closeSheet(); await load(); }
     catch(err){ toast(err.message, false, 6000); }
   }
+  else if (t.dataset.orgedit){ const s = byId(t.dataset.orgedit); if (s){ closeSheet(); fillForm(s); } }
+  else if (t.dataset.orgstatus){
+    t.disabled = true;
+    try{ await api.post({action:"update", id:t.dataset.id, admin:ADMIN || undefined, orgToken:orgTok(), station:{status:t.dataset.orgstatus}}); toast(t.dataset.orgstatus === "out" ? "Označeno: došly bonbony." : "Dům je zase otevřený."); closeSheet(); await load(); }
+    catch(err){ toast(err.message, false, 6000); } t.disabled = false;
+  }
   else if (t.dataset.hostout){
     if (!confirm("Odhlásit tento telefon od domu? Znovu se přihlásíte PINem.")) return;
     delete mine[t.dataset.hostout]; store.set("hw-mine", mine); renderAll(false);
@@ -1758,7 +1770,7 @@ $("#form").addEventListener("submit", async e => {
   $("#btnSave").disabled = true;
   try{
     if (id){
-      await api.post({action:"update", id, token:mine[id], admin:ADMIN || undefined, station:s});
+      await api.post({action:"update", id, token:mine[id], admin:ADMIN || undefined, orgToken:mine[id] ? undefined : orgTok(), station:s});
       alertMsg("Uloženo. Změny už vidí všichni.", true); toast("Uloženo – změny už vidí všichni.");
     } else {
       const r = await api.post({action:"add", pin, loc:LOC.id, station:Object.assign({status:"open"}, s)});

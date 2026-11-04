@@ -1052,6 +1052,12 @@ function sheetHtml(s){
       <button class="ibtn" type="button" data-rate="${id}">★<span>${myRatings[s.id] ? "Your " + myRatings[s.id] + " ★" : "Rate"}</span></button>
       ${!v ? `<button class="ibtn" type="button" data-skip="${id}">${sk ? "↩" : "⤼"}<span>${sk ? "Add back" : "Skip"}</span></button>` : ""}
     </div>
+    ${(ADMIN || orgTok()) && !mine[s.id] ? `<div class="row bs-admin">
+      <button class="btn sm" type="button" data-orgedit="${id}">✏️ Edit (${ADMIN ? "admin" : "organizer"})</button>
+      ${s.status === "open"
+        ? `<button class="btn sm" type="button" data-orgstatus="out" data-id="${id}">Out of candy</button>`
+        : `<button class="btn sm teal" type="button" data-orgstatus="open" data-id="${id}">Open again</button>`}
+    </div>` : ""}
     ${ADMIN || orgTok() ? `<button class="btn sm ghost bs-admin" type="button" data-admindel="${id}">Delete house (${ADMIN ? "admin" : "organizer"})</button>` : ""}`;
 }
 let markers = {};
@@ -1530,6 +1536,12 @@ document.addEventListener("click", async e => {
     try{ await api.post({action:"delete", id:t.dataset.admindel, admin:ADMIN || undefined, orgToken:orgTok()}); closeSheet(); await load(); }
     catch(err){ toast(err.message, false, 6000); }
   }
+  else if (t.dataset.orgedit){ const s = byId(t.dataset.orgedit); if (s){ closeSheet(); fillForm(s); } }
+  else if (t.dataset.orgstatus){
+    t.disabled = true;
+    try{ await api.post({action:"update", id:t.dataset.id, admin:ADMIN || undefined, orgToken:orgTok(), station:{status:t.dataset.orgstatus}}); toast(t.dataset.orgstatus === "out" ? "Marked: out of candy." : "The house is open again."); closeSheet(); await load(); }
+    catch(err){ toast(err.message, false, 6000); } t.disabled = false;
+  }
   else if (t.dataset.hostout){
     if (!confirm("Sign this phone out of the house? You can sign in again with your PIN.")) return;
     delete mine[t.dataset.hostout]; store.set("hw-mine", mine); renderAll(false);
@@ -1758,7 +1770,7 @@ $("#form").addEventListener("submit", async e => {
   $("#btnSave").disabled = true;
   try{
     if (id){
-      await api.post({action:"update", id, token:mine[id], admin:ADMIN || undefined, station:s});
+      await api.post({action:"update", id, token:mine[id], admin:ADMIN || undefined, orgToken:mine[id] ? undefined : orgTok(), station:s});
       alertMsg("Saved. Everyone can see the changes now.", true); toast("Saved – everyone can see the changes now.");
     } else {
       const r = await api.post({action:"add", pin, loc:LOC.id, station:Object.assign({status:"open"}, s)});

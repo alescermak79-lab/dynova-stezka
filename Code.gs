@@ -399,7 +399,7 @@ function doPost_(e) {
       return json_({ ok: true, id: String(row.id), token: String(row.token) });
     }
 
-    if (!isAdmin && !isHost && !(isOrg && body.action === 'delete'))
+    if (!isAdmin && !isHost && !(isOrg && (body.action === 'delete' || body.action === 'update')))   // organizátor smí domy v lokalitě i upravit
       throw new Error('Toto stanoviště může upravit jen jeho hostitel – přihlaste se PINem.');
 
     if (body.action === 'update') {
