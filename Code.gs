@@ -269,7 +269,8 @@ function visitStats_(loc) {
     sh.getRange(2, 1, sh.getLastRow() - 1, 3).getValues().forEach(function (r) {
       if (loc && String(r[2]) !== String(loc)) return;
       seen[r[1]] = 1;
-      if (String(r[0]) === t) seenToday[r[1]] = 1;
+      const d = r[0] instanceof Date ? Utilities.formatDate(r[0], 'Europe/Prague', 'yyyy-MM-dd') : String(r[0]).slice(0, 10);   // Tabulka může text převést na datum
+      if (d === t) seenToday[r[1]] = 1;
     });
     return { today: Object.keys(seenToday).length, total: Object.keys(seen).length };
   } catch (err) { return null; }
