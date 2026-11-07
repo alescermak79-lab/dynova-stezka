@@ -300,7 +300,15 @@ details.login>summary{cursor:pointer;font-weight:700;color:var(--candle);min-hei
 .nextcard button.num{border:0;cursor:pointer;padding:0}
 .nextcard button.t{border:0;background:none;text-align:left;padding:0;color:inherit;min-height:40px;display:flex;flex-direction:column;justify-content:center;cursor:pointer}
 /* ---- záložka Více ---- */
-.subtabs{position:sticky;top:-16px;z-index:5;margin:-16px -16px 14px;padding:10px 16px;background:var(--night);border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.subtabs{position:sticky;top:-16px;z-index:5;margin:-16px -16px 14px;padding:10px 16px;background:var(--night);border-bottom:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:12px}
+.gal figure{margin:0;background:var(--dusk);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.gal .gp{padding:0;border:0;background:var(--dusk2);cursor:zoom-in;display:block;aspect-ratio:1/1;width:100%}
+.gal .gp img{width:100%;height:100%;object-fit:cover;display:block}
+.gal figcaption{padding:7px 9px 9px;font-size:13px;line-height:1.3}
+.gal figcaption button{padding:0;border:0;background:none;color:var(--candle);font:inherit;font-weight:800;text-align:left;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.lightbox .lbnav{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:64px;border-radius:12px;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:34px;line-height:1;cursor:pointer}
+.lightbox .lbnav.prev{left:8px}.lightbox .lbnav.next{right:8px}
 .subtabs button{min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--dusk);color:var(--mist);font-weight:800;cursor:pointer}
 .subtabs button[aria-selected="true"]{background:var(--candle);border-color:var(--candle);color:#2a1a00}
 /* ---- navigace „Jdeme koledovat“ ---- */
@@ -548,6 +556,7 @@ img[data-photo][role=button]{cursor:zoom-in}
   <section class="view" id="v-more" hidden aria-label="More">
     <div class="subtabs" role="tablist" aria-label="More">
       <button type="button" role="tab" data-sub="rank" aria-selected="true">🏆 Leaderboard</button>
+      <button type="button" role="tab" data-sub="photos" aria-selected="false">📷 Photos</button>
       <button type="button" role="tab" data-sub="info" aria-selected="false">ℹ️ Info</button>
     </div>
     <div class="wrap" id="v-rank">
@@ -564,6 +573,11 @@ img[data-photo][role=button]{cursor:zoom-in}
         <h3 style="margin:6px 0 8px">Not rated yet</h3>
         <div class="panel"><ol class="route rank" id="unratedList"></ol></div>
       </div>
+    </div>
+    <div class="wrap" id="v-photos" hidden>
+      <h2>All Halloween photos</h2>
+      <p class="muted small" id="galIntro" style="margin:0"></p>
+      <div class="gal" id="galGrid"></div>
     </div>
     <div class="wrap" id="v-info" hidden>
       <h2>How it works</h2>
@@ -708,7 +722,7 @@ img[data-photo][role=button]{cursor:zoom-in}
     <div class="tour-acts" id="tourActs"><button class="btn ghost" type="button" id="tourBack">Back</button><button class="btn primary" type="button" id="tourNext">Next</button></div>
   </div>
 </div>
-<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Photo"><img id="lbImg" alt="House photo"><div class="cap" id="lbCap" hidden></div><button class="btn sm close" type="button" id="lbClose">Close</button></div>
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Photo"><img id="lbImg" alt="House photo"><div class="cap" id="lbCap" hidden></div><button class="lbnav prev" type="button" id="lbPrev" aria-label="Previous photo" hidden>‹</button><button class="lbnav next" type="button" id="lbNext" aria-label="Next photo" hidden>›</button><button class="btn sm close" type="button" id="lbClose">Close</button></div>
 <div class="toast" id="toast" role="status" hidden></div>
 <div id="srLive" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 <input type="file" id="photoInput" accept="image/*" hidden>
@@ -960,7 +974,25 @@ function paintStars(n){ $$("#starPick button").forEach(b => b.classList.toggle("
 function openRate(id, after){ const s = byId(id); if (!s) return; rateId = id; $("#rateName").textContent = s.name; $("#rateNick").value = NICK;
   $("#rateTitle").textContent = after ? "How did you like it?" : "Rate this house"; $("#rateCancel").textContent = after ? "Not now" : "Close"; paintStars(myRatings[id] || 0); $("#rateOverlay").hidden = false; }
 function closeRate(){ $("#rateOverlay").hidden = true; rateId = null; }
-function openLightbox(url, by){ $("#lbImg").src = url; $("#lbCap").textContent = by ? "📷 " + by : ""; $("#lbCap").hidden = !by; $("#lightbox").hidden = false; }
+let LBI = -1, GAL = [];
+function openLightbox(url, by){ LBI = -1; $("#lbPrev").hidden = $("#lbNext").hidden = true; $("#lbImg").src = url; $("#lbCap").textContent = by ? "📷 " + by : ""; $("#lbCap").hidden = !by; $("#lightbox").hidden = false; }
+function openGal(i){
+  if (!GAL.length) return;
+  LBI = (i + GAL.length) % GAL.length; const p = GAL[LBI];
+  $("#lbImg").src = p.url;
+  $("#lbCap").textContent = p.name + (p.nick ? " · 📷 " + p.nick : "") + " · " + (LBI + 1) + "/" + GAL.length;
+  $("#lbCap").hidden = false; $("#lbPrev").hidden = $("#lbNext").hidden = GAL.length < 2; $("#lightbox").hidden = false;
+}
+function drawPhotos(){
+  const g = $("#galGrid"); if (!g) return;
+  GAL = [];
+  stations.forEach(s => (s.photos || []).forEach(p => GAL.push({url:p.url, nick:p.nick || "", created:p.created || "", sid:s.id, name:s.name})));
+  GAL.sort((a, b) => a.created < b.created ? 1 : a.created > b.created ? -1 : 0);
+  const n = GAL.length, houses = new Set(GAL.map(p => p.sid)).size;
+  $("#galIntro").textContent = n ? n + " " + (n === 1 ? "photo" : "photos") + " from " + houses + " " + (houses === 1 ? "house" : "houses") + ", newest first. Tap a photo to enlarge it, then use the arrows or swipe to browse."
+    : "No photos yet. You can add them from a house on the map with 📷 Add photo.";
+  g.innerHTML = GAL.map((p, i) => `<figure><button type="button" class="gp" data-gal="${i}" aria-label="Enlarge photo – ${esc(p.name)}"><img src="${esc(p.url)}" alt="" loading="lazy"></button><figcaption><button type="button" data-showonmap="${esc(p.sid)}">${esc(p.name)}</button>${p.nick ? `<span class="muted"> · ${esc(p.nick)}</span>` : ""}</figcaption></figure>`).join("");
+}
 /* ---------- přezdívka návštěvníka ---------- */
 let NICK = store.get("hw-nick", "");
 function setNick(v){ NICK = String(v || "").replace(/[<>]/g, "").trim().slice(0, 30); store.set("hw-nick", NICK); ["#rateNick", "#infoNick", "#tourNick"].forEach(s => { const i = $(s); if (i && i !== document.activeElement) i.value = NICK; }); }
@@ -1189,7 +1221,7 @@ async function doLogin(){
   $("#btnLogin").disabled = false;
 }
 
-function renderAll(replan = true){ if (replan) planRoute(); drawMap(); drawRoute(); drawMine(); drawLogin(); drawRank(); drawHostCard(); if (NAV.on) navAfterData(); }
+function renderAll(replan = true){ if (replan) planRoute(); drawMap(); drawRoute(); drawMine(); drawLogin(); drawRank(); drawPhotos(); drawHostCard(); if (NAV.on) navAfterData(); }
 
 /* ---------- 9: rychlá karta hostitele na mapě ---------- */
 function hostStat(s){                          // stav domu pro hostitele: [třída, text]
@@ -1491,14 +1523,15 @@ function sendHit(){
 /* ---------- tabs ---------- */
 let moreSub = "rank";
 function go(tab, sub){
-  if (tab === "rank" || tab === "info"){ sub = tab; tab = "more"; }
+  if (tab === "fotky") tab = "photos";
+  if (tab === "rank" || tab === "info" || tab === "photos"){ sub = tab; tab = "more"; }
   if (tab !== "map"){ if (NAV.on) exitNav(); if (sheetId) closeSheet(); }
   $$("nav.tabs button").forEach(b => { if (b.dataset.tab === tab) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
   $$(".view").forEach(v => v.hidden = v.id !== "v-" + tab);
   if (tab === "more"){
     if (sub) moreSub = sub;
     $$(".subtabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.sub === moreSub));
-    $("#v-rank").hidden = moreSub !== "rank"; $("#v-info").hidden = moreSub !== "info";
+    $("#v-rank").hidden = moreSub !== "rank"; $("#v-info").hidden = moreSub !== "info"; $("#v-photos").hidden = moreSub !== "photos";
     if (sub) $("#v-more").scrollTop = 0;
   }
   if (tab === "map") setTimeout(() => map.invalidateSize(), 50);
@@ -1639,6 +1672,14 @@ $$("#starPick button:not([disabled])").forEach(b => {
 $("#rateCancel").addEventListener("click", closeRate);
 $("#rateOverlay").addEventListener("click", e => { if (e.target.id === "rateOverlay") closeRate(); });
 $("#lbClose").addEventListener("click", () => { $("#lightbox").hidden = true; });
+$("#lbPrev").addEventListener("click", e => { e.stopPropagation(); openGal(LBI - 1); });
+$("#lbNext").addEventListener("click", e => { e.stopPropagation(); openGal(LBI + 1); });
+$("#galGrid").addEventListener("click", e => { const b = e.target.closest("[data-gal]"); if (b) openGal(+b.dataset.gal); });
+document.addEventListener("keydown", e => { if ($("#lightbox").hidden || LBI < 0) return; if (e.key === "ArrowRight") openGal(LBI + 1); else if (e.key === "ArrowLeft") openGal(LBI - 1); });
+(() => { let x0 = null; const lb = $("#lightbox");
+  lb.addEventListener("touchstart", e => { x0 = e.touches.length === 1 ? e.touches[0].clientX : null; }, {passive:true});
+  lb.addEventListener("touchend", e => { if (x0 === null || LBI < 0) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 50) openGal(LBI + (dx < 0 ? 1 : -1)); }, {passive:true});
+})();
 $("#lightbox").addEventListener("click", e => { if (e.target.id === "lightbox") $("#lightbox").hidden = true; });
 document.addEventListener("keydown", e => { if (e.key === "Escape"){ $("#lightbox").hidden = true; closeRate(); if (sheetId) closeSheet(); } });
 $("#btnResetVisited").addEventListener("click", () => { visited.clear(); skipped.clear(); store.set("hw-visited", []); store.set("hw-skip", []); renderAll(); });
@@ -2353,7 +2394,7 @@ $("#langBtn").addEventListener("click", e => {
 /* ---------- boot ---------- */
 $("#demoFlag").hidden = !DEMO;
 const initTab = (location.hash || "#map").slice(1);
-go(["map","route","add","more","rank","info"].includes(initTab) ? initTab : "map");
+go(["map","route","add","more","rank","info","photos","fotky"].includes(initTab) ? initTab : "map");
 drawHeader();
 load(true);
 setInterval(() => { if (!document.hidden && LOC) load(); }, 60000);
