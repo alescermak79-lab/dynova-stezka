@@ -123,7 +123,7 @@ function clean_(s, prev) {
     scare: Math.min(3, Math.max(1, parseInt(get('scare'), 10) || 1)),
     allergyFree: bool_(get('allergyFree')), nonCandy: bool_(get('nonCandy')), accessible: bool_(get('accessible')),
     from: time_(get('from')), to: time_(get('to')),
-    note: str_(get('note'), 200),
+    note: str_(get('note'), 300),
     status: ['open', 'out', 'closed'].indexOf(String(get('status'))) >= 0 ? String(get('status')) : 'open'
   };
   if (!out.name) throw new Error('Chybí název stanoviště.');
