@@ -238,6 +238,7 @@ ol.route.rank li{grid-template-columns:36px 56px 1fr;align-items:center}
 .hstat{display:inline-block;font-size:12.5px;font-weight:800;border-radius:6px;padding:2px 8px}
 .hstat.open{background:rgba(255,190,70,.18);color:var(--candle)}
 .hstat.out{background:rgba(125,115,144,.3);color:var(--bone)}
+.hstat.wait{background:rgba(154,90,38,.25);color:#e0a874}
 .hint{display:flex;gap:10px;align-items:center;background:rgba(255,211,107,.1);border:1px solid rgba(255,211,107,.35);border-radius:var(--r);padding:12px}
 .hint p{margin:0;flex:1;font-size:13.5px}
 .req{color:var(--blood);font-weight:800}
@@ -1149,7 +1150,7 @@ function drawMine(){
       ${thumbsHtml(s, 0, 30, true)}</div>
     <div class="row">
       <button class="btn sm" type="button" data-addphoto="${esc(s.id)}">📷 Přidat foto</button>
-      <span class="hstat ${s.status === "open" ? "open" : "out"}">${s.status === "open" ? "🎃 Máme otevřeno" : "Stav: došly bonbony"}</span>
+      <span class="hstat ${hostStat(s)[0]}">${hostStat(s)[1]}</span>
       ${s.status === "open"
         ? `<button class="btn sm" type="button" data-status="out" data-id="${esc(s.id)}">Ohlásit: došly bonbony</button>`
         : `<button class="btn sm teal" type="button" data-status="open" data-id="${esc(s.id)}">Ohlásit: zase otevřeno</button>`}
@@ -1191,12 +1192,22 @@ async function doLogin(){
 function renderAll(replan = true){ if (replan) planRoute(); drawMap(); drawRoute(); drawMine(); drawLogin(); drawRank(); drawHostCard(); if (NAV.on) navAfterData(); }
 
 /* ---------- 9: rychlá karta hostitele na mapě ---------- */
+function hostStat(s){                          // stav domu pro hostitele: [třída, text]
+  if (s.status !== "open") return ["out", s.status === "closed" ? "Stav: zavřeno" : "Stav: došly bonbony"];
+  const st = timeState(s);
+  if (st === "open") return ["open", "🎃 Máme otevřeno"];
+  if (st === "before") return ["wait", `🕔 Otevíráme v ${esc(hm(s.from))}`];
+  if (st === "after") return ["wait", `Dnes už zavřeno (do ${esc(hm(s.to))})`];
+  if (LOC && new Date() > locEnd()) return ["wait", "Akce už skončila"];
+  const day = LANG === "en" ? locStart().toLocaleDateString("en-US", {month:"short", day:"numeric"}) : `${locStart().getDate()}. ${locStart().getMonth() + 1}.`;
+  return ["wait", `🕔 Otevíráme ${day}${s.from ? " v " + esc(hm(s.from)) : ""}`];
+}
 function drawHostCard(){
   const c = $("#hostcard"), s = stations.find(x => mine[x.id]);
   if (!s || picking){ c.hidden = true; return; }
   const open = s.status === "open";
   c.innerHTML = `<div class="h">🏠 Můj dům: <b>${esc(s.name)}</b></div>
-    <div><span class="hstat ${open ? "open" : "out"}">${open ? "🎃 Máme otevřeno" : "Stav: došly bonbony"}</span></div>
+    <div><span class="hstat ${hostStat(s)[0]}">${hostStat(s)[1]}</span></div>
     ${open ? `<button class="btn sm" type="button" data-status="out" data-id="${esc(s.id)}">Ohlásit: došly bonbony</button>`
            : `<button class="btn sm teal" type="button" data-status="open" data-id="${esc(s.id)}">Ohlásit: zase otevřeno</button>`}`;
   c.hidden = false;
