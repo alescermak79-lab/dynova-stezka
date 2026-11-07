@@ -8,6 +8,8 @@ const SHEET = 'Stanoviste';
 const SHEET_RATE = 'Hodnoceni';
 const SHEET_PHOTO = 'Fotky';
 const SHEET_LOC = 'Lokality';
+const SHEET_VISIT = 'Navstevy';                // počítadlo: jeden řádek = jeden telefon za den
+const VISIT_COLS = ['day', 'voter', 'loc', 'created'];
 const MAX_STATIONS = 300;                      // pojistka proti spamu (na jednu lokalitu)
 const MAX_LOCS = 500;
 const RADIUS_KM = 6;                           // stanoviště musí být do této vzdálenosti od středu lokality
@@ -241,7 +243,7 @@ function doGet(e) {
         return (b.host - a.host) || (a.created < b.created ? 1 : -1);
       }).slice(0, 24);
     });
-    const out = JSON.stringify({ ok: true, locations: locations, stations: stations, cached: new Date().toISOString() });
+    const out = JSON.stringify({ ok: true, locations: locations, stations: stations, visits: visitStats_(want), cached: new Date().toISOString() });
     try { if (out.length < 95000) cache.put(cacheKey_(want), out, CACHE_SEC); } catch (err) {}
     return ContentService.createTextOutput(out).setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
@@ -249,7 +251,32 @@ function doGet(e) {
   }
 }
 
+/* ---------- počítadlo návštěv (bez zámku a bez mazání mezipaměti) ---------- */
+function today_() { return Utilities.formatDate(new Date(), 'Europe/Prague', 'yyyy-MM-dd'); }
+function hit_(b) {
+  try {
+    const v = str_(b.voter, 64), loc = str_(b.loc, 40);
+    if (!v) return json_({ ok: false });
+    aux_(SHEET_VISIT, VISIT_COLS).appendRow([today_(), v, loc || DEFAULT_LOC, new Date().toISOString()]);
+    return json_({ ok: true });
+  } catch (err) { return json_({ ok: false }); }
+}
+function visitStats_(loc) {
+  try {
+    const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_VISIT);
+    if (!sh || sh.getLastRow() < 2) return { today: 0, total: 0 };
+    const t = today_(), seen = {}, seenToday = {};
+    sh.getRange(2, 1, sh.getLastRow() - 1, 3).getValues().forEach(function (r) {
+      if (loc && String(r[2]) !== String(loc)) return;
+      seen[r[1]] = 1;
+      if (String(r[0]) === t) seenToday[r[1]] = 1;
+    });
+    return { today: Object.keys(seenToday).length, total: Object.keys(seen).length };
+  } catch (err) { return null; }
+}
+
 function doPost(e) {
+  try { const b0 = JSON.parse((e && e.postData && e.postData.contents) || '{}'); if (b0.action === 'hit') return hit_(b0); } catch (err) {}
   const res = doPost_(e);
   try {
     const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');

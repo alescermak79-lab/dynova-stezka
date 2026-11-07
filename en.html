@@ -1473,8 +1473,19 @@ function applyData(res, fit, cached){
     if (fit) fitLoc();
     loadedOnce = true; if (!cached){ lastOk = Date.now(); $("#offline").hidden = true; }
     showState(stations.length ? "" : "empty");
+    VISITS = res.visits || VISITS; if (!cached) sendHit();
+    if (!$("#v-info").hidden) drawInfo();
     maybeOnboard();
   }
+}
+/* ---------- počítadlo návštěv: každý telefon se započítá jednou za den ---------- */
+let VISITS = null;
+function sendHit(){
+  if (DEMO || !LOC) return;
+  const k = new Date().toLocaleDateString("sv-SE", {timeZone:"Europe/Prague"}) + "|" + LOC.id;
+  if (store.get("hw-hit", "") === k) return;
+  store.set("hw-hit", k);
+  api.post({action:"hit", voter:VOTER, loc:LOC.id}).catch(() => {});
 }
 
 /* ---------- tabs ---------- */
@@ -1852,7 +1863,8 @@ function drawInfo(){
   $("#infoFacts").innerHTML = `<div>When<b style="font-size:17px">${dFmt.format(start)}</b></div>
     <div>Time<b style="font-size:17px">${tFmt.format(start)}–${tFmt.format(end)}</b></div>
     <div>Where<b style="font-size:17px">${esc(locLabel(LOC))}</b></div>
-    ${LOC.meeting ? `<div>Meeting point<b style="font-size:17px">${esc(LOC.meeting)}</b></div>` : ""}`;
+    ${LOC.meeting ? `<div>Meeting point<b style="font-size:17px">${esc(LOC.meeting)}</b></div>` : ""}
+    ${VISITS ? `<div>Opened by<b style="font-size:17px">${VISITS.today} today · ${VISITS.total} total</b></div>` : ""}`;
   $("#orgPanel").hidden = false;
   const on = !!orgTok() || !!ADMIN;
   $("#orgInfo").textContent = on
