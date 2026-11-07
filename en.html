@@ -235,6 +235,9 @@ ol.route.rank li{grid-template-columns:36px 56px 1fr;align-items:center}
 .hostcard{position:absolute;right:10px;top:66px;z-index:540;background:var(--dusk);border:1px solid var(--line);border-radius:14px;padding:8px 10px;box-shadow:0 8px 20px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:6px;max-width:min(230px,60%)}
 .hostcard .h{font-size:12px;color:var(--mist);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hostcard .h b{color:var(--bone)}
+.hstat{display:inline-block;font-size:12.5px;font-weight:800;border-radius:6px;padding:2px 8px}
+.hstat.open{background:rgba(255,190,70,.18);color:var(--candle)}
+.hstat.out{background:rgba(125,115,144,.3);color:var(--bone)}
 .hint{display:flex;gap:10px;align-items:center;background:rgba(255,211,107,.1);border:1px solid rgba(255,211,107,.35);border-radius:var(--r);padding:12px}
 .hint p{margin:0;flex:1;font-size:13.5px}
 .req{color:var(--blood);font-weight:800}
@@ -1146,9 +1149,10 @@ function drawMine(){
       ${thumbsHtml(s, 0, 30, true)}</div>
     <div class="row">
       <button class="btn sm" type="button" data-addphoto="${esc(s.id)}">📷 Add photo</button>
+      <span class="hstat ${s.status === "open" ? "open" : "out"}">${s.status === "open" ? "🎃 We're open" : "Status: out of candy"}</span>
       ${s.status === "open"
-        ? `<button class="btn sm" type="button" data-status="out" data-id="${esc(s.id)}">Out of candy</button>`
-        : `<button class="btn sm teal" type="button" data-status="open" data-id="${esc(s.id)}">Open again</button>`}
+        ? `<button class="btn sm" type="button" data-status="out" data-id="${esc(s.id)}">Mark: out of candy</button>`
+        : `<button class="btn sm teal" type="button" data-status="open" data-id="${esc(s.id)}">Mark: open again</button>`}
       <button class="btn sm ghost" type="button" data-edit="${esc(s.id)}">Upravit</button>
       <button class="btn sm ghost" type="button" data-del="${esc(s.id)}">Smazat</button>
       <button class="btn sm ghost" type="button" data-hostout="${esc(s.id)}">Sign out this phone</button>
@@ -1192,8 +1196,9 @@ function drawHostCard(){
   if (!s || picking){ c.hidden = true; return; }
   const open = s.status === "open";
   c.innerHTML = `<div class="h">🏠 My house: <b>${esc(s.name)}</b></div>
-    ${open ? `<button class="btn sm" type="button" data-status="out" data-id="${esc(s.id)}">Out of candy</button>`
-           : `<button class="btn sm teal" type="button" data-status="open" data-id="${esc(s.id)}">Open again</button>`}`;
+    <div><span class="hstat ${open ? "open" : "out"}">${open ? "🎃 We're open" : "Status: out of candy"}</span></div>
+    ${open ? `<button class="btn sm" type="button" data-status="out" data-id="${esc(s.id)}">Mark: out of candy</button>`
+           : `<button class="btn sm teal" type="button" data-status="open" data-id="${esc(s.id)}">Mark: open again</button>`}`;
   c.hidden = false;
 }
 
