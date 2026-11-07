@@ -871,12 +871,12 @@ function hoursHtml(s){
 const minsFor = m => Math.max(1, Math.round(m / (CONFIG.KID_SPEED_KMH * 1000 / 60))) + " min";   // m = skutečná délka cesty
 
 /* ---------- filtering & routing ---------- */
-function matches(s){
+function matches(s, onMap){                    // onMap: na mapě ukaž i domy, kde došly bonbony (šedá dýně), jen ne v trase
   if (filters.small && s.scare > 1) return false;
   if (filters.allergy && !s.allergyFree) return false;
   if (filters.noncandy && !s.nonCandy) return false;
   if (filters.access && !s.accessible) return false;
-  if (filters.open && s.status !== "open") return false;
+  if (filters.open && s.status !== "open" && !onMap) return false;
   return true;
 }
 function planRoute(){
@@ -1069,7 +1069,7 @@ function drawMap(){
   markerLayer.clearLayers(); markers = {};
   const order = new Map(route.map((id, i) => [id, i + 1]));
   stations.forEach(s => {
-    if (!matches(s) && !visited.has(s.id)) return;
+    if (!matches(s, true) && !visited.has(s.id)) return;
     const tgt = NAV.on && NAV.target === s.id;
     const m = L.marker([s.lat, s.lng], {icon: icon(s, NAV.on ? undefined : order.get(s.id), tgt), title: s.name,
       zIndexOffset: tgt ? 900 : order.has(s.id) ? 500 - order.get(s.id) : 0});
