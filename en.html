@@ -1774,6 +1774,26 @@ function resetForm(){
   addMore = false; drawMine();
 }
 $("#btnCancelEdit").addEventListener("click", () => { resetForm(); $("#formMsg").hidden = true; });
+/* ---------- ochrana proti dvěma dýním na jedné adrese ---------- */
+let dupOk = false;
+const normAddr = a => String(a || "").split(",")[0].normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+function findDupe(s){
+  return stations.find(x => (s.address && normAddr(x.address) && normAddr(x.address) === normAddr(s.address)) || (isFinite(s.lat) && dist(s, x) < 15));
+}
+function showDupe(d){
+  const m = $("#formMsg"); m.className = "msg err"; m.hidden = false;
+  const imported = normAddr(d.name) === normAddr(d.address);
+  m.innerHTML = `There is already a house here on the map: <b>${esc(d.name)}</b>${d.address && !imported ? ` (${esc(d.address)})` : ""}. Is it yours? Sign in to it and edit it${imported ? " – the PIN is your house number" : " with the PIN you chose"}.
+    <div class="row" style="margin-top:8px"><button class="btn sm primary" type="button" data-claim="${esc(d.id)}">Sign in to this house</button><button class="btn sm ghost" type="button" data-dupok="1">It's a different house – add it</button></div>`;
+}
+$("#formMsg").addEventListener("click", e => {
+  const c = e.target.closest("[data-claim]"), ok = e.target.closest("[data-dupok]");
+  if (c){
+    drawLogin(); const p = $("#loginPanel"); p.hidden = false; p.open = true;
+    $("#lgStation").value = c.dataset.claim; $("#formMsg").hidden = true;
+    p.scrollIntoView({block:"center", behavior:"smooth"}); setTimeout(() => $("#lgPin").focus(), 300);
+  } else if (ok){ dupOk = true; $("#form").requestSubmit(); }
+});
 $("#form").addEventListener("submit", async e => {
   e.preventDefault();
   const s = readForm(), id = $("#fId").value;
@@ -1783,6 +1803,8 @@ $("#form").addEventListener("submit", async e => {
   if (dist(s, locCenter()) > CONFIG.RADIUS_KM * 1000) return alertMsg(`The location is more than ${CONFIG.RADIUS_KM} km from ${LOC.city}. Check it with “Pick on the map”, or choose another area.`);
   const pin = $("#fPin").value.trim();
   if (!id && pin.length < 4) return alertMsg("Choose a PIN of at least 4 characters – without it you couldn't edit the house from another phone."), $("#fPin").focus();
+  if (!id && !dupOk){ const d = findDupe(s); if (d) return showDupe(d); }
+  dupOk = false;
   $("#btnSave").disabled = true;
   try{
     if (id){

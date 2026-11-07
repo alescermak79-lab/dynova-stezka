@@ -1774,6 +1774,26 @@ function resetForm(){
   addMore = false; drawMine();
 }
 $("#btnCancelEdit").addEventListener("click", () => { resetForm(); $("#formMsg").hidden = true; });
+/* ---------- ochrana proti dvěma dýním na jedné adrese ---------- */
+let dupOk = false;
+const normAddr = a => String(a || "").split(",")[0].normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+function findDupe(s){
+  return stations.find(x => (s.address && normAddr(x.address) && normAddr(x.address) === normAddr(s.address)) || (isFinite(s.lat) && dist(s, x) < 15));
+}
+function showDupe(d){
+  const m = $("#formMsg"); m.className = "msg err"; m.hidden = false;
+  const imported = normAddr(d.name) === normAddr(d.address);
+  m.innerHTML = `Na tomhle místě už na mapě je dům <b>${esc(d.name)}</b>${d.address && !imported ? ` (${esc(d.address)})` : ""}. Je to váš? Přihlaste se k němu a upravte si ho${imported ? " – PIN je vaše číslo popisné" : " PINem, který jste zvolili"}.
+    <div class="row" style="margin-top:8px"><button class="btn sm primary" type="button" data-claim="${esc(d.id)}">Přihlásit se k tomuto domu</button><button class="btn sm ghost" type="button" data-dupok="1">Je to jiný dům – přidat</button></div>`;
+}
+$("#formMsg").addEventListener("click", e => {
+  const c = e.target.closest("[data-claim]"), ok = e.target.closest("[data-dupok]");
+  if (c){
+    drawLogin(); const p = $("#loginPanel"); p.hidden = false; p.open = true;
+    $("#lgStation").value = c.dataset.claim; $("#formMsg").hidden = true;
+    p.scrollIntoView({block:"center", behavior:"smooth"}); setTimeout(() => $("#lgPin").focus(), 300);
+  } else if (ok){ dupOk = true; $("#form").requestSubmit(); }
+});
 $("#form").addEventListener("submit", async e => {
   e.preventDefault();
   const s = readForm(), id = $("#fId").value;
@@ -1783,6 +1803,8 @@ $("#form").addEventListener("submit", async e => {
   if (dist(s, locCenter()) > CONFIG.RADIUS_KM * 1000) return alertMsg(`Poloha je víc než ${CONFIG.RADIUS_KM} km od lokality ${LOC.city}. Zkontrolujte ji přes „Vybrat na mapě“, nebo si vyberte jinou lokalitu.`);
   const pin = $("#fPin").value.trim();
   if (!id && pin.length < 4) return alertMsg("Zvolte PIN alespoň o 4 znacích – bez něj byste stanoviště nemohli upravit z jiného telefonu."), $("#fPin").focus();
+  if (!id && !dupOk){ const d = findDupe(s); if (d) return showDupe(d); }
+  dupOk = false;
   $("#btnSave").disabled = true;
   try{
     if (id){
